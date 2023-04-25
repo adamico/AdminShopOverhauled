@@ -1,6 +1,5 @@
 package com.vnator.adminshop.blocks;
 
-import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.vnator.adminshop.AdminShop;
@@ -13,19 +12,16 @@ import com.vnator.adminshop.setup.Messages;
 import com.vnator.adminshop.shop.Shop;
 import com.vnator.adminshop.shop.ShopItem;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.player.Inventory;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
 
@@ -68,7 +64,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         isBuy = true;
     }
 
-    @SuppressWarnings("resource")
+//    @SuppressWarnings("resource")
     @Override
     protected void init() {
         super.init();
@@ -121,7 +117,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
     }
 
     @Override
-    protected void renderBg(PoseStack matrixStack, float partialTicks, int mouseX, int mouseY){
+    protected void renderBg(@NotNull PoseStack matrixStack, float partialTicks, int mouseX, int mouseY){
         RenderSystem.setShaderTexture(0, GUI);
         int relX = (this.width - this.imageWidth) / 2;
         int relY = (this.height - this.imageHeight) / 2;
@@ -252,11 +248,11 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
 
     private void printInfo(){
         System.out.println("Buy Buttons: ");
-        buyButtons.forEach(l -> System.out.println(l));
+        buyButtons.forEach(System.out::println);
         System.out.println("Sell Buttons: ");
-        sellButtons.forEach(l -> System.out.println(l));
+        sellButtons.forEach(System.out::println);
 
-        System.out.println("");
+        System.out.println();
 
         System.out.println("Buy Category pages | Selected: "+buyCategory);
         for (int i : buyCategoriesPage) {

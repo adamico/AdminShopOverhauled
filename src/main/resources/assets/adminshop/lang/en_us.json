@@ -7,5 +7,10 @@
   "gui.sell": "Sell",
   "gui.money_message": "Money: $",
   "gui.item_tag": "Item Tag",
-  "gui.fluid_tag": "Fluid Tag"
+  "gui.fluid_tag": "Fluid Tag",
+  "block.adminshop.atm": "ATM",
+  "block.adminshop.shop": "Shop",
+  "block.adminshop.seller": "Seller",
+  "block.adminshop.buyer": "Buyer",
+  "item.adminshop.check": "Check"
 }
