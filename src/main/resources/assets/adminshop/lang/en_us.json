@@ -1,0 +1,11 @@
+{
+  "key.categories.adminshop": "Admin Shop",
+  "key.adminshop.shop_increase_1": "Increase Shop Rate 1",
+  "key.adminshop.shop_increase_2": "Increase Shop Rate 2",
+  "screen.adminshop.shop": "Shop",
+  "gui.buy": "Buy",
+  "gui.sell": "Sell",
+  "gui.money_message": "Money: $",
+  "gui.item_tag": "Item Tag",
+  "gui.fluid_tag": "Fluid Tag"
+}
