@@ -1,5 +1,7 @@
 package com.vnator.adminshop.blocks;
 
+import com.vnator.adminshop.AdminShop;
+import com.vnator.adminshop.money.BankAccount;
 import com.vnator.adminshop.money.ClientMoneyData;
 import com.vnator.adminshop.money.MoneyManager;
 import com.vnator.adminshop.setup.Registration;
@@ -13,6 +15,9 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.SlotItemHandler;
 import net.minecraftforge.items.wrapper.InvWrapper;
 
+import java.util.Optional;
+import java.util.Set;
+
 public class ShopContainer extends AbstractContainerMenu {
 
     private Player playerEntity;
@@ -24,7 +29,7 @@ public class ShopContainer extends AbstractContainerMenu {
         this.playerInventory = new InvWrapper(playerInventory);
 
         layoutPlayerInventorySlots(16, 140);
-        trackMoney();
+//        trackMoney();
     }
 
     @Override
@@ -54,16 +59,46 @@ public class ShopContainer extends AbstractContainerMenu {
     public long getPlayerBalance(){
         // TODO add BankAccount-s functionality
         if(playerEntity.level.isClientSide()){
-            return ClientMoneyData.getMoney(playerEntity.getStringUUID(), 1);
+            Set<BankAccount> accountSet = ClientMoneyData.getAccountSet();
+            BankAccount personalAccount;
+            Optional<BankAccount> result = accountSet.stream().filter(account -> (account.getOwner().equals(playerEntity.getStringUUID()) &&
+                    account.getId() == 1)).findAny();
+            if (result.isEmpty()) {
+                AdminShop.LOGGER.warn("(Container) Couldn't find personal account, creating one.");
+                personalAccount = new BankAccount(playerEntity.getStringUUID());
+                accountSet.add(personalAccount);
+                ClientMoneyData.setAccountSet(accountSet);
+            } else {
+                personalAccount = result.get();
+            }
+            return personalAccount.getBalance();
         }
         return MoneyManager.get(playerEntity.level).getBalance(playerEntity.getStringUUID());
     }
 
     public void setPlayerBalance(int value, int index){
         // TODO add BankAccount-s functionality
-        long money = ClientMoneyData.getMoney(playerEntity.getStringUUID(), 1);
+        long money = getPlayerBalance();
         long change = (long) value << (index*16);
-        ClientMoneyData.setMoney(money | change);
+
+        if(playerEntity.level.isClientSide()){
+//            ClientMoneyData.setMoney(playerEntity.getStringUUID(), 1, money | change);
+            Set<BankAccount> accountSet = ClientMoneyData.getAccountSet();
+            BankAccount personalAccount;
+            Optional<BankAccount> result = accountSet.stream().filter(account -> (account.getOwner().equals(playerEntity.getStringUUID()) &&
+                    account.getId() == 1)).findAny();
+            if (result.isEmpty()) {
+                AdminShop.LOGGER.warn("(Container) Couldn't find personal account, creating one.");
+                personalAccount = new BankAccount(playerEntity.getStringUUID());
+                accountSet.add(personalAccount);
+                ClientMoneyData.setAccountSet(accountSet);
+            } else {
+                personalAccount = result.get();
+            }
+            personalAccount.setBalance(money | change);
+        } else {
+            AdminShop.LOGGER.error("Calling setPlayerBalance() out of client side!");
+        }
     }
 
     private int addSlotRange(IItemHandler handler, int index, int x, int y, int amount, int dx) {

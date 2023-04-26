@@ -4,10 +4,8 @@ import com.ibm.icu.impl.Pair;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.vnator.adminshop.AdminShop;
-import com.vnator.adminshop.client.gui.BuySellButton;
-import com.vnator.adminshop.client.gui.CategoryButton;
-import com.vnator.adminshop.client.gui.ScrollButton;
-import com.vnator.adminshop.client.gui.ShopButton;
+import com.vnator.adminshop.client.gui.*;
+import com.vnator.adminshop.money.BankAccount;
 import com.vnator.adminshop.money.ClientMoneyData;
 import com.vnator.adminshop.network.PacketPurchaseRequest;
 import com.vnator.adminshop.setup.Messages;
@@ -17,11 +15,13 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
 
@@ -46,9 +46,12 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
     private int sellCategory;
     private boolean isBuy; //Whether the Buy option is currently selected
     private final String playerUUID;
-    private final Set<Pair<String, Integer>> sharedAccountsSet = new HashSet<>();
-    private Pair<String, Integer> bankAccount;
+    private Map<Pair<String, Integer>, BankAccount> accountMap;
+    private Pair<String, Integer> personalAccount;
+    private final List<Pair<String, Integer>> usableAccounts = new ArrayList<>();
+    private int usableAccountsIndex;
 
+    private ChangeAccountButton changeAccountButton;
     private BuySellButton buySellButton;
     private ScrollButton upButton;
     private ScrollButton downButton;
@@ -63,9 +66,26 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         assert Minecraft.getInstance().level.isClientSide;
 
         this.playerUUID = Minecraft.getInstance().player.getStringUUID();
-        this.sharedAccountsSet.clear();
-        this.sharedAccountsSet.addAll(ClientMoneyData.getSharedAccountsSet());
-        this.bankAccount = Pair.of(playerUUID, 1); // default bank account is personal account
+        this.personalAccount = Pair.of(this.playerUUID, 1);
+        this.accountMap = ClientMoneyData.getAccountMap();
+
+        if (!this.accountMap.containsKey(personalAccount)) {
+            AdminShop.LOGGER.warn("Couldn't find personal account, creating one.");
+            AdminShop.LOGGER.warn(personalAccount.first+":"+personalAccount.second);
+            BankAccount personalBankAccount = ClientMoneyData.addAccount(new BankAccount(this.personalAccount.first,
+                    this.personalAccount.second));
+            // Refresh account map
+            this.accountMap = ClientMoneyData.getAccountMap();
+        }
+
+        this.usableAccounts.clear();
+        this.usableAccounts.add(personalAccount);
+        List<BankAccount> usableBankAccounts = accountMap.values().stream().filter(account -> (account.getMembers()
+                .contains(playerUUID) && !account.getOwner().equals(playerUUID))).toList();
+        this.usableAccounts.addAll(usableBankAccounts.stream().map(account -> Pair.of(account.getOwner(),
+                account.getId())).collect(Collectors.toSet()));
+        this.usableAccountsIndex = 0;
+
         this.shopContainer = container;
         this.imageWidth = 195;
         this.imageHeight = 222;
@@ -89,10 +109,11 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         createScrollButtons(relX, relY);
         createCategoryButtons(true, relX, relY);
         createCategoryButtons(false, relX, relY);
+        createChangeAccountButton(relX, relY);
         buyCategoriesPage = new int[buyButtons.size()];
         sellCategoriesPage = new int[sellButtons.size()];
         refreshShopButtons();
-        printInfo();
+//        printInfo();
     }
 
     @Override
@@ -107,16 +128,16 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         matrixStack.pushPose();
         //Block Title
         String blockName = I18n.get(ShopBlock.SCREEN_ADMINSHOP_SHOP);
-        drawCenteredString(matrixStack, font, blockName, getXSize()/2, 6, 0x404040);
+        drawCenteredString(matrixStack, font, blockName, getXSize()/2, 6, 0xffffff);
         //drawString(name, getXSize()/2 - string getStringWidth(name)/2, 6, 0x404040);
 
         //Player Inventory Title
-        drawString(matrixStack, font, playerInventoryTitle, 16, getYSize()-94, 0x404040);
+        drawString(matrixStack, font, playerInventoryTitle, 16, getYSize()-94, 0xffffff);
 
         //Player Balance
         drawString(matrixStack, Minecraft.getInstance().font,
-                I18n.get(GUI_MONEY) + shopContainer.getPlayerBalance(),
-                getXSize() - font.width(I18n.get(GUI_MONEY) + "00000000") - 8,
+                I18n.get(GUI_MONEY) + ClientMoneyData.getMoney(personalAccount),
+                getXSize() - font.width(I18n.get(GUI_MONEY) + "00000000") - 4,
                 6, 0xffffff); //x, y, color
 
         //Tooltip for item the player is hovering over
@@ -124,7 +145,8 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         Optional<ShopButton> button = shopButtons.stream().filter(b -> b.isMouseOn).findFirst();
         button.ifPresent(shopButton -> {
             renderTooltip(matrixStack, shopButton.getTooltipContent(),
-                    Optional.empty(), mouseX-(this.width - this.imageWidth) / 2, mouseY);
+                    Optional.empty(), mouseX-(this.width - this.imageWidth)/2,
+                    mouseY-(this.height - this.imageHeight)/2);
         });
         matrixStack.popPose();
 
@@ -153,7 +175,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
                         x+SHOP_BUTTON_X+SHOP_BUTTON_SIZE*(j%NUM_COLS),
                         y+SHOP_BUTTON_Y+SHOP_BUTTON_SIZE*((j/NUM_COLS)%NUM_ROWS), itemRenderer, (b) -> {
                     int quantity = ((ShopButton)b).getQuantity();
-                    attemptTransaction(this.bankAccount, isBuy, i2, j2, quantity);
+                    attemptTransaction(this.personalAccount, isBuy, i2, j2, quantity);
                 });
                 shopButtons.get(i).add(button);
                 button.visible = isBuy;
@@ -162,6 +184,26 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         }
     }
 
+    private void createChangeAccountButton(int x, int y) {
+        if(changeAccountButton != null) {
+            removeWidget(changeAccountButton);
+        }
+        changeAccountButton = new ChangeAccountButton(x+9, y+108, (b) -> {
+            changeAccounts();
+            assert Minecraft.getInstance().player != null;
+            Minecraft.getInstance().player.sendMessage(new TextComponent("Changed account to "+
+                    this.usableAccounts.get(this.usableAccountsIndex).first+":"+
+                    this.usableAccounts.get(this.usableAccountsIndex).second), Minecraft.getInstance().player.getUUID());
+            refreshShopButtons();
+        });
+        addRenderableWidget(changeAccountButton);
+    }
+
+    private void changeAccounts() {
+        this.usableAccountsIndex = (this.usableAccountsIndex + 1) % this.usableAccounts.size();
+        // Refresh account map
+        this.accountMap = ClientMoneyData.getAccountMap();
+    }
     private void createBuySellButton(int x, int y){
         if(buySellButton != null){
             removeWidget(buySellButton);
@@ -241,6 +283,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         sellButtons.forEach(l -> l.forEach(b -> b.visible = false));
         buyCategoryButtons.forEach(b -> b.visible = false);
         sellCategoryButtons.forEach(b -> b.visible = false);
+        changeAccountButton.visible = false;
 //        List<ShopButton> buttons = (isBuy ? buyButtons : sellButtons)
 //                .get((isBuy ? buyCategory : sellCategory));
 //        int page = (isBuy ? buyCategoriesPage[buyCategory] : sellCategoriesPage[sellCategory]);
@@ -248,6 +291,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
 //                Math.min((page+1) * NUM_ROWS*NUM_COLS, buttons.size()) );
         getVisibleShopButtons().forEach(b -> b.visible = true);
         (isBuy ? buyCategoryButtons : sellCategoryButtons).forEach(b -> b.visible = true);
+        changeAccountButton.visible = true;
     }
 
     private List<ShopButton> getVisibleShopButtons(){
@@ -261,6 +305,8 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
 
     private void attemptTransaction(Pair<String, Integer> bankAccount, boolean isBuy, int category, int index, int quantity){
         Messages.sendToServer(new PacketPurchaseRequest(bankAccount, isBuy, category, index, quantity));
+        // Refresh account map
+        this.accountMap = ClientMoneyData.getAccountMap();
     }
 
     private void printInfo(){

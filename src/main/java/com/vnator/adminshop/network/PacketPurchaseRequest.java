@@ -95,18 +95,15 @@ public class PacketPurchaseRequest {
             }
 
             // Sync money with client
+            AdminShop.LOGGER.info("Syncing money with client");
             ServerPlayer player = ctx.getSender();
             assert player != null;
             Set<Pair<String, Integer>> sharedAccountsSet = new HashSet<>();
             Map<Pair<String, Integer>, Long> accountBalanceMap = new HashMap<>();
 
             MoneyManager moneyManager = MoneyManager.get(player.getLevel());
-            List<BankAccount> accountList = moneyManager.getAccountList();
-            accountList.forEach(account -> {
-                sharedAccountsSet.add(Pair.of(account.getOwner(), account.getId()));
-                accountBalanceMap.put(Pair.of(account.getOwner(), account.getId()), account.getBalance());
-            });
-            Messages.sendToPlayer(new PacketSyncMoneyToClient(sharedAccountsSet, accountBalanceMap), player);
+            Set<BankAccount> accountSet = moneyManager.getAccountSet();
+            Messages.sendToPlayer(new PacketSyncMoneyToClient(accountSet), player);
 
         });
         return true;
@@ -131,9 +128,8 @@ public class PacketPurchaseRequest {
                 if(returned.getCount() == quantity) {
                     player.sendMessage(new TextComponent("Not enough inventory space for item!"), player.getUUID());
                 }
-                // TODO Read item's price
-                int tempPrice = 10;
-                long price = (long) ceil((quantity - returned.getCount()) * tempPrice);
+                int itemCost = item.getPrice();
+                long price = (long) ceil((quantity - returned.getCount()) * itemCost);
 
 
                 boolean success = MoneyManager.get(player.getLevel()).subtractBalance(accOwner, accID, price);
@@ -159,9 +155,8 @@ public class PacketPurchaseRequest {
             ItemStack toRemove = item.getItem().copy();
             toRemove.setCount(quantity);
             int numSold = removeItemsFromInventory(iItemHandler, toRemove);
-            // TODO Read item's price
-            int tempPrice = 10;
-            long price = (long) numSold * tempPrice;
+            int itemCost = item.getPrice();
+            long price = (long) numSold * itemCost;
             if (numSold == 0) {
                 player.sendMessage(new TextComponent("No matching item found."), player.getUUID());
                 AdminShop.LOGGER.error("No matching item found.");

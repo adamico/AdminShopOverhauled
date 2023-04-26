@@ -152,9 +152,11 @@ public class Shop {
         }
 
             //Check if price is a number
+        int price;
         try {
-            Double.parseDouble(line[3]);
+            price = Integer.parseInt(line[3]);
         }catch (NumberFormatException e){
+            price = 1;
             errors.add("Line "+lineNumber+":\tFourth column must be a number, decimals optional.");
             isError = true;
         }
@@ -245,6 +247,7 @@ public class Shop {
                 .setIsItem(isItem)
                 .setIsTag(isTag)
                 .setData(nameBuilder.toString(), nbt)
+                .setPrice(price)
                 .build();
 
             //Check if ShopItem was created correctly

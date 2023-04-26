@@ -4,6 +4,7 @@ import com.vnator.adminshop.AdminShop;
 import com.vnator.adminshop.setup.Config;
 import net.minecraft.nbt.CompoundTag;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Objects;
@@ -26,15 +27,26 @@ public class BankAccount {
         this.id = 1;
         this.balance = Config.STARTING_MONEY.get();
     }
+    public BankAccount(String own, int nid) {
+        this.owner = own;
+        this.members = new HashSet<>();
+        this.members.add(own);
+        this.id = nid;
+        this.balance = (id == 1) ? Config.STARTING_MONEY.get() : 0L;
+    }
 
     public BankAccount(String own, Set<String> mem, int nid) {
-        if(nid == 1){
-            throw new RuntimeException("Can't set shared bank account id to 1!");
-        }
         this.owner = own;
         this.members = mem;
         this.id = nid;
         this.balance = 0;
+    }
+
+    public BankAccount(String own, Set<String> mem, int nid, long bal) {
+        this.owner = own;
+        this.members = mem;
+        this.id = nid;
+        this.balance = bal;
     }
 
     public CompoundTag serializeTag() {

@@ -24,6 +24,7 @@ public class ShopItem {
     private boolean isBuy;
     private boolean isItem;
     private boolean isTag;
+    private int price;
 
     private ItemStack item;
     private FluidStack fluid;
@@ -36,6 +37,11 @@ public class ShopItem {
     }
 
     public ItemStack getItem(){return item;}
+
+    public int getPrice() {
+        return price;
+    }
+
     public FluidStack getFluid(){return fluid;}
     public TagKey<Item> getTagItem(){return itemTag;}
     public TagKey<Fluid> getTagFluid(){return fluidTag;}
@@ -45,7 +51,7 @@ public class ShopItem {
     public boolean isTag(){return isTag;}
 
     static class Builder{
-        private ShopItem instance;
+        private final ShopItem instance;
 
         public Builder(){
             instance = new ShopItem();
@@ -63,6 +69,11 @@ public class ShopItem {
 
         public Builder setIsTag(boolean b){
             instance.isTag = b;
+            return this;
+        }
+
+        public Builder setPrice(int p) {
+            instance.price = p;
             return this;
         }
 
@@ -105,9 +116,9 @@ public class ShopItem {
      * @return Display name of the item/fluid contained in this
      */
     public String toString(){
-        if(isItem && !isTag)    //Item
-            return I18n.get(item.getItem().toString());
-        else if(isItem)         //Item Tag
+        if(isItem && !isTag) {   //Item
+            return item.getItem().getDefaultInstance().getDisplayName().getString();
+        } else if(isItem)         //Item Tag
             return I18n.get("gui.item_tag") + ": " + itemTag.location();
         else if(!isTag)         //Fluid
             return fluid.getDisplayName().getString();

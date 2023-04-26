@@ -8,6 +8,7 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.world.inventory.InventoryMenu;
@@ -98,7 +99,7 @@ public class ShopButton extends Button {
 
     public List<Component> getTooltipContent(){
         return List.of(
-                new TextComponent(item.toString())
+                new TextComponent("$"+item.getPrice()+" "+item.toString())
         );
     }
 

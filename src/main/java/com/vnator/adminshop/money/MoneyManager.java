@@ -11,16 +11,13 @@ import net.minecraft.world.level.storage.DimensionDataStorage;
 import net.minecraftforge.server.ServerLifecycleHooks;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class MoneyManager extends SavedData {
 
     private static final String COMPOUND_TAG_NAME = "adminshop_ledger";
 
-    private final List<BankAccount> accountList = new ArrayList<>();
+    private final Set<BankAccount> accountSet = new HashSet<>();
     private final Map<String, Integer> accountsOwned = new HashMap<>();
     private final Map<String, Map<Integer, BankAccount>> sortedAccountMap = new HashMap<>();
     private final Map<String, List<BankAccount>> sharedAccounts = new HashMap<>();
@@ -30,8 +27,8 @@ public class MoneyManager extends SavedData {
         return sharedAccounts;
     }
 
-    public List<BankAccount> getAccountList() {
-        return accountList;
+    public Set<BankAccount> getAccountSet() {
+        return accountSet;
     }
 
     //"Singleton" getter
@@ -57,7 +54,7 @@ public class MoneyManager extends SavedData {
             newPlayerMap.put(1, newAccount);
             sortedAccountMap.put(player, newPlayerMap);
             accountsOwned.put(player, 1);
-            accountList.add(sortedAccountMap.get(player).get(id));
+            accountSet.add(sortedAccountMap.get(player).get(id));
             setDirty();
         }
         return sortedAccountMap.get(player).get(id);
@@ -103,13 +100,13 @@ public class MoneyManager extends SavedData {
     public MoneyManager(CompoundTag tag){
         if (tag.contains(COMPOUND_TAG_NAME)) {
             ListTag ledger = tag.getList(COMPOUND_TAG_NAME, 10);
-            accountList.clear();
+            accountSet.clear();
             accountsOwned.clear();
             sortedAccountMap.clear();
             sharedAccounts.clear();
             ledger.forEach((accountTag) -> {
                 BankAccount bankAccount = BankAccount.deserializeTag((CompoundTag) accountTag);
-                accountList.add(bankAccount);
+                accountSet.add(bankAccount);
 
                 // add to sorted accounts maps
                 String owner = bankAccount.getOwner();
@@ -148,7 +145,7 @@ public class MoneyManager extends SavedData {
     public @NotNull CompoundTag save(CompoundTag tag) {
         ListTag ledger = new ListTag();
 
-        accountList.forEach((account) -> {
+        accountSet.forEach((account) -> {
             CompoundTag bankAccountTag = account.serializeTag();
             ledger.add(bankAccountTag);
         });
