@@ -67,7 +67,7 @@ public class PacketPurchaseRequest {
             // Sync money with client
             ServerPlayer player = ctx.getSender();
             assert player != null;
-            Messages.sendToPlayer(new PacketSyncMoneyToClient(MoneyManager.get(ctx.getSender().getLevel()).getBalance(
+            Messages.sendToPlayer(new PacketSyncMoneyToClient(MoneyManager.get(player.getLevel()).getBalance(
                     player.getStringUUID())), player);
 
         });
