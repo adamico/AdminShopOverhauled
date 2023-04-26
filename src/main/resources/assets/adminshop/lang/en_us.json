@@ -5,7 +5,7 @@
   "screen.adminshop.shop": "Shop",
   "gui.buy": "Buy",
   "gui.sell": "Sell",
-  "gui.money_message": "Money: $",
+  "gui.money_message": "$",
   "gui.item_tag": "Item Tag",
   "gui.fluid_tag": "Fluid Tag",
   "block.adminshop.atm": "ATM",

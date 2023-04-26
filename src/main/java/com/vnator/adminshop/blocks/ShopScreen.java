@@ -103,7 +103,8 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         //Player Balance
         drawString(matrixStack, Minecraft.getInstance().font,
                 I18n.get(GUI_MONEY) + shopContainer.getPlayerBalance(),
-                10, 10, 0xffffff); //x, y, color
+                getXSize() - font.width(I18n.get(GUI_MONEY) + "0000000") - 8,
+                6, 0xffffff); //x, y, color
 
         //Tooltip for item the player is hovering over
         List<ShopButton> shopButtons = getVisibleShopButtons();
