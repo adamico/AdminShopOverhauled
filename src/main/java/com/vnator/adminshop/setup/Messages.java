@@ -1,10 +1,7 @@
 package com.vnator.adminshop.setup;
 
 import com.vnator.adminshop.AdminShop;
-import com.vnator.adminshop.network.PacketATMWithdraw;
-import com.vnator.adminshop.network.PacketPurchaseRequest;
-import com.vnator.adminshop.network.PacketSyncMoneyToClient;
-import com.vnator.adminshop.network.PacketSyncShopToClient;
+import com.vnator.adminshop.network.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkDirection;
@@ -52,6 +49,7 @@ public class Messages {
                 .encoder(PacketSyncShopToClient::toBytes)
                 .consumer(PacketSyncShopToClient::handle)
                 .add();
+
     }
 
     public static <MSG> void sendToServer(MSG message) {

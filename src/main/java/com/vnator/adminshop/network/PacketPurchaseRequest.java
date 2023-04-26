@@ -1,6 +1,8 @@
 package com.vnator.adminshop.network;
 
+import com.ibm.icu.impl.Pair;
 import com.vnator.adminshop.AdminShop;
+import com.vnator.adminshop.money.BankAccount;
 import com.vnator.adminshop.money.MoneyManager;
 import com.vnator.adminshop.setup.Messages;
 import com.vnator.adminshop.shop.Shop;
@@ -19,14 +21,37 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
+import static java.lang.Math.ceil;
+
 public class PacketPurchaseRequest {
 
     private final boolean isBuy;
     private final int category;
     private final int itemIndex;
     private final int quantity;
+    private final String accOwner;
+    private final int accID;
 
-    public PacketPurchaseRequest(boolean isBuy, int category, int itemIndex, int quantity){
+    public PacketPurchaseRequest(BankAccount bankAccount, boolean isBuy, int category, int itemIndex, int quantity){
+        this.accOwner = bankAccount.getOwner();
+        this.accID = bankAccount.getId();
+        this.isBuy = isBuy;
+        this.category = category;
+        this.itemIndex = itemIndex;
+        this.quantity = quantity;
+    }
+    public PacketPurchaseRequest(Pair<String, Integer> bankAccount, boolean isBuy, int category, int itemIndex, int quantity){
+        this.accOwner = bankAccount.first;
+        this.accID = bankAccount.second;
+        this.isBuy = isBuy;
+        this.category = category;
+        this.itemIndex = itemIndex;
+        this.quantity = quantity;
+    }
+
+    public PacketPurchaseRequest(String owner, int ownerId, boolean isBuy, int category, int itemIndex, int quantity){
+        this.accOwner = owner;
+        this.accID = ownerId;
         this.isBuy = isBuy;
         this.category = category;
         this.itemIndex = itemIndex;
@@ -34,6 +59,8 @@ public class PacketPurchaseRequest {
     }
 
     public PacketPurchaseRequest(FriendlyByteBuf buf){
+        accOwner = buf.readUtf();
+        accID = buf.readInt();
         isBuy = buf.readBoolean();
         category = buf.readInt();
         itemIndex = buf.readInt();
@@ -41,6 +68,8 @@ public class PacketPurchaseRequest {
     }
 
     public void toBytes(FriendlyByteBuf buf){
+        buf.writeUtf(accOwner);
+        buf.writeInt(accID);
         buf.writeBoolean(isBuy);
         buf.writeInt(category);
         buf.writeInt(itemIndex);
@@ -95,13 +124,15 @@ public class PacketPurchaseRequest {
                 }
                 // TODO Read item's price
                 int tempPrice = 10;
-                float price = (quantity - returned.getCount()) * tempPrice;
-                boolean success = MoneyManager.get(player.getLevel()).subtractBalance(player.getStringUUID(), (long) price);
+                long price = (long) ceil((quantity - returned.getCount()) * tempPrice);
+
+
+                boolean success = MoneyManager.get(player.getLevel()).subtractBalance(accOwner, accID, price);
                 if (success) {
                     ItemHandlerHelper.insertItemStacked(iItemHandler, toInsert, false);
                 } else {
-                    player.sendMessage(new TextComponent("Not enough money!"), player.getUUID());
-                    AdminShop.LOGGER.error("Not enough money to perform transaction.");
+                    player.sendMessage(new TextComponent("Not enough money in account!"), player.getUUID());
+                    AdminShop.LOGGER.error("Not enough money in account to perform transaction.");
                 }
             } // else {
                 // TODO fluid logic
@@ -121,14 +152,14 @@ public class PacketPurchaseRequest {
             int numSold = removeItemsFromInventory(iItemHandler, toRemove);
             // TODO Read item's price
             int tempPrice = 10;
-            float price = numSold * tempPrice;
+            long price = (long) numSold * tempPrice;
             if (numSold == 0) {
                 player.sendMessage(new TextComponent("No matching item found."), player.getUUID());
                 AdminShop.LOGGER.error("No matching item found.");
                 return;
             }
 
-            boolean success = MoneyManager.get(player.getLevel()).addBalance(player.getStringUUID(), (long) price);
+            boolean success = MoneyManager.get(player.getLevel()).addBalance(accOwner, accID, price);
             if (success) {
                 AdminShop.LOGGER.info("Sold item.");
             } else {
@@ -178,4 +209,5 @@ public class PacketPurchaseRequest {
         System.out.println("Removed count: "+(item.getCount() - count));
         return item.getCount() - count;
     }
+
 }

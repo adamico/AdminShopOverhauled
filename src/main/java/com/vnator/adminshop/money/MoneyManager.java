@@ -19,13 +19,16 @@ import java.util.Map;
 public class MoneyManager extends SavedData {
 
     private static final String COMPOUND_TAG_NAME = "adminshop_ledger";
-//    private Map<String, Long> moneyMap = new HashMap<>();
 
-    private List<BankAccount> accountList = new ArrayList<>();
-    private Map<String, Integer> accountsOwned = new HashMap<>();
-    private Map<String, Map<Integer, BankAccount>> sortedAccountMap = new HashMap<>();
+    private final List<BankAccount> accountList = new ArrayList<>();
+    private final Map<String, Integer> accountsOwned = new HashMap<>();
+    private final Map<String, Map<Integer, BankAccount>> sortedAccountMap = new HashMap<>();
+    private final Map<String, List<BankAccount>> sharedAccounts = new HashMap<>();
 
 
+    public Map<String, List<BankAccount>> getSharedAccounts() {
+        return sharedAccounts;
+    }
 
     //"Singleton" getter
     public static MoneyManager get(Level checkLevel){
@@ -78,6 +81,10 @@ public class MoneyManager extends SavedData {
         setDirty();
         return getBankAccount(player, 1).subtractBalance(amount);
     }
+    public boolean subtractBalance(String player, int id, long amount){
+        setDirty();
+        return getBankAccount(player, id).subtractBalance(amount);
+    }
 
     public boolean setBalance(String player, long amount){
         if(amount < 0) return false;
@@ -92,11 +99,15 @@ public class MoneyManager extends SavedData {
     public MoneyManager(CompoundTag tag){
         if (tag.contains(COMPOUND_TAG_NAME)) {
             ListTag ledger = tag.getList(COMPOUND_TAG_NAME, 10);
+            accountList.clear();
+            accountsOwned.clear();
+            sortedAccountMap.clear();
+            sharedAccounts.clear();
             ledger.forEach((accountTag) -> {
                 BankAccount bankAccount = BankAccount.deserializeTag((CompoundTag) accountTag);
                 accountList.add(bankAccount);
 
-                // add to sorted accounts
+                // add to sorted accounts maps
                 String owner = bankAccount.getOwner();
                 int id = bankAccount.getId();
                 if (accountsOwned.containsKey(owner)) {
@@ -112,6 +123,19 @@ public class MoneyManager extends SavedData {
                     newPlayerMap.put(1, bankAccount);
                     sortedAccountMap.put(owner, newPlayerMap);
                 }
+
+                // create shared accounts list
+                bankAccount.getMembers().forEach(member -> {
+                    List<BankAccount> sharedAccountsList;
+                    if (!sharedAccounts.containsKey(member)) {
+                        sharedAccountsList = new ArrayList<>();
+
+                    } else {
+                        sharedAccountsList = sharedAccounts.get(member);
+                    }
+                    sharedAccountsList.add(bankAccount);
+                    sharedAccounts.put(member, sharedAccountsList);
+                });
             });
         }
     }

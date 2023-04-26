@@ -1,5 +1,6 @@
 package com.vnator.adminshop.blocks;
 
+import com.ibm.icu.impl.Pair;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.vnator.adminshop.AdminShop;
@@ -7,6 +8,7 @@ import com.vnator.adminshop.client.gui.BuySellButton;
 import com.vnator.adminshop.client.gui.CategoryButton;
 import com.vnator.adminshop.client.gui.ScrollButton;
 import com.vnator.adminshop.client.gui.ShopButton;
+import com.vnator.adminshop.money.ClientMoneyData;
 import com.vnator.adminshop.network.PacketPurchaseRequest;
 import com.vnator.adminshop.setup.Messages;
 import com.vnator.adminshop.shop.Shop;
@@ -45,6 +47,9 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
     private int buyCategory; //Currently selected category for the Buy option
     private int sellCategory;
     private boolean isBuy; //Whether the Buy option is currently selected
+    private String playerUUID;
+    private List<Pair<String, Integer>> sharedAccountsList = new ArrayList<>();
+    private Pair<String, Integer> bankAccount;
 
     private BuySellButton buySellButton;
     private ScrollButton upButton;
@@ -54,9 +59,18 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
 
     public ShopScreen(ShopContainer container, Inventory inv, Component name) {
         super(container, inv, name);
+
+        assert Minecraft.getInstance().player != null;
+        assert Minecraft.getInstance().level != null;
+        assert Minecraft.getInstance().level.isClientSide;
+
+        this.playerUUID = Minecraft.getInstance().player.getStringUUID();
+        this.sharedAccountsList = ClientMoneyData.getSharedAccountsList();
+        this.bankAccount = Pair.of(playerUUID, 1); // default bank account is personal account
         this.shopContainer = container;
         this.imageWidth = 195;
         this.imageHeight = 222;
+
         buyButtons = new ArrayList<>();
         sellButtons = new ArrayList<>();
         buyCategoryButtons = new ArrayList<>();
@@ -83,7 +97,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
     }
 
     @Override
-    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks){
+    public void render(@NotNull PoseStack matrixStack, int mouseX, int mouseY, float partialTicks){
         this.renderBackground(matrixStack);
         super.render(matrixStack, mouseX, mouseY, partialTicks);
         this.renderTooltip(matrixStack, mouseX, mouseY);
@@ -103,7 +117,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         //Player Balance
         drawString(matrixStack, Minecraft.getInstance().font,
                 I18n.get(GUI_MONEY) + shopContainer.getPlayerBalance(),
-                getXSize() - font.width(I18n.get(GUI_MONEY) + "0000000") - 8,
+                getXSize() - font.width(I18n.get(GUI_MONEY) + "00000000") - 8,
                 6, 0xffffff); //x, y, color
 
         //Tooltip for item the player is hovering over
@@ -129,7 +143,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         List<List<ShopItem>> shopItems = isBuy ? Shop.get().shopStockBuy : Shop.get().shopStockSell;
         List<List<ShopButton>> shopButtons = isBuy ? buyButtons : sellButtons;
         //Clear shop buttons if they already exist
-        shopButtons.forEach(l -> l.forEach(b -> removeWidget(b)));
+        shopButtons.forEach(l -> l.forEach(this::removeWidget));
         shopButtons.clear();
         for(int i = 0; i < shopItems.size(); i++){
             shopButtons.add(new ArrayList<>());
@@ -140,7 +154,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
                         x+SHOP_BUTTON_X+SHOP_BUTTON_SIZE*(j%NUM_COLS),
                         y+SHOP_BUTTON_Y+SHOP_BUTTON_SIZE*((j/NUM_COLS)%NUM_ROWS), itemRenderer, (b) -> {
                     int quantity = ((ShopButton)b).getQuantity();
-                    attemptTransaction(isBuy, i2, j2, quantity);
+                    attemptTransaction(this.bankAccount, isBuy, i2, j2, quantity);
                 });
                 shopButtons.get(i).add(button);
                 button.visible = isBuy;
@@ -194,7 +208,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
     private void createCategoryButtons(boolean isBuy, int x, int y){
         List<CategoryButton> buttons = (isBuy ? buyCategoryButtons : sellCategoryButtons);
         if(buttons != null){
-            buttons.forEach(b -> removeWidget(b));
+            buttons.forEach(this::removeWidget);
             buttons.clear();
         }
         List<String> names = (isBuy ? Shop.get().categoryNamesBuy : Shop.get().categoryNamesSell);
@@ -215,7 +229,10 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
                 button.setSelected(true);
             }
             button.visible = isBuy == this.isBuy;
-            buttons.add(button);
+
+            if (buttons != null) {
+                buttons.add(button);
+            }
             addRenderableWidget(button);
         }
     }
@@ -243,8 +260,8 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         return categoryButtons.subList(numPassed, Math.min(numPassed+NUM_ROWS*NUM_COLS, categoryButtons.size()));
     }
 
-    private void attemptTransaction(boolean isbuy, int category, int index, int quantity){
-        Messages.sendToServer(new PacketPurchaseRequest(isbuy, category, index, quantity));
+    private void attemptTransaction(Pair<String, Integer> bankAccount, boolean isBuy, int category, int index, int quantity){
+        Messages.sendToServer(new PacketPurchaseRequest(bankAccount, isBuy, category, index, quantity));
     }
 
     private void printInfo(){

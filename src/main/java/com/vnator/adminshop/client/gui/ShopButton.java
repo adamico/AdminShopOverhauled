@@ -1,21 +1,17 @@
 package com.vnator.adminshop.client.gui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.vnator.adminshop.client.KeyInit;
 import com.vnator.adminshop.shop.ShopItem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.item.ItemStack;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
 
@@ -102,7 +98,7 @@ public class ShopButton extends Button {
 
     public List<Component> getTooltipContent(){
         return List.of(
-                new TextComponent(item.toString())
+                new TextComponent(item.getItem().getDisplayName().getContents())
         );
     }
 

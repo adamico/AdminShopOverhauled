@@ -60,27 +60,24 @@ public class BankAccount {
     public long getBalance() {
         return balance;
     }
-
     public void setBalance(long balance) {
         this.balance = balance;
     }
-
     public int getId() {
         return id;
     }
-
-    public String getOwner() {
-        return owner;
-    }
-
-    private void setOwner(String owner) {
-        this.owner = owner;
-    }
-
     public void setId(int id) {
         this.id = id;
     }
-
+    public String getOwner() {
+        return owner;
+    }
+    private void setOwner(String owner) {
+        this.owner = owner;
+    }
+    public Set<String> getMembers() {
+        return members;
+    }
     public void setMembers(Set<String> members) {
         this.members = members;
     }
