@@ -98,7 +98,7 @@ public class ShopButton extends Button {
 
     public List<Component> getTooltipContent(){
         return List.of(
-                new TextComponent(item.getItem().getDisplayName().getContents())
+                new TextComponent(item.toString())
         );
     }
 

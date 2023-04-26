@@ -30,6 +30,10 @@ public class MoneyManager extends SavedData {
         return sharedAccounts;
     }
 
+    public List<BankAccount> getAccountList() {
+        return accountList;
+    }
+
     //"Singleton" getter
     public static MoneyManager get(Level checkLevel){
         if(checkLevel.isClientSide()){

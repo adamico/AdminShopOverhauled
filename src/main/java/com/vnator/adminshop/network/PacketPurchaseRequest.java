@@ -19,6 +19,7 @@ import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.wrapper.PlayerMainInvWrapper;
 import net.minecraftforge.network.NetworkEvent;
 
+import java.util.*;
 import java.util.function.Supplier;
 
 import static java.lang.Math.ceil;
@@ -96,8 +97,16 @@ public class PacketPurchaseRequest {
             // Sync money with client
             ServerPlayer player = ctx.getSender();
             assert player != null;
-            Messages.sendToPlayer(new PacketSyncMoneyToClient(MoneyManager.get(player.getLevel()).getBalance(
-                    player.getStringUUID())), player);
+            Set<Pair<String, Integer>> sharedAccountsSet = new HashSet<>();
+            Map<Pair<String, Integer>, Long> accountBalanceMap = new HashMap<>();
+
+            MoneyManager moneyManager = MoneyManager.get(player.getLevel());
+            List<BankAccount> accountList = moneyManager.getAccountList();
+            accountList.forEach(account -> {
+                sharedAccountsSet.add(Pair.of(account.getOwner(), account.getId()));
+                accountBalanceMap.put(Pair.of(account.getOwner(), account.getId()), account.getBalance());
+            });
+            Messages.sendToPlayer(new PacketSyncMoneyToClient(sharedAccountsSet, accountBalanceMap), player);
 
         });
         return true;

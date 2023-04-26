@@ -21,9 +21,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
 
@@ -38,24 +36,24 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
     private static final int SHOP_BUTTON_SIZE = 18;
     public static final int SHOP_BUTTONS_PER_PAGE = 36;
 
-    private ShopContainer shopContainer;
+    private final ShopContainer shopContainer;
 
-    private List<List<ShopButton>> buyButtons;
-    private List<List<ShopButton>> sellButtons;
+    private final List<List<ShopButton>> buyButtons;
+    private final List<List<ShopButton>> sellButtons;
     private int[] buyCategoriesPage; //Current page for each category
     private int[] sellCategoriesPage;
     private int buyCategory; //Currently selected category for the Buy option
     private int sellCategory;
     private boolean isBuy; //Whether the Buy option is currently selected
-    private String playerUUID;
-    private List<Pair<String, Integer>> sharedAccountsList = new ArrayList<>();
+    private final String playerUUID;
+    private final Set<Pair<String, Integer>> sharedAccountsSet = new HashSet<>();
     private Pair<String, Integer> bankAccount;
 
     private BuySellButton buySellButton;
     private ScrollButton upButton;
     private ScrollButton downButton;
-    private List<CategoryButton> buyCategoryButtons;
-    private List<CategoryButton> sellCategoryButtons;
+    private final List<CategoryButton> buyCategoryButtons;
+    private final List<CategoryButton> sellCategoryButtons;
 
     public ShopScreen(ShopContainer container, Inventory inv, Component name) {
         super(container, inv, name);
@@ -65,7 +63,8 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         assert Minecraft.getInstance().level.isClientSide;
 
         this.playerUUID = Minecraft.getInstance().player.getStringUUID();
-        this.sharedAccountsList = ClientMoneyData.getSharedAccountsList();
+        this.sharedAccountsSet.clear();
+        this.sharedAccountsSet.addAll(ClientMoneyData.getSharedAccountsSet());
         this.bankAccount = Pair.of(playerUUID, 1); // default bank account is personal account
         this.shopContainer = container;
         this.imageWidth = 195;
@@ -93,7 +92,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         buyCategoriesPage = new int[buyButtons.size()];
         sellCategoriesPage = new int[sellButtons.size()];
         refreshShopButtons();
-        //printInfo();
+        printInfo();
     }
 
     @Override

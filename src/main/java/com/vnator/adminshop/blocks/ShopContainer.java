@@ -52,15 +52,17 @@ public class ShopContainer extends AbstractContainerMenu {
     }
 
     public long getPlayerBalance(){
+        // TODO add BankAccount-s functionality
         if(playerEntity.level.isClientSide()){
-            return ClientMoneyData.getMoney();
+            return ClientMoneyData.getMoney(playerEntity.getStringUUID(), 1);
         }
         return MoneyManager.get(playerEntity.level).getBalance(playerEntity.getStringUUID());
     }
 
     public void setPlayerBalance(int value, int index){
-        long money = ClientMoneyData.getMoney();
-        long change = value << (index*16);
+        // TODO add BankAccount-s functionality
+        long money = ClientMoneyData.getMoney(playerEntity.getStringUUID(), 1);
+        long change = (long) value << (index*16);
         ClientMoneyData.setMoney(money | change);
     }
 
