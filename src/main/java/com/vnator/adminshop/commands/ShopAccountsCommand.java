@@ -1,10 +1,10 @@
 package com.vnator.adminshop.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
-import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.vnator.adminshop.AdminShop;
 import com.vnator.adminshop.money.BankAccount;
@@ -12,15 +12,12 @@ import com.vnator.adminshop.money.MoneyManager;
 import com.vnator.adminshop.network.MojangAPI;
 import com.vnator.adminshop.network.PacketSyncMoneyToClient;
 import com.vnator.adminshop.setup.Messages;
-import net.minecraft.client.Minecraft;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.player.Player;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class ShopAccountsCommand {
 
@@ -29,15 +26,15 @@ public class ShopAccountsCommand {
 
         // /shopAccounts info
         LiteralArgumentBuilder<CommandSourceStack> infoCommand = Commands.literal("info")
-                .executes(command -> { return info(command.getSource()); });
+                .executes(command -> info(command.getSource()));
 
         // /shopAccounts listAccounts
         LiteralArgumentBuilder<CommandSourceStack> listAccountsCommand = Commands.literal("listAccounts")
-                        .executes((command) -> { return listAccounts(command.getSource()); });
+                        .executes(command -> listAccounts(command.getSource()));
 
         // /shopAccounts createAccount [<members>]
         LiteralArgumentBuilder<CommandSourceStack> createAccountCommand = Commands.literal("createAccount")
-                        .executes((command) -> { return createAccount(command.getSource()); });
+                        .executes(command -> createAccount(command.getSource()));
         RequiredArgumentBuilder<CommandSourceStack, String> createAccountWithMembersCommand =
                 Commands.argument("members", StringArgumentType.greedyString())
                         .executes((command) -> {
@@ -46,9 +43,18 @@ public class ShopAccountsCommand {
                         });
         createAccountCommand.then(createAccountWithMembersCommand);
 
+        // /shopAccounts deleteAccount [id]
+        LiteralArgumentBuilder<CommandSourceStack> deleteAccountCommand = Commands.literal("deleteAccount")
+                        .then(Commands.argument("id", IntegerArgumentType.integer()))
+                        .executes(command -> {
+                            int id = IntegerArgumentType.getInteger(command, "id");
+                            return deleteAccount(command.getSource(), id);
+                        });
+
         shopAccountsCommand.then(infoCommand)
                         .then(listAccountsCommand)
-                        .then(createAccountCommand);
+                        .then(createAccountCommand)
+                        .then(deleteAccountCommand);
         dispatcher.register(shopAccountsCommand);
     }
 
@@ -75,15 +81,31 @@ public class ShopAccountsCommand {
             AdminShop.LOGGER.error("No accounts found for "+player.getName().getString());
             returnMessage.append("None");
         } else {
-            moneyManager.getSharedAccounts().get(playerUUID)
-                    .forEach(bankAccount -> {
-                returnMessage.append("$");
-                returnMessage.append(bankAccount.getBalance());
-                returnMessage.append(": ");
-                returnMessage.append(MojangAPI.getUsernameByUUID(bankAccount.getOwner()));
-                returnMessage.append(':');
-                returnMessage.append(bankAccount.getId());
-                returnMessage.append("\n");
+            List<BankAccount> sharedAccountsSorted = moneyManager.getSharedAccounts().get(playerUUID);
+            sharedAccountsSorted.sort((o1, o2) -> {
+                if (o1.getOwner().equals(playerUUID) && !o2.getOwner().equals(playerUUID)) {
+                    return -1;
+                } else if (!o1.getOwner().equals(playerUUID) && o2.getOwner().equals(playerUUID)) {
+                    return 1;
+                } else if (o1.getOwner().equals(o2.getOwner())) {
+                    return Integer.compare(o1.getId(), o2.getId());
+                } else {
+                    return o1.getOwner().compareTo(o2.getOwner());
+                }}
+            );
+            sharedAccountsSorted.forEach(bankAccount -> {
+            returnMessage.append("$");
+            returnMessage.append(bankAccount.getBalance());
+            returnMessage.append(": ");
+            returnMessage.append(MojangAPI.getUsernameByUUID(bankAccount.getOwner()));
+            returnMessage.append(":");
+            returnMessage.append(bankAccount.getId());
+            returnMessage.append("\nMembers: ");
+            bankAccount.getMembers().forEach(memberUUID -> {
+                returnMessage.append(MojangAPI.getUsernameByUUID(memberUUID));
+                returnMessage.append(" ");
+            });
+            returnMessage.append("\n");
             });
         }
 
@@ -150,14 +172,53 @@ public class ShopAccountsCommand {
         }
 
         // If successful, sync client data to each member and return new ID to command
-        MoneyManager moneyManager = MoneyManager.get(player.getLevel());
+        MoneyManager moneyManager = MoneyManager.get(source.getLevel());
         Set<BankAccount> accountSet = moneyManager.getAccountSet();
 
         // Sync client data with all members
-        memberPlayers.forEach(member -> {
-                Messages.sendToPlayer(new PacketSyncMoneyToClient(accountSet), member);
-        });
+        memberPlayers.forEach(member -> Messages.sendToPlayer(new PacketSyncMoneyToClient(accountSet), member));
         source.sendSuccess(new TextComponent("Created new account with ID "+newId), true);
+        return 1;
+    }
+
+    private static int deleteAccount(CommandSourceStack source, int id) throws CommandSyntaxException {
+        // Check if trying to delete personal account
+        if (id == 1) {
+            AdminShop.LOGGER.error("Can't delete personal account!");
+            source.sendFailure(new TextComponent("Can't delete personal (id 1) account!"));
+            return 0;
+        }
+        // Get player and moneyManager
+        ServerPlayer player = source.getPlayerOrException();
+        MoneyManager moneyManager = MoneyManager.get(source.getLevel());
+        // Check if player has account with said ID
+        if (!moneyManager.existsBankAccount(player.getStringUUID(), id)) {
+            source.sendFailure(new TextComponent("There are no accounts you own with said ID!"));
+            return 0;
+        }
+        // Get list of to-be-deleted account's memberUUIDs
+        Set<String> memberUUIDs = moneyManager.getBankAccount(player.getStringUUID(), id).getMembers();
+        // Delete bank account
+        boolean success = moneyManager.deleteBankAccount(player.getStringUUID(), id);
+        if(!success) {
+            AdminShop.LOGGER.error("Error deleting bank account!");
+            source.sendFailure(new TextComponent("Error deleting bank account!"));
+        }
+
+        // Get list of online deleted account members
+        List<ServerPlayer> onlinePlayers = source.getLevel().players();
+        List<ServerPlayer> onlineMembers = new ArrayList<>();
+        memberUUIDs.forEach(name -> {
+            Optional<ServerPlayer> searchPlayer = onlinePlayers.stream().filter(serverPlayer ->
+                    serverPlayer.getStringUUID().equals(name)).findAny();
+            searchPlayer.ifPresent(onlineMembers::add);
+        });
+
+        // Sync client data with all onlineMembers
+        Set<BankAccount> accountSet = moneyManager.getAccountSet();
+        onlineMembers.forEach(memberPlayer -> Messages.sendToPlayer(
+                new PacketSyncMoneyToClient(accountSet), memberPlayer));
+
         return 1;
     }
 }

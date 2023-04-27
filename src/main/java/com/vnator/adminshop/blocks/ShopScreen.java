@@ -18,10 +18,7 @@ import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.EntityGetter;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -83,13 +80,11 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         }
 
         this.usableAccounts.clear();
-//        this.usableAccounts.add(personalAccount);
-//        List<BankAccount> usableBankAccounts = accountMap.values().stream().filter(account -> (account.getMembers()
-//                .contains(playerUUID) && !account.getOwner().equals(playerUUID))).toList();
         List<BankAccount> usableBankAccounts = this.accountMap.values().stream().filter(account -> (account.getMembers()
                 .contains(playerUUID) || account.getOwner().equals(playerUUID))).toList();
         this.usableAccounts.addAll(usableBankAccounts.stream().map(account -> Pair.of(account.getOwner(),
                 account.getId())).collect(Collectors.toSet()));
+        sortUsableAccounts();
         this.usableAccountsIndex = 0;
 
         this.shopContainer = container;
@@ -135,7 +130,6 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         //Block Title
         String blockName = I18n.get(ShopBlock.SCREEN_ADMINSHOP_SHOP);
         drawCenteredString(matrixStack, font, blockName, getXSize()/2, 6, 0xffffff);
-        //drawString(name, getXSize()/2 - string getStringWidth(name)/2, 6, 0x404040);
 
         //Player Inventory Title
         drawString(matrixStack, font, playerInventoryTitle, 16, getYSize()-94, 0xffffff);
@@ -206,6 +200,24 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         addRenderableWidget(changeAccountButton);
     }
 
+    // Sort usableAccounts, first by pair.first == playerUUID, if not sort alphabetically, then by pair.second in
+    // ascending order. Index is preserved to the original account it pointed to.
+    private void sortUsableAccounts() {
+        Pair<String, Integer> selectedBankAccount = usableAccounts.get(usableAccountsIndex);
+        this.usableAccounts.sort((o1, o2) -> {
+            if (o1.first.equals(playerUUID) && !o2.first.equals(playerUUID)) {
+                return -1;
+            } else if (!o1.first.equals(playerUUID) && o2.first.equals(playerUUID)) {
+                return 1;
+            } else if (o1.first.equals(o2.first)) {
+                return o1.second.compareTo(o2.second);
+            } else {
+                return o1.first.compareTo(o2.first);
+            }
+        });
+        this.usableAccountsIndex = usableAccounts.indexOf(selectedBankAccount);
+    }
+
     private void changeAccounts() {
         // Refresh account map
         this.accountMap = ClientMoneyData.getAccountMap();
@@ -219,7 +231,9 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         if(!new HashSet<>(this.usableAccounts).containsAll(newUsableAccounts)) {
             newUsableAccounts.forEach(account -> {
                 if(!this.usableAccounts.contains(account)) {
+                    // Add new account, and sort
                     usableAccounts.add(account);
+                    sortUsableAccounts();
                 }
             });
         }
@@ -229,13 +243,16 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
             usableAccounts.forEach(account -> {
                 if(!newUsableAccounts.contains(account)) {
                     boolean isCurrentIndex = usableAccounts.indexOf(account) == this.usableAccountsIndex;
-                    // Assume there is at least one other bank account in usableAccounts if we are removing one
-                    assert this.usableAccounts.size() > 1;
-                    // Remove this account
-                    this.usableAccounts.remove(account);
-                    // reset index if removed account used to be the current index
-                    if (isCurrentIndex) {
-                        this.usableAccountsIndex = 0;
+                    // We can never remove the first account (personal account)
+                    if (!(this.usableAccounts.size() > 1 && !this.usableAccounts.get(0).equals(account))) {
+                        AdminShop.LOGGER.error("Missing personal account in accountMap!");
+                    } else {
+                        // Remove this account
+                        this.usableAccounts.remove(account);
+                        // reset index if removed account used to be the current index
+                        if (isCurrentIndex) {
+                            this.usableAccountsIndex = 0;
+                        }
                     }
                 }
             });

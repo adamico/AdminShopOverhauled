@@ -114,7 +114,11 @@ public class MoneyManager extends SavedData {
             BankAccount newAccount = new BankAccount(owner);
             newPlayerMap.put(1, newAccount);
             sortedAccountMap.put(owner, newPlayerMap);
-            accountsOwned.put(owner, 1);
+            if (!accountsOwned.containsKey(owner)) {
+                accountsOwned.put(owner, 1);
+            } else {
+                accountsOwned.put(owner, accountsOwned.get(owner)+1);
+            }
             if (!sharedAccounts.containsKey(owner)) {
                 sharedAccounts.put(owner, new ArrayList<>());
             }
@@ -124,6 +128,45 @@ public class MoneyManager extends SavedData {
         }
         return sortedAccountMap.get(owner).get(id);
     }
+
+    /**
+     * Deletes bank account from memory. Can't delete personal accounts (id 1)
+     * @param owner the owner UUID
+     * @param id the account's ID
+     * @return true if successful, false if not
+     */
+    public boolean deleteBankAccount(String owner, int id) {
+        // Check if trying to delete personal account
+        if (id == 1) {
+            AdminShop.LOGGER.error("Cannot delete personal account!");
+            return false;
+        }
+        // Check if account exists
+        if (!existsBankAccount(owner, id)) {
+            AdminShop.LOGGER.error("Trying to delete an account which does not exist!");
+            return false;
+        }
+        // Get account
+        BankAccount toDelete = getBankAccount(owner, id);
+
+        // Delete account from set and relevant maps
+        accountSet.remove(toDelete);
+        accountsOwned.put(owner, accountsOwned.get(owner) - 1);
+        sortedAccountMap.get(owner).remove(id);
+        toDelete.getMembers().forEach(member -> sharedAccounts.get(member).remove(toDelete));
+        return true;
+    }
+
+    /**
+     * Checks if said bank account exists
+     * @param owner Owner UUID
+     * @param id Account ID
+     * @return true if account exists, false otherwise
+     */
+    public boolean existsBankAccount(String owner, int id) {
+        return sortedAccountMap.containsKey(owner) && sortedAccountMap.get(owner).containsKey(id);
+    }
+
     //Money getters/setters
 
     /**

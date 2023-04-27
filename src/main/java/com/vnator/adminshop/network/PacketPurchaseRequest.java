@@ -94,15 +94,22 @@ public class PacketPurchaseRequest {
                 sellTransaction(supplier, shopItem, quantity);
             }
 
-            // Sync money with client
-            AdminShop.LOGGER.info("Syncing money with client");
+            // Sync money with affected clients
+            AdminShop.LOGGER.info("Syncing money with clients");
             ServerPlayer player = ctx.getSender();
             assert player != null;
 
+            // Get current bank account
             MoneyManager moneyManager = MoneyManager.get(player.getLevel());
             Set<BankAccount> accountSet = moneyManager.getAccountSet();
-            Messages.sendToPlayer(new PacketSyncMoneyToClient(accountSet), player);
+            BankAccount currentAccount = moneyManager.getBankAccount(this.accOwner, this.accID);
 
+            // Sync money with bank account's members
+            assert currentAccount.getMembers().contains(this.accOwner);
+            currentAccount.getMembers().forEach(memberUUID -> {
+                Messages.sendToPlayer(new PacketSyncMoneyToClient(accountSet), (ServerPlayer) player.getLevel()
+                        .getPlayerByUUID(UUID.fromString(memberUUID)));
+            });
         });
         return true;
     }
