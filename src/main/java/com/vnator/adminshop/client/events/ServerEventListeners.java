@@ -1,4 +1,4 @@
-package com.vnator.adminshop.shop;
+package com.vnator.adminshop.client.events;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.vnator.adminshop.AdminShop;
@@ -8,6 +8,7 @@ import com.vnator.adminshop.money.MoneyManager;
 import com.vnator.adminshop.network.PacketSyncMoneyToClient;
 import com.vnator.adminshop.network.PacketSyncShopToClient;
 import com.vnator.adminshop.setup.Messages;
+import com.vnator.adminshop.shop.Shop;
 import net.minecraft.client.Minecraft;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.level.ServerLevel;
@@ -18,6 +19,7 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
+@Mod.EventBusSubscriber(modid = AdminShop.MODID)
 public class ServerEventListeners {
 
     @SubscribeEvent
