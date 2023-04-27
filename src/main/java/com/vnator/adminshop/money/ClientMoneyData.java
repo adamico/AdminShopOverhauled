@@ -2,10 +2,11 @@ package com.vnator.adminshop.money;
 
 import com.ibm.icu.impl.Pair;
 import com.vnator.adminshop.AdminShop;
-import com.vnator.adminshop.setup.Config;
-import net.minecraft.client.Minecraft;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class ClientMoneyData {
 

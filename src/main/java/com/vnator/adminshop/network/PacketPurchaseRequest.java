@@ -98,8 +98,6 @@ public class PacketPurchaseRequest {
             AdminShop.LOGGER.info("Syncing money with client");
             ServerPlayer player = ctx.getSender();
             assert player != null;
-            Set<Pair<String, Integer>> sharedAccountsSet = new HashSet<>();
-            Map<Pair<String, Integer>, Long> accountBalanceMap = new HashMap<>();
 
             MoneyManager moneyManager = MoneyManager.get(player.getLevel());
             Set<BankAccount> accountSet = moneyManager.getAccountSet();

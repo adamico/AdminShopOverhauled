@@ -1,5 +1,6 @@
 package com.vnator.adminshop.blocks;
 
+import com.ibm.icu.impl.Pair;
 import com.vnator.adminshop.AdminShop;
 import com.vnator.adminshop.money.BankAccount;
 import com.vnator.adminshop.money.ClientMoneyData;
@@ -57,7 +58,7 @@ public class ShopContainer extends AbstractContainerMenu {
     }
 
     public long getPlayerBalance(){
-        // TODO add BankAccount-s functionality
+        // add BankAccount-s functionality
         if(playerEntity.level.isClientSide()){
             Set<BankAccount> accountSet = ClientMoneyData.getAccountSet();
             BankAccount personalAccount;
@@ -73,11 +74,11 @@ public class ShopContainer extends AbstractContainerMenu {
             }
             return personalAccount.getBalance();
         }
-        return MoneyManager.get(playerEntity.level).getBalance(playerEntity.getStringUUID());
+        return MoneyManager.get(playerEntity.level).getBalance(playerEntity.getStringUUID(), 1);
     }
 
     public void setPlayerBalance(int value, int index){
-        // TODO add BankAccount-s functionality
+        // add BankAccount-s functionality
         long money = getPlayerBalance();
         long change = (long) value << (index*16);
 
