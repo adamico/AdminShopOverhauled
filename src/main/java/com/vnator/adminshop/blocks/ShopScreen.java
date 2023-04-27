@@ -7,6 +7,7 @@ import com.vnator.adminshop.AdminShop;
 import com.vnator.adminshop.client.gui.*;
 import com.vnator.adminshop.money.BankAccount;
 import com.vnator.adminshop.money.ClientMoneyData;
+import com.vnator.adminshop.network.MojangAPI;
 import com.vnator.adminshop.network.PacketPurchaseRequest;
 import com.vnator.adminshop.setup.Messages;
 import com.vnator.adminshop.shop.Shop;
@@ -17,7 +18,10 @@ import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.EntityGetter;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -191,8 +195,9 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         changeAccountButton = new ChangeAccountButton(x+9, y+108, (b) -> {
             changeAccounts();
             assert Minecraft.getInstance().player != null;
+            assert Minecraft.getInstance().level != null;
             Minecraft.getInstance().player.sendMessage(new TextComponent("Changed account to "+
-                    this.usableAccounts.get(this.usableAccountsIndex).first+":"+
+                    MojangAPI.getUsernameByUUID(this.usableAccounts.get(this.usableAccountsIndex).first)+":"+
                     this.usableAccounts.get(this.usableAccountsIndex).second), Minecraft.getInstance().player.getUUID());
             refreshShopButtons();
         });
@@ -200,9 +205,10 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
     }
 
     private void changeAccounts() {
-        this.usableAccountsIndex = (this.usableAccountsIndex + 1) % this.usableAccounts.size();
         // Refresh account map
         this.accountMap = ClientMoneyData.getAccountMap();
+        this.usableAccountsIndex = (this.usableAccountsIndex + 1) % this.usableAccounts.size();
+
     }
     private void createBuySellButton(int x, int y){
         if(buySellButton != null){

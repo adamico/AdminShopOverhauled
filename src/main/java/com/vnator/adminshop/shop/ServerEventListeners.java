@@ -3,6 +3,7 @@ package com.vnator.adminshop.shop;
 import com.mojang.brigadier.CommandDispatcher;
 import com.vnator.adminshop.AdminShop;
 import com.vnator.adminshop.commands.ReloadShopCommand;
+import com.vnator.adminshop.commands.ShopAccountsCommand;
 import com.vnator.adminshop.money.MoneyManager;
 import com.vnator.adminshop.network.PacketSyncMoneyToClient;
 import com.vnator.adminshop.network.PacketSyncShopToClient;
@@ -32,5 +33,6 @@ public class ServerEventListeners {
     public static void onCommandRegistration(RegisterCommandsEvent event){
         CommandDispatcher<CommandSourceStack> commandDispatcher = event.getDispatcher();
         ReloadShopCommand.register(commandDispatcher);
+        ShopAccountsCommand.register(commandDispatcher);
     }
 }
