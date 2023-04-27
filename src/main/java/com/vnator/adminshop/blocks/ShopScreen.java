@@ -83,9 +83,11 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         }
 
         this.usableAccounts.clear();
-        this.usableAccounts.add(personalAccount);
-        List<BankAccount> usableBankAccounts = accountMap.values().stream().filter(account -> (account.getMembers()
-                .contains(playerUUID) && !account.getOwner().equals(playerUUID))).toList();
+//        this.usableAccounts.add(personalAccount);
+//        List<BankAccount> usableBankAccounts = accountMap.values().stream().filter(account -> (account.getMembers()
+//                .contains(playerUUID) && !account.getOwner().equals(playerUUID))).toList();
+        List<BankAccount> usableBankAccounts = this.accountMap.values().stream().filter(account -> (account.getMembers()
+                .contains(playerUUID) || account.getOwner().equals(playerUUID))).toList();
         this.usableAccounts.addAll(usableBankAccounts.stream().map(account -> Pair.of(account.getOwner(),
                 account.getId())).collect(Collectors.toSet()));
         this.usableAccountsIndex = 0;
@@ -140,7 +142,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
 
         //Player Balance
         drawString(matrixStack, Minecraft.getInstance().font,
-                I18n.get(GUI_MONEY) + ClientMoneyData.getMoney(personalAccount),
+                I18n.get(GUI_MONEY) + ClientMoneyData.getMoney(this.usableAccounts.get(this.usableAccountsIndex)),
                 getXSize() - font.width(I18n.get(GUI_MONEY) + "00000000") - 4,
                 6, 0xffffff); //x, y, color
 
@@ -179,7 +181,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
                         x+SHOP_BUTTON_X+SHOP_BUTTON_SIZE*(j%NUM_COLS),
                         y+SHOP_BUTTON_Y+SHOP_BUTTON_SIZE*((j/NUM_COLS)%NUM_ROWS), itemRenderer, (b) -> {
                     int quantity = ((ShopButton)b).getQuantity();
-                    attemptTransaction(this.personalAccount, isBuy, i2, j2, quantity);
+                    attemptTransaction(this.usableAccounts.get(this.usableAccountsIndex), isBuy, i2, j2, quantity);
                 });
                 shopButtons.get(i).add(button);
                 button.visible = isBuy;
@@ -207,6 +209,38 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
     private void changeAccounts() {
         // Refresh account map
         this.accountMap = ClientMoneyData.getAccountMap();
+
+        // Check for new accounts
+        Set<Pair<String, Integer>> newUsableAccounts = accountMap.values().stream().filter(account -> (account.getMembers()
+                .contains(playerUUID) || account.getOwner().equals(playerUUID))).map(account ->
+                Pair.of(account.getOwner(), account.getId())).collect(Collectors.toSet());
+
+        // If usableAccounts doesn't contain all, add the new one
+        if(!new HashSet<>(this.usableAccounts).containsAll(newUsableAccounts)) {
+            newUsableAccounts.forEach(account -> {
+                if(!this.usableAccounts.contains(account)) {
+                    usableAccounts.add(account);
+                }
+            });
+        }
+
+        // If newUsableAccounts doesn't contain all, remove the deleted one
+        if(!newUsableAccounts.containsAll(this.usableAccounts)) {
+            usableAccounts.forEach(account -> {
+                if(!newUsableAccounts.contains(account)) {
+                    boolean isCurrentIndex = usableAccounts.indexOf(account) == this.usableAccountsIndex;
+                    // Assume there is at least one other bank account in usableAccounts if we are removing one
+                    assert this.usableAccounts.size() > 1;
+                    // Remove this account
+                    this.usableAccounts.remove(account);
+                    // reset index if removed account used to be the current index
+                    if (isCurrentIndex) {
+                        this.usableAccountsIndex = 0;
+                    }
+                }
+            });
+        }
+
         this.usableAccountsIndex = (this.usableAccountsIndex + 1) % this.usableAccounts.size();
 
     }

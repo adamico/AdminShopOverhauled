@@ -63,7 +63,8 @@ public class MoneyManager extends SavedData {
         // Find free account ID, -1 if not found
         for (int i = 1; i < (MAX_ACCOUNTS+1); i++) {
             if(!sortedAccountMap.get(owner).containsKey(i)) {
-                newId = 1;
+                newId = i;
+                break;
             }
         }
 
@@ -114,6 +115,10 @@ public class MoneyManager extends SavedData {
             newPlayerMap.put(1, newAccount);
             sortedAccountMap.put(owner, newPlayerMap);
             accountsOwned.put(owner, 1);
+            if (!sharedAccounts.containsKey(owner)) {
+                sharedAccounts.put(owner, new ArrayList<>());
+            }
+            sharedAccounts.get(owner).add(newAccount);
             accountSet.add(sortedAccountMap.get(owner).get(id));
             setDirty();
         }

@@ -1,6 +1,7 @@
 package com.vnator.adminshop;
 
 import com.mojang.logging.LogUtils;
+import com.vnator.adminshop.client.events.ServerEventListeners;
 import com.vnator.adminshop.setup.ClientSetup;
 import com.vnator.adminshop.setup.Config;
 import com.vnator.adminshop.setup.ModSetup;
@@ -8,6 +9,7 @@ import com.vnator.adminshop.setup.Registration;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -40,7 +42,7 @@ public class AdminShop {
         IEventBus modbus = FMLJavaModLoadingContext.get().getModEventBus();
         modbus.addListener(ModSetup::init);
         DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> modbus.addListener(ClientSetup::init));
-//        MinecraftForge.EVENT_BUS.register(ServerEventListeners.class);
+        MinecraftForge.EVENT_BUS.register(ServerEventListeners.class);
 
         /*
         // Register the setup method for modloading

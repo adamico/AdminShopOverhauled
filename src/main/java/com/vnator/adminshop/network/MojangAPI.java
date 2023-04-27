@@ -26,7 +26,7 @@ public class MojangAPI {
 
                 // Extract the username from the response JSON
                 String jsonResponse = response.toString();
-                int nameStartIndex = jsonResponse.lastIndexOf("\"name\":\"") + 8;
+                int nameStartIndex = jsonResponse.lastIndexOf("\"name\" : \"") + 10;
                 int nameEndIndex = jsonResponse.lastIndexOf("\"}");
 
                 return jsonResponse.substring(nameStartIndex, nameEndIndex);

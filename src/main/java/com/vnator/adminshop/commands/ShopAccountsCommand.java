@@ -3,6 +3,7 @@ package com.vnator.adminshop.commands;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.vnator.adminshop.AdminShop;
@@ -26,24 +27,36 @@ public class ShopAccountsCommand {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher){
         LiteralArgumentBuilder<CommandSourceStack> shopAccountsCommand = Commands.literal("shopAccounts");
 
+        // /shopAccounts info
+        LiteralArgumentBuilder<CommandSourceStack> infoCommand = Commands.literal("info")
+                .executes(command -> { return info(command.getSource()); });
+
         // /shopAccounts listAccounts
         LiteralArgumentBuilder<CommandSourceStack> listAccountsCommand = Commands.literal("listAccounts")
                         .executes((command) -> { return listAccounts(command.getSource()); });
 
-        // /shopAccounts createAccount [user1, user2, ...]
+        // /shopAccounts createAccount [<members>]
         LiteralArgumentBuilder<CommandSourceStack> createAccountCommand = Commands.literal("createAccount")
-                        .executes((command) -> { return createAccount(command.getSource()); })
-                        .then(Commands.argument("members", StringArgumentType.greedyString()))
+                        .executes((command) -> { return createAccount(command.getSource()); });
+        RequiredArgumentBuilder<CommandSourceStack, String> createAccountWithMembersCommand =
+                Commands.argument("members", StringArgumentType.greedyString())
                         .executes((command) -> {
                             String users = StringArgumentType.getString(command, "members");
                             return createAccount(command.getSource(), users);
                         });
+        createAccountCommand.then(createAccountWithMembersCommand);
 
-        shopAccountsCommand.then(listAccountsCommand)
+        shopAccountsCommand.then(infoCommand)
+                        .then(listAccountsCommand)
                         .then(createAccountCommand);
         dispatcher.register(shopAccountsCommand);
     }
 
+    private static int info(CommandSourceStack source) {
+        source.sendSuccess(new TextComponent("AdminShop, a mod originally by Vnator and forked by Ammonium_"),
+                true);
+        return 1;
+    }
     private static int listAccounts(CommandSourceStack source) throws CommandSyntaxException {
         // returns 1 (success) or 0 (fail)
         ServerPlayer player = source.getPlayerOrException();
@@ -51,16 +64,28 @@ public class ShopAccountsCommand {
         StringBuilder returnMessage = new StringBuilder("Usable bank accounts for "+player.getName().getString()+
                 ":"+"\n");
 
-        MoneyManager.get(source.getLevel()).getSharedAccounts().get(playerUUID)
-                .forEach(bankAccount -> {
-            returnMessage.append("$");
-            returnMessage.append(bankAccount.getBalance());
-            returnMessage.append(": ");
-            returnMessage.append(MojangAPI.getUsernameByUUID(bankAccount.getOwner()));
-            returnMessage.append(':');
-            returnMessage.append(bankAccount.getId());
-            returnMessage.append("\n");
-        });
+        if (source.getLevel().isClientSide) {
+            AdminShop.LOGGER.error("Can't access this from client side!");
+            source.sendFailure(new TextComponent("Can't access this from client side!"));
+            return 0;
+        }
+
+        MoneyManager moneyManager = MoneyManager.get(source.getLevel());
+        if (!moneyManager.getSharedAccounts().containsKey(playerUUID)) {
+            AdminShop.LOGGER.error("No accounts found for "+player.getName().getString());
+            returnMessage.append("None");
+        } else {
+            moneyManager.getSharedAccounts().get(playerUUID)
+                    .forEach(bankAccount -> {
+                returnMessage.append("$");
+                returnMessage.append(bankAccount.getBalance());
+                returnMessage.append(": ");
+                returnMessage.append(MojangAPI.getUsernameByUUID(bankAccount.getOwner()));
+                returnMessage.append(':');
+                returnMessage.append(bankAccount.getId());
+                returnMessage.append("\n");
+            });
+        }
 
         source.sendSuccess(new TextComponent(returnMessage.toString()), true);
         return 1;
@@ -74,6 +99,7 @@ public class ShopAccountsCommand {
     private static int createAccount(CommandSourceStack source, String members) throws CommandSyntaxException {
         // Create account to MoneyManager, then sync money to every members' clients
         // Split members string to list
+        System.out.println(members);
         ServerPlayer player = source.getPlayerOrException();
         Set<String> memberNames = Set.of(members.split(" "));
 
