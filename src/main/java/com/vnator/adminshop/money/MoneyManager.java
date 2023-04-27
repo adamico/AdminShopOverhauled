@@ -167,6 +167,37 @@ public class MoneyManager extends SavedData {
         return sortedAccountMap.containsKey(owner) && sortedAccountMap.get(owner).containsKey(id);
     }
 
+    /**
+     * Adds member to bank account
+     * @param owner owner UUID
+     * @param id account ID
+     * @param memberUUID new member UUID
+     * @return true if added, false otherwise
+     */
+    public boolean addMember(String owner, int id, String memberUUID) {
+        // Check if account exists
+        if (!existsBankAccount(owner, id)) {
+            AdminShop.LOGGER.error("Can't add member to account that doesn't exist");
+            return false;
+        }
+        // Get bank account
+        BankAccount oldBankAccount = getBankAccount(owner, id);
+        // Check if account already has member
+        if (oldBankAccount.getMembers().contains(memberUUID)) {
+            AdminShop.LOGGER.error("Bank account already has member!");
+            return false;
+        }
+        // Add member to account
+        boolean success = oldBankAccount.addMember(memberUUID);
+        if (!success) {
+            AdminShop.LOGGER.error("Error adding member.");
+            return false;
+        }
+
+        AdminShop.LOGGER.info("Succesfully removed member from bank account.");
+        return true;
+    }
+
     //Money getters/setters
 
     /**
@@ -175,6 +206,7 @@ public class MoneyManager extends SavedData {
      * @return the player's personal account balance
      * @deprecated Use getBalance(String player, Int id) instead
      */
+    @Deprecated
     public long getBalance(String player){
         AdminShop.LOGGER.warn("getBalance(String player) is deprecated.");
         return  getBankAccount(player, 1).getBalance();

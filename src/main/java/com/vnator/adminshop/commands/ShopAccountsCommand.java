@@ -53,10 +53,24 @@ public class ShopAccountsCommand {
                         });
         deleteAccountCommand.then(deleteAccountWithIDCommand);
 
+        // /shopAccounts addMember [id] [member]
+        LiteralArgumentBuilder<CommandSourceStack> addMemberCommand = Commands.literal("addMember");
+        RequiredArgumentBuilder<CommandSourceStack, Integer> addMemberCommandID = Commands.argument("id",
+                IntegerArgumentType.integer());
+        RequiredArgumentBuilder<CommandSourceStack, String> addMemberCommandMember = Commands.argument("member",
+                StringArgumentType.string())
+                        .executes(command -> {
+                            int id = IntegerArgumentType.getInteger(command, "id");
+                            String member = StringArgumentType.getString(command, "member");
+                            return addMember(command.getSource(), id, member);
+                        });
+        addMemberCommand.then(addMemberCommandID.then(addMemberCommandMember));
+
         shopAccountsCommand.then(infoCommand)
-                        .then(listAccountsCommand)
-                        .then(createAccountCommand)
-                        .then(deleteAccountCommand);
+                    .then(listAccountsCommand)
+                    .then(createAccountCommand)
+                    .then(deleteAccountCommand)
+                    .then(addMemberCommand);
         dispatcher.register(shopAccountsCommand);
     }
 
@@ -221,6 +235,64 @@ public class ShopAccountsCommand {
                 new PacketSyncMoneyToClient(accountSet), memberPlayer));
 
         source.sendSuccess(new TextComponent("Successfully deleted account "+id), true);
+        return 1;
+    }
+
+    private static int addMember(CommandSourceStack source, int id, String member) throws CommandSyntaxException {
+        // Check if trying to add member to personal account
+        if (id == 1) {
+            AdminShop.LOGGER.error("Can't add member to personal account.");
+            source.sendFailure(new TextComponent("Can't add member to personal account (id 1)! Make a shared " +
+                    "account with /shopAccounts createAccount [<members>]"));
+            return 0;
+        }
+        // Get player and moneyManager
+        ServerPlayer player = source.getPlayerOrException();
+        MoneyManager moneyManager = MoneyManager.get(source.getLevel());
+        // Check if bank account exists
+        if (!moneyManager.existsBankAccount(player.getStringUUID(), id)) {
+            AdminShop.LOGGER.error("Can't add member to bank account that doesn't exist.");
+            source.sendFailure(new TextComponent("That account ID doesn't exist! Use an existing " +
+                    "ID from /shopAccounts listAccounts"));
+            return 0;
+        }
+        // Get memberUUID, fail if can't
+        List<ServerPlayer> onlinePlayers = source.getLevel().players();
+        Optional<ServerPlayer> searchPlayer = onlinePlayers.stream().filter(serverPlayer -> serverPlayer.getName()
+                .getString().equals(member)).findAny();
+        if(searchPlayer.isEmpty()) {
+            AdminShop.LOGGER.error("Couldn't find member in onlinePlayers.");
+            source.sendFailure(new TextComponent("Couldn't find member "+member+"! Member must be online"));
+            return 0;
+        }
+        String memberUUID = searchPlayer.get().getStringUUID();
+        // Check if bank account already has member
+        if (moneyManager.getBankAccount(player.getStringUUID(), id).getMembers().contains(memberUUID)) {
+            AdminShop.LOGGER.error("BankAccount already has member.");
+            source.sendFailure(new TextComponent("Account already has member."));
+            return 0;
+        }
+        // Add member, return if failed
+        boolean success = moneyManager.addMember(player.getStringUUID(), id, memberUUID);
+        if (!success) {
+            AdminShop.LOGGER.error("Error adding member to bank account.");
+            source.sendFailure(new TextComponent("Error adding member to bank account."));
+            return 0;
+        }
+        // Get list of online members
+        List<ServerPlayer> onlineMembers = new ArrayList<>();
+        BankAccount newBankAccount = moneyManager.getBankAccount(player.getStringUUID(), id);
+        newBankAccount.getMembers().forEach(accountMember -> {
+            Optional<ServerPlayer> searchMember = onlinePlayers.stream().filter(serverPlayer ->
+                    serverPlayer.getStringUUID().equals(accountMember)).findAny();
+            searchMember.ifPresent(onlineMembers::add);
+        });
+        // Sync client data with all onlineMembers
+        Set<BankAccount> accountSet = moneyManager.getAccountSet();
+        onlineMembers.forEach(memberPlayer -> Messages.sendToPlayer(
+                new PacketSyncMoneyToClient(accountSet), memberPlayer));
+
+        source.sendSuccess(new TextComponent("Successfully added "+member+" to account."), true);
         return 1;
     }
 }
