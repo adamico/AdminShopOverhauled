@@ -44,12 +44,14 @@ public class ShopAccountsCommand {
         createAccountCommand.then(createAccountWithMembersCommand);
 
         // /shopAccounts deleteAccount [id]
-        LiteralArgumentBuilder<CommandSourceStack> deleteAccountCommand = Commands.literal("deleteAccount")
-                        .then(Commands.argument("id", IntegerArgumentType.integer()))
+        LiteralArgumentBuilder<CommandSourceStack> deleteAccountCommand = Commands.literal("deleteAccount");
+        RequiredArgumentBuilder<CommandSourceStack, Integer> deleteAccountWithIDCommand =
+                Commands.argument("id", IntegerArgumentType.integer())
                         .executes(command -> {
                             int id = IntegerArgumentType.getInteger(command, "id");
                             return deleteAccount(command.getSource(), id);
                         });
+        deleteAccountCommand.then(deleteAccountWithIDCommand);
 
         shopAccountsCommand.then(infoCommand)
                         .then(listAccountsCommand)
@@ -121,7 +123,6 @@ public class ShopAccountsCommand {
     private static int createAccount(CommandSourceStack source, String members) throws CommandSyntaxException {
         // Create account to MoneyManager, then sync money to every members' clients
         // Split members string to list
-        System.out.println(members);
         ServerPlayer player = source.getPlayerOrException();
         Set<String> memberNames = Set.of(members.split(" "));
 
@@ -219,6 +220,7 @@ public class ShopAccountsCommand {
         onlineMembers.forEach(memberPlayer -> Messages.sendToPlayer(
                 new PacketSyncMoneyToClient(accountSet), memberPlayer));
 
+        source.sendSuccess(new TextComponent("Successfully deleted account "+id), true);
         return 1;
     }
 }

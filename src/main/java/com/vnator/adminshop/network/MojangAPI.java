@@ -4,9 +4,18 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MojangAPI {
+
+    private static final Map<String, String> storedResults = new HashMap<>();
     public static String getUsernameByUUID(String uuid) {
+        // Search for in stored results
+        if (storedResults.containsKey(uuid)) {
+            return storedResults.get(uuid);
+        }
+
         try {
             URL url = new URL("https://api.mojang.com/user/profile/" + uuid.replace("-", ""));
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -28,8 +37,10 @@ public class MojangAPI {
                 String jsonResponse = response.toString();
                 int nameStartIndex = jsonResponse.lastIndexOf("\"name\" : \"") + 10;
                 int nameEndIndex = jsonResponse.lastIndexOf("\"}");
-
-                return jsonResponse.substring(nameStartIndex, nameEndIndex);
+                // Save name to stored results and return
+                String name = jsonResponse.substring(nameStartIndex, nameEndIndex);
+                storedResults.put(uuid, name);
+                return name;
             } else {
                 System.out.println("GET request failed: " + responseCode);
             }
