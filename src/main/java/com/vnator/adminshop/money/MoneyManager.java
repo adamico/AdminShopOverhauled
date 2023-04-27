@@ -198,6 +198,42 @@ public class MoneyManager extends SavedData {
         return true;
     }
 
+    /**
+     * Removes member from bank account
+     * @param owner owner UUID
+     * @param id account ID
+     * @param memberUUID member UUID to remove
+     * @return true if removed, false otherwise
+     */
+    public boolean removeMember(String owner, int id, String memberUUID) {
+        // Check if account exists
+        if (!existsBankAccount(owner, id)) {
+            AdminShop.LOGGER.error("Can't remove member from account that doesn't exist!");
+            return false;
+        }
+        // Get bank account
+        BankAccount bankAccount = getBankAccount(owner, id);
+        // Check if account doesn't have member
+        if (!bankAccount.getMembers().contains(memberUUID)) {
+            AdminShop.LOGGER.error("Bank account doesn't have member!");
+            return false;
+        }
+        // Check if trying to remove owner
+        if (bankAccount.getOwner().equals(owner)) {
+            AdminShop.LOGGER.error("Can't remove owner from account!");
+            return false;
+        }
+        // Remove member from account
+        boolean success = bankAccount.removeMember(memberUUID);
+        if (!success) {
+            AdminShop.LOGGER.error("Error removing member.");
+            return false;
+        }
+
+        AdminShop.LOGGER.info("Succesfully removed member from bank account.");
+        return true;
+    }
+
     //Money getters/setters
 
     /**

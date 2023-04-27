@@ -17,6 +17,7 @@ import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.server.level.ServerPlayer;
 
+import java.lang.reflect.Member;
 import java.util.*;
 
 public class ShopAccountsCommand {
@@ -66,11 +67,25 @@ public class ShopAccountsCommand {
                         });
         addMemberCommand.then(addMemberCommandID.then(addMemberCommandMember));
 
+        // /shopAccounts removeMember [id] [member]
+        LiteralArgumentBuilder<CommandSourceStack> removeMemberCommand = Commands.literal("removeMember");
+        RequiredArgumentBuilder<CommandSourceStack, Integer> removeMemberCommandID = Commands.argument("id",
+                IntegerArgumentType.integer());
+        RequiredArgumentBuilder<CommandSourceStack, String> removeMemberCommandMember = Commands.argument("member",
+                        StringArgumentType.string())
+                .executes(command -> {
+                    int id = IntegerArgumentType.getInteger(command, "id");
+                    String member = StringArgumentType.getString(command, "member");
+                    return removeMember(command.getSource(), id, member);
+                });
+        removeMemberCommand.then(removeMemberCommandID.then(removeMemberCommandMember));
+
         shopAccountsCommand.then(infoCommand)
                     .then(listAccountsCommand)
                     .then(createAccountCommand)
                     .then(deleteAccountCommand)
-                    .then(addMemberCommand);
+                    .then(addMemberCommand)
+                    .then(removeMemberCommand);
         dispatcher.register(shopAccountsCommand);
     }
 
@@ -269,7 +284,7 @@ public class ShopAccountsCommand {
         // Check if bank account already has member
         if (moneyManager.getBankAccount(player.getStringUUID(), id).getMembers().contains(memberUUID)) {
             AdminShop.LOGGER.error("BankAccount already has member.");
-            source.sendFailure(new TextComponent("Account already has member."));
+            source.sendFailure(new TextComponent("Account already has member "+member));
             return 0;
         }
         // Add member, return if failed
@@ -293,6 +308,70 @@ public class ShopAccountsCommand {
                 new PacketSyncMoneyToClient(accountSet), memberPlayer));
 
         source.sendSuccess(new TextComponent("Successfully added "+member+" to account."), true);
+        return 1;
+    }
+    private static int removeMember(CommandSourceStack source, int id, String member) throws CommandSyntaxException {
+        // Check if trying to add member to personal account
+        if (id == 1) {
+            AdminShop.LOGGER.error("Can't remove member from personal account.");
+            source.sendFailure(new TextComponent("Can't add remove member from personal account (id 1)!"));
+            return 0;
+        }
+        // Get player and moneyManager
+        ServerPlayer player = source.getPlayerOrException();
+        MoneyManager moneyManager = MoneyManager.get(source.getLevel());
+        // Check if bank account exists
+        if (!moneyManager.existsBankAccount(player.getStringUUID(), id)) {
+            AdminShop.LOGGER.error("Can't remove member from bank account that doesn't exist.");
+            source.sendFailure(new TextComponent("That account ID doesn't exist! Use an existing " +
+                    "ID from /shopAccounts listAccounts"));
+            return 0;
+        }
+        // Get memberUUID, fail if can't
+        List<ServerPlayer> onlinePlayers = source.getLevel().players();
+        Optional<ServerPlayer> searchPlayer = onlinePlayers.stream().filter(serverPlayer -> serverPlayer.getName()
+                .getString().equals(member)).findAny();
+        if(searchPlayer.isEmpty()) {
+            AdminShop.LOGGER.error("Couldn't find member in onlinePlayers.");
+            source.sendFailure(new TextComponent("Couldn't find member "+member+"! Member must be online"));
+            return 0;
+        }
+        String memberUUID = searchPlayer.get().getStringUUID();
+        // Check if bank account doesn't have member
+        if (!moneyManager.getBankAccount(player.getStringUUID(), id).getMembers().contains(memberUUID)) {
+            AdminShop.LOGGER.error("BankAccount doesn't have member.");
+            source.sendFailure(new TextComponent("Account doesn't have member "+member));
+            return 0;
+        }
+        /// Check if trying to remove owner (self)
+        if (player.getStringUUID().equals(memberUUID)) {
+            AdminShop.LOGGER.error("Account owner cant remove itself from own account");
+            source.sendFailure(new TextComponent("You can't remove yourself from an account you own."));
+            return 0;
+        }
+        // Remove member, return if failed
+        boolean success = moneyManager.removeMember(player.getStringUUID(), id, memberUUID);
+        if (!success) {
+            AdminShop.LOGGER.error("Error removing member from bank account.");
+            source.sendFailure(new TextComponent("Error removing member from bank account."));
+            return 0;
+        }
+        // Get list of online members to sync, including removed one
+        List<ServerPlayer> onlineMembers = new ArrayList<>();
+        BankAccount newBankAccount = moneyManager.getBankAccount(player.getStringUUID(), id);
+        Set<String> membersToSync = new HashSet<>(newBankAccount.getMembers());
+        membersToSync.add(memberUUID);
+        membersToSync.forEach(accountMember -> {
+            Optional<ServerPlayer> searchMember = onlinePlayers.stream().filter(serverPlayer ->
+                    serverPlayer.getStringUUID().equals(accountMember)).findAny();
+            searchMember.ifPresent(onlineMembers::add);
+        });
+        // Sync client data with all onlineMembers
+        Set<BankAccount> accountSet = moneyManager.getAccountSet();
+        onlineMembers.forEach(memberPlayer -> Messages.sendToPlayer(
+                new PacketSyncMoneyToClient(accountSet), memberPlayer));
+
+        source.sendSuccess(new TextComponent("Successfully removed "+member+" from account."), true);
         return 1;
     }
 }
