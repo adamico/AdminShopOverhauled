@@ -35,11 +35,11 @@ public class BankAccount {
         this.balance = (id == 1) ? Config.STARTING_MONEY.get() : 0L;
     }
 
-    public BankAccount(String own, Set<String> mem, int nid) {
+    public BankAccount(String own, int nid, Set<String> mem) {
         this.owner = own;
         this.members = mem;
         this.id = nid;
-        this.balance = 0;
+        this.balance = (nid == 1) ? Config.STARTING_MONEY.get() : 0L;
     }
 
     public BankAccount(String own, Set<String> mem, int nid, long bal) {

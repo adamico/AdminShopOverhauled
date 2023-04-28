@@ -1,9 +1,7 @@
 package com.vnator.adminshop.network;
 
-import com.ibm.icu.impl.Pair;
 import com.vnator.adminshop.money.BankAccount;
 import com.vnator.adminshop.money.ClientMoneyData;
-import com.vnator.adminshop.money.MoneyManager;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -12,19 +10,18 @@ import java.util.function.Supplier;
 
 public class PacketSyncMoneyToClient {
 
-    private final Set<BankAccount> accountSet = new HashSet<>();
+    private final List<BankAccount> usableAccounts = new ArrayList<>();
 
-    public PacketSyncMoneyToClient(Set<BankAccount> accountSet){
-        this.accountSet.addAll(accountSet);
+    public PacketSyncMoneyToClient(List<BankAccount> usableAccounts){
+        this.usableAccounts.addAll(usableAccounts);
     }
 
     public PacketSyncMoneyToClient(FriendlyByteBuf buf){
-//        accountSet.clear();
-        // Get set size
-        int setSize = buf.readInt();
+        // Get list size
+        int listSize = buf.readInt();
 
         // Get each BankAccount from the buffer
-        for (int i = 0; i < setSize; i++) {
+        for (int i = 0; i < listSize; i++) {
             // Owner UUID
             String owner = buf.readUtf();
             // Account ID
@@ -41,17 +38,17 @@ public class PacketSyncMoneyToClient {
                 members.add(buf.readUtf());
             }
 
-            // Add to accountSet
-            accountSet.add(new BankAccount(owner, members, id, bal));
+            // Add to usableAccounts
+            usableAccounts.add(new BankAccount(owner, members, id, bal));
         }
     }
 
     public void toBytes(FriendlyByteBuf buf){
         // Add set and map size to buffer
-        buf.writeInt(accountSet.size());
+        buf.writeInt(usableAccounts.size());
 
         // Write each BankAccount to the buffer
-        accountSet.forEach(account -> {
+        usableAccounts.forEach(account -> {
             // Owner UUID
             buf.writeUtf(account.getOwner());
             // Account ID
@@ -74,7 +71,7 @@ public class PacketSyncMoneyToClient {
         ctx.enqueueWork(() -> {
             //Client side accessed here
             //Do NOT call client-only code though, since server needs to access this too
-            ClientMoneyData.setAccountSet(accountSet);
+            ClientMoneyData.setUsableAccounts(usableAccounts);
         });
         return true;
     }

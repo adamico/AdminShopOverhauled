@@ -206,7 +206,8 @@ public class ShopAccountsCommand {
         Set<BankAccount> accountSet = moneyManager.getAccountSet();
 
         // Sync client data with all members
-        memberPlayers.forEach(member -> Messages.sendToPlayer(new PacketSyncMoneyToClient(accountSet), member));
+        memberPlayers.forEach(member -> Messages.sendToPlayer(new PacketSyncMoneyToClient(
+                moneyManager.getSharedAccounts().get(member.getStringUUID())), member));
         source.sendSuccess(new TextComponent("Created new account with ID "+newId), true);
         return 1;
     }
@@ -247,7 +248,8 @@ public class ShopAccountsCommand {
         // Sync client data with all onlineMembers
         Set<BankAccount> accountSet = moneyManager.getAccountSet();
         onlineMembers.forEach(memberPlayer -> Messages.sendToPlayer(
-                new PacketSyncMoneyToClient(accountSet), memberPlayer));
+                new PacketSyncMoneyToClient(moneyManager.getSharedAccounts().get(memberPlayer.getStringUUID())),
+                memberPlayer));
 
         source.sendSuccess(new TextComponent("Successfully deleted account "+id), true);
         return 1;
@@ -305,7 +307,8 @@ public class ShopAccountsCommand {
         // Sync client data with all onlineMembers
         Set<BankAccount> accountSet = moneyManager.getAccountSet();
         onlineMembers.forEach(memberPlayer -> Messages.sendToPlayer(
-                new PacketSyncMoneyToClient(accountSet), memberPlayer));
+                new PacketSyncMoneyToClient(moneyManager.getSharedAccounts().get(memberPlayer.getStringUUID())),
+                memberPlayer));
 
         source.sendSuccess(new TextComponent("Successfully added "+member+" to account."), true);
         return 1;
@@ -369,7 +372,8 @@ public class ShopAccountsCommand {
         // Sync client data with all onlineMembers
         Set<BankAccount> accountSet = moneyManager.getAccountSet();
         onlineMembers.forEach(memberPlayer -> Messages.sendToPlayer(
-                new PacketSyncMoneyToClient(accountSet), memberPlayer));
+                new PacketSyncMoneyToClient(moneyManager.getSharedAccounts().get(memberPlayer.getStringUUID())),
+                memberPlayer));
 
         source.sendSuccess(new TextComponent("Successfully removed "+member+" from account."), true);
         return 1;

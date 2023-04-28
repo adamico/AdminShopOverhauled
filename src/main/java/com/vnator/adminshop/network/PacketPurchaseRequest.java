@@ -107,7 +107,8 @@ public class PacketPurchaseRequest {
             // Sync money with bank account's members
             assert currentAccount.getMembers().contains(this.accOwner);
             currentAccount.getMembers().forEach(memberUUID -> {
-                Messages.sendToPlayer(new PacketSyncMoneyToClient(accountSet), (ServerPlayer) player.getLevel()
+                List<BankAccount> usableAccounts = moneyManager.getSharedAccounts().get(memberUUID);
+                Messages.sendToPlayer(new PacketSyncMoneyToClient(usableAccounts), (ServerPlayer) player.getLevel()
                         .getPlayerByUUID(UUID.fromString(memberUUID)));
             });
         });

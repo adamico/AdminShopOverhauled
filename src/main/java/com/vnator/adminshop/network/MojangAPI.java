@@ -1,5 +1,7 @@
 package com.vnator.adminshop.network;
 
+import com.vnator.adminshop.AdminShop;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -42,7 +44,7 @@ public class MojangAPI {
                 storedResults.put(uuid, name);
                 return name;
             } else {
-                System.out.println("GET request failed: " + responseCode);
+                AdminShop.LOGGER.error("Mojang API request failed: " + responseCode);
             }
         } catch (Exception e) {
             e.printStackTrace();

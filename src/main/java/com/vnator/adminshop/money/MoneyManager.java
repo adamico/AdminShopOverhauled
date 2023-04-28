@@ -48,18 +48,7 @@ public class MoneyManager extends SavedData {
      * @return the ID of the new account, or -1 if no account was created
      */
     public int CreateAccount(String owner, Set<String> members) {
-
-        if(!members.contains(owner)) {
-            AdminShop.LOGGER.warn("Member set does not contain owner, adding.");
-            members.add(owner);
-        }
-
-        if (accountsOwned.get(owner) >= MAX_ACCOUNTS) {
-            AdminShop.LOGGER.error("Owner has reached max accounts limit!");
-            return -1;
-        }
         int newId = -1;
-
         // Find free account ID, -1 if not found
         for (int i = 1; i < (MAX_ACCOUNTS+1); i++) {
             if(!sortedAccountMap.get(owner).containsKey(i)) {
@@ -67,23 +56,53 @@ public class MoneyManager extends SavedData {
                 break;
             }
         }
-
         if (newId == -1) {
             AdminShop.LOGGER.error("Could not find free account ID for owner!");
             return newId;
         }
-
+        // Create account
+        return CreateAccount(owner, newId, members);
+    }
+    public int CreateAccount(String owner, int id) {
+        Set<String> members = new HashSet<>();
+        members.add(owner);
+        return CreateAccount(owner, id, members);
+    }
+    public int CreateAccount(String owner, int id, Set<String> members) {
+        // Check if members set contains owner
+        if(!members.contains(owner)) {
+            AdminShop.LOGGER.warn("Member set does not contain owner, adding.");
+            members.add(owner);
+        }
+        // Check if owner has reached max accounts
+        if (accountsOwned.containsKey(owner) && accountsOwned.get(owner) >= MAX_ACCOUNTS) {
+            AdminShop.LOGGER.error("Owner has reached max accounts limit!");
+            return -1;
+        }
         // Create new account and add to relevant sets/maps
-        BankAccount newAccount = new BankAccount(owner, members, newId, 0L);
+        BankAccount newAccount = new BankAccount(owner, id, members);
         accountSet.add(newAccount);
-        accountsOwned.put(owner, newId);
-        sortedAccountMap.get(owner).put(newId, newAccount);
+        // If first account, initialize maps
+        if (!accountsOwned.containsKey(owner)) {
+            accountsOwned.put(owner, 1);
+        } else {
+            accountsOwned.put(owner, accountsOwned.get(owner)+1);
+        }
+        if (!sortedAccountMap.containsKey(owner)) {
+            sortedAccountMap.put(owner, new HashMap<>());
+        }
+        // Add to sorted map
+        sortedAccountMap.get(owner).put(id, newAccount);
         newAccount.getMembers().forEach(member -> {
+            // If first account, initialize map
+            if (!sharedAccounts.containsKey(member)) {
+                sharedAccounts.put(member, new ArrayList<>());
+            }
             sharedAccounts.get(member).add(newAccount);
         });
 
         // return new account ID
-        return newId;
+        return id;
     }
 
     //"Singleton" getter

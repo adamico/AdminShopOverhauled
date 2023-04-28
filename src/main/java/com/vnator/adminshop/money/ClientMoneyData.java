@@ -3,29 +3,27 @@ package com.vnator.adminshop.money;
 import com.ibm.icu.impl.Pair;
 import com.vnator.adminshop.AdminShop;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class ClientMoneyData {
 
-    private static final Set<BankAccount> accountSet = new HashSet<>();
+    // Only contains the list of accounts it is either an owner or member on
+    private static final List<BankAccount> usableAccounts = new ArrayList<>();
     private static final Map<Pair<String, Integer>, BankAccount> accountMap = new HashMap<>();
 
-    public static Set<BankAccount> getAccountSet() {
-        return accountSet;
+    public static List<BankAccount> getUsableAccounts() {
+        return usableAccounts;
     }
 
     public static Map<Pair<String, Integer>, BankAccount> getAccountMap() {
         return accountMap;
     }
 
-    public static void setAccountSet(Set<BankAccount> accountSet) {
-        ClientMoneyData.accountSet.clear();
-        ClientMoneyData.accountSet.addAll(accountSet);
+    public static void setUsableAccounts(List<BankAccount> usableAccounts) {
+        ClientMoneyData.usableAccounts.clear();
+        ClientMoneyData.usableAccounts.addAll(usableAccounts);
         ClientMoneyData.accountMap.clear();
-        ClientMoneyData.accountSet.forEach(account -> {
+        ClientMoneyData.usableAccounts.forEach(account -> {
             ClientMoneyData.accountMap.put(Pair.of(account.getOwner(), account.getId()), account);
         });
     }
@@ -35,18 +33,18 @@ public class ClientMoneyData {
             AdminShop.LOGGER.warn("newAccount already in accountMap.");
             return accountMap.get(Pair.of(newAccount.getOwner(), newAccount.getId()));
         }
-        ClientMoneyData.accountSet.add(newAccount);
+        ClientMoneyData.usableAccounts.add(newAccount);
         ClientMoneyData.accountMap.put(Pair.of(newAccount.getOwner(), newAccount.getId()), newAccount);
         return newAccount;
     }
 
 
     public static boolean removeAccount(BankAccount toRemove) {
-        if (!accountSet.contains(toRemove)) {
-            AdminShop.LOGGER.warn("removeAccount not in accountSet");
+        if (!usableAccounts.contains(toRemove)) {
+            AdminShop.LOGGER.warn("removeAccount not in usableAccounts");
             return false;
         }
-        accountSet.remove(toRemove);
+        usableAccounts.remove(toRemove);
         accountMap.remove(Pair.of(toRemove.getOwner(), toRemove.getId()));
         return true;
     }
@@ -59,7 +57,7 @@ public class ClientMoneyData {
 //        if (!accountSet.contains(bankAccount)) {
         BankAccount result;
         if (!accountMap.containsKey(bankAccount)) {
-            AdminShop.LOGGER.warn("Could not find bankAccount in accountSet, adding it.");
+            AdminShop.LOGGER.warn("Could not find bankAccount in usableAccounts, adding it.");
             AdminShop.LOGGER.warn("OwnerUUID:" + bankAccount.first + ", accID:" + bankAccount.second);
             result = ClientMoneyData.addAccount(new BankAccount(bankAccount.first, bankAccount.second));
         } else {
