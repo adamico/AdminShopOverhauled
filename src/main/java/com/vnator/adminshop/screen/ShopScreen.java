@@ -38,7 +38,6 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
     private static final int SHOP_BUTTON_Y = 18;
     private static final int SHOP_BUTTON_SIZE = 18;
     public static final int SHOP_BUTTONS_PER_PAGE = 36;
-
     private final ShopContainer shopContainer;
 
     private final List<List<ShopButton>> buyButtons;

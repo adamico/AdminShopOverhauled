@@ -12,5 +12,6 @@
   "block.adminshop.shop": "Shop",
   "block.adminshop.seller": "Seller",
   "block.adminshop.buyer": "Buyer",
-  "item.adminshop.check": "Check"
+  "item.adminshop.check": "Check",
+  "itemGroup.adminshop": "Admin Shop"
 }
