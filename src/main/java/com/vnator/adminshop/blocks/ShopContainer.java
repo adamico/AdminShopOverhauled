@@ -1,6 +1,6 @@
 package com.vnator.adminshop.blocks;
 
-import com.vnator.adminshop.setup.Registration;
+import com.vnator.adminshop.screen.ModMenuTypes;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -15,8 +15,12 @@ public class ShopContainer extends AbstractContainerMenu {
     private final Player playerEntity;
     private final IItemHandler playerInventory;
 
+//    public ShopContainer(int windowId, Inventory inv, FriendlyByteBuf extraData) {
+//        this(windowId, inv, inv.player);
+//    }
+
     public ShopContainer(int windowId, Inventory playerInventory, Player player){
-        super(Registration.SHOP_CONTAINER.get(), windowId);
+        super(ModMenuTypes.SHOP_MENU.get(), windowId);
         this.playerEntity = player;
         this.playerInventory = new InvWrapper(playerInventory);
 

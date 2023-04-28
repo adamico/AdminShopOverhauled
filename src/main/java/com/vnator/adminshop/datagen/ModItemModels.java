@@ -1,10 +1,13 @@
 package com.vnator.adminshop.datagen;
 
 import com.vnator.adminshop.AdminShop;
-import com.vnator.adminshop.setup.Registration;
+import com.vnator.adminshop.blocks.ModBlocks;
+import com.vnator.adminshop.item.ModItems;
 import net.minecraft.data.DataGenerator;
 import net.minecraftforge.client.model.generators.ItemModelProvider;
 import net.minecraftforge.common.data.ExistingFileHelper;
+
+import java.util.Objects;
 
 public class ModItemModels extends ItemModelProvider {
 
@@ -14,12 +17,9 @@ public class ModItemModels extends ItemModelProvider {
 
     @Override
     protected void registerModels() {
-        withExistingParent(Registration.SHOP_ITEM.get().getRegistryName().getPath(), modLoc("block/shop"));
-        withExistingParent(Registration.ATM_ITEM.get().getRegistryName().getPath(), modLoc("block/atm"));
-        withExistingParent(Registration.SELLER_ITEM.get().getRegistryName().getPath(), modLoc("block/seller"));
-        withExistingParent(Registration.BUYER_ITEM.get().getRegistryName().getPath(), modLoc("block/buyer"));
+        withExistingParent(Objects.requireNonNull(ModBlocks.SHOP.get().getRegistryName()).getPath(), modLoc("block/shop"));
 
-        singleTexture(Registration.CHECK.get().getRegistryName().getPath(),
+        singleTexture(Objects.requireNonNull(ModItems.CHECK.get().getRegistryName()).getPath(),
                 mcLoc("item/generated"),
                 "layer0", mcLoc("item/check"));
     }

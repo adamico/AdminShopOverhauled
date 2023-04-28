@@ -1,11 +1,14 @@
 package com.vnator.adminshop;
 
 import com.mojang.logging.LogUtils;
+import com.vnator.adminshop.blocks.ModBlocks;
+import com.vnator.adminshop.blocks.entity.ModBlockEntities;
 import com.vnator.adminshop.client.events.ServerEventListeners;
+import com.vnator.adminshop.item.ModItems;
+import com.vnator.adminshop.screen.ModMenuTypes;
 import com.vnator.adminshop.setup.ClientSetup;
 import com.vnator.adminshop.setup.Config;
 import com.vnator.adminshop.setup.ModSetup;
-import com.vnator.adminshop.setup.Registration;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.api.distmarker.Dist;
@@ -31,15 +34,17 @@ public class AdminShop {
 
     public AdminShop() {
 
-        //Register the deferred registry
-        Registration.init();
+        IEventBus eventBus = FMLJavaModLoadingContext.get().getModEventBus();
         Config.register();
 
-        //Register the setup method for modloading
-        IEventBus modbus = FMLJavaModLoadingContext.get().getModEventBus();
-        modbus.addListener(ModSetup::init);
-        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> modbus.addListener(ClientSetup::init));
+        eventBus.addListener(ModSetup::init);
+        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> eventBus.addListener(ClientSetup::init));
         MinecraftForge.EVENT_BUS.register(ServerEventListeners.class);
+
+        ModItems.register(eventBus);
+        ModBlocks.register(eventBus);
+        ModBlockEntities.register(eventBus);
+        ModMenuTypes.register(eventBus);
 
         // Register ourselves for server and other game events we are interested in
         // MinecraftForge.EVENT_BUS.register(this);

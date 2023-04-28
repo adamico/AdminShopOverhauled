@@ -1,5 +1,6 @@
 package com.vnator.adminshop.blocks;
 
+import com.vnator.adminshop.blocks.entity.ShopBE;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
@@ -37,6 +38,8 @@ public class ShopBlock extends CustomDirectionalBlock implements EntityBlock {
                 .sound(SoundType.METAL)
                 .strength(1.0f)
                 .lightLevel(state -> 0)
+                .dynamicShape()
+                .noOcclusion()
         );
     }
 

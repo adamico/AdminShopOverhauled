@@ -1,7 +1,7 @@
 package com.vnator.adminshop.datagen;
 
 import com.vnator.adminshop.AdminShop;
-import com.vnator.adminshop.setup.Registration;
+import com.vnator.adminshop.blocks.ModBlocks;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.tags.BlockTagsProvider;
 import net.minecraft.tags.BlockTags;
@@ -16,10 +16,7 @@ public class ModBlockTags extends BlockTagsProvider {
     @Override
     protected void addTags(){
         tag(BlockTags.MINEABLE_WITH_PICKAXE)
-                .add(Registration.SHOP.get())
-                .add(Registration.ATM.get())
-                .add(Registration.BUYER.get())
-                .add(Registration.SELLER.get());
+                .add(ModBlocks.SHOP.get());
     }
 
     @Override

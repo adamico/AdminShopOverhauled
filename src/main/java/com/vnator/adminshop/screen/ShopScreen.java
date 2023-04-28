@@ -1,9 +1,11 @@
-package com.vnator.adminshop.blocks;
+package com.vnator.adminshop.screen;
 
 import com.ibm.icu.impl.Pair;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.vnator.adminshop.AdminShop;
+import com.vnator.adminshop.blocks.ShopBlock;
+import com.vnator.adminshop.blocks.ShopContainer;
 import com.vnator.adminshop.client.gui.*;
 import com.vnator.adminshop.money.BankAccount;
 import com.vnator.adminshop.money.ClientMoneyData;

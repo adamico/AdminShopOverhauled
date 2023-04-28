@@ -1,6 +1,6 @@
 package com.vnator.adminshop.datagen;
 
-import com.vnator.adminshop.setup.Registration;
+import com.vnator.adminshop.blocks.ModBlocks;
 import net.minecraft.data.DataGenerator;
 
 public class ModLootTables extends BaseLootTableProvider{
@@ -10,9 +10,6 @@ public class ModLootTables extends BaseLootTableProvider{
 
     @Override
     protected void addTables() {
-        lootTables.put(Registration.SHOP.get(), createSimpleTable("shop", Registration.SHOP.get()));
-        lootTables.put(Registration.ATM.get(), createSimpleTable("atm", Registration.ATM.get()));
-        lootTables.put(Registration.BUYER.get(), createSimpleTable("buyer", Registration.BUYER.get()));
-        lootTables.put(Registration.SELLER.get(), createSimpleTable("seller", Registration.SELLER.get()));
+        lootTables.put(ModBlocks.SHOP.get(), createSimpleTable("shop", ModBlocks.SHOP.get()));
     }
 }

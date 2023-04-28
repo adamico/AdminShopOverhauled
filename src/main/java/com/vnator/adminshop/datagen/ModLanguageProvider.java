@@ -1,7 +1,8 @@
 package com.vnator.adminshop.datagen;
 
 import com.vnator.adminshop.AdminShop;
-import com.vnator.adminshop.setup.Registration;
+import com.vnator.adminshop.blocks.ModBlocks;
+import com.vnator.adminshop.item.ModItems;
 import net.minecraft.data.DataGenerator;
 import net.minecraftforge.common.data.LanguageProvider;
 
@@ -16,11 +17,7 @@ public class ModLanguageProvider extends LanguageProvider {
     @Override
     protected void addTranslations() {
         add("itemGroup." + TAB_NAME, "Admin Shop");
-        add(Registration.SHOP.get(), "Shop");
-        add(Registration.ATM.get(), "ATM");
-        add(Registration.BUYER.get(), "Auto Buyer");
-        add(Registration.SELLER.get(), "Auto Seller");
-
-        add(Registration.CHECK.get(), "Check");
+        add(ModBlocks.SHOP.get(), "Shop");
+        add(ModItems.CHECK.get(), "Check");
     }
 }

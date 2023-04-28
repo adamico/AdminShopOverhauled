@@ -1,7 +1,9 @@
 package com.vnator.adminshop.setup;
 
 import com.vnator.adminshop.AdminShop;
-import com.vnator.adminshop.blocks.ShopScreen;
+import com.vnator.adminshop.blocks.ModBlocks;
+import com.vnator.adminshop.screen.ModMenuTypes;
+import com.vnator.adminshop.screen.ShopScreen;
 import com.vnator.adminshop.client.KeyInit;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
@@ -14,11 +16,8 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 public class ClientSetup {
     public static void init(FMLClientSetupEvent event){
         event.enqueueWork(() -> {
-            MenuScreens.register(Registration.SHOP_CONTAINER.get(), ShopScreen::new);
-            ItemBlockRenderTypes.setRenderLayer(Registration.SHOP.get(), RenderType.translucent());
-            ItemBlockRenderTypes.setRenderLayer(Registration.ATM.get(), RenderType.translucent());
-            ItemBlockRenderTypes.setRenderLayer(Registration.SELLER.get(), RenderType.translucent());
-            ItemBlockRenderTypes.setRenderLayer(Registration.BUYER.get(), RenderType.translucent());
+            MenuScreens.register(ModMenuTypes.SHOP_MENU.get(), ShopScreen::new);
+            ItemBlockRenderTypes.setRenderLayer(ModBlocks.SHOP.get(), RenderType.translucent());
             KeyInit.init();
         });
     }
