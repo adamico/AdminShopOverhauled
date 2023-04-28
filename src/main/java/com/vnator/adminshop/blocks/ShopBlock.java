@@ -12,15 +12,12 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.Shapes;
@@ -29,8 +26,7 @@ import net.minecraftforge.network.NetworkHooks;
 
 import javax.annotation.Nullable;
 
-public class ShopBlock extends Block implements EntityBlock {
-
+public class ShopBlock extends CustomDirectionalBlock implements EntityBlock {
     public static final String MESSAGE_SHOP = "message.shop";
     public static final String SCREEN_ADMINSHOP_SHOP = "screen.adminshop.shop";
 

@@ -44,6 +44,7 @@ public class Registration {
     public static final RegistryObject<Item> SHOP_ITEM = fromBlock(SHOP);
     public static final RegistryObject<BlockEntityType<ShopBE>> SHOP_BE = BLOCK_ENTITIES.register("shop",
             () -> BlockEntityType.Builder.of(ShopBE::new, SHOP.get()).build(null));
+
     public static final RegistryObject<MenuType<ShopContainer>> SHOP_CONTAINER = CONTAINERS.register("shop",
             () -> IForgeMenuType.create(((windowId, inv, data) -> new ShopContainer(windowId, inv, inv.player))));
 
