@@ -51,8 +51,8 @@ public class BuySellButton extends Button {
             this.blit(matrix, x, y, 195, 56, 50, 12);
         }
         drawCenteredString(matrix, Minecraft.getInstance().font, I18n.get(GUI_BUY), x+12,
-                y+8-Minecraft.getInstance().font.lineHeight/2, 0xFFFFFF);
+                y+6-Minecraft.getInstance().font.lineHeight/2, 0xFFFFFF);
         drawCenteredString(matrix, Minecraft.getInstance().font, I18n.get(GUI_SELL), x+37,
-                y+8-Minecraft.getInstance().font.lineHeight/2, 0xFFFFFF);
+                y+6-Minecraft.getInstance().font.lineHeight/2, 0xFFFFFF);
     }
 }

@@ -25,7 +25,7 @@ public class ChangeAccountButton extends Button {
         }
 
         RenderSystem.setShaderTexture(0, GUI);
-        this.blit(matrix, x, y, 195, 0, 50, 16);
+        this.blit(matrix, x, y, 195, 113, 50, 16);
 
         drawCenteredString(matrix, Minecraft.getInstance().font, name, x+25,
                 y+8-Minecraft.getInstance().font.lineHeight/2, 0xFFFFFF);
