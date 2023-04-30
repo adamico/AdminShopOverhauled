@@ -7,12 +7,15 @@ import net.minecraft.commands.CommandSource;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.network.chat.TextComponent;
+import net.minecraft.world.item.Item;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,23 +24,20 @@ import java.util.regex.Pattern;
  */
 public class Shop {
 
-    private static String SHOP_FILE_LOCATION = "config/"+ AdminShop.MODID +"/shop.csv";
+    private static final String SHOP_FILE_LOCATION = "config/"+ AdminShop.MODID +"/shop.csv";
     private static final String DEFAULT_SHOP_FILE = "assets/"+ AdminShop.MODID +"/default_shop.csv";
-    private static final String BUY_CATEGORIES_TEXT = "Buy Categories:";
-    private static final String SELL_CATEGORIES_TEXT = "Sell Categories:";
-    //Matches "(value) as (var_type)" outside of a string to turn back into just the value
+
+    //Matches "(value) as (var_type)" outside a string to turn back into just the value
     private static final String CT_CAST_REGEX = "([0-9]+(\\.[0-9]*)?|true|false) as " +
             "(int|short|byte|bool|float|double|long)(\\[\\])?(?=[^\"]*(\"[^\"]*\"[^\"]*)*$)";
     private static Shop instance;
 
     public String shopTextRaw;
 
-    public List<String> categoryNamesBuy;
-    public List<String> categoryNamesSell;
-
-    public List<List<ShopItem>> shopStockBuy;
-    public List<List<ShopItem>> shopStockSell;
-
+    private final List<ShopItem> shopStockBuy;
+    private final Map<Item, ShopItem> shopBuyMap;
+    private final List<ShopItem> shopStockSell;
+    private final Map<Item, ShopItem> shopSellMap;
     public List<String> errors;
 
     public static Shop get(){
@@ -47,13 +47,29 @@ public class Shop {
     }
 
     public Shop(){
-        categoryNamesBuy = new ArrayList<>();
-        categoryNamesSell = new ArrayList<>();
         shopStockBuy = new ArrayList<>();
         shopStockSell = new ArrayList<>();
+        shopBuyMap = new HashMap<>();
+        shopSellMap = new HashMap<>();
         errors = new ArrayList<>();
 
         loadFromFile((CommandSource) null);
+    }
+
+    public List<ShopItem> getShopStockBuy() {
+        return shopStockBuy;
+    }
+
+    public List<ShopItem> getShopStockSell() {
+        return shopStockSell;
+    }
+
+    public Map<Item, ShopItem> getShopBuyMap() {
+        return shopBuyMap;
+    }
+
+    public Map<Item, ShopItem> getShopSellMap() {
+        return shopSellMap;
     }
 
     public void loadFromFile(CommandSource initiator){
@@ -72,12 +88,10 @@ public class Shop {
         //Clear out existing shop data
         shopTextRaw = csv;
         errors.clear();
-        categoryNamesBuy.clear();
-        categoryNamesSell.clear();
-        shopStockBuy.forEach(s -> s.clear());
         shopStockBuy.clear();
-        shopStockSell.forEach(s -> s.clear());
         shopStockSell.clear();
+        shopBuyMap.clear();
+        shopSellMap.clear();
 
         //Parse file
         List<List<String>> parsedCSV = CSVParser.parseCSV(csv);
@@ -110,29 +124,12 @@ public class Shop {
         if(line[0].equals(""))
             return;
 
-        //Category names
-        if(line[0].equals(BUY_CATEGORIES_TEXT)){
-            for(int i = 1; i < line.length; i++) {
-                if(line[i].equals("")) break;
-                categoryNamesBuy.add(line[i]);
-                shopStockBuy.add(new ArrayList<>());
-            }
-            return;
-        }else if(line[0].equals(SELL_CATEGORIES_TEXT)){
-            for(int i = 1; i < line.length; i++) {
-                if(line[i].equals("")) break;
-                categoryNamesSell.add(line[i]);
-                shopStockSell.add(new ArrayList<>());
-            }
-            return;
-        }
-
         //Shop item (default)
 
         //Parse each column and confirm it contains "valid" input
         boolean isError = false;
-        if(line.length < 5){
-            errors.add("Line "+lineNumber+":\tExpected shop item on this row, which requires 5 columns." +
+        if(line.length < 4){
+            errors.add("Line "+lineNumber+":\tExpected shop item on this row, which requires 4 columns." +
                     " Not enough columns");
             isError = true;
             return;
@@ -140,14 +137,16 @@ public class Shop {
             //Check if buy or sell is correctly specified
         if(!(line[0].equalsIgnoreCase("buy") || line[0].equalsIgnoreCase("sell")
                 || line[0].equalsIgnoreCase("b") || line[0].equalsIgnoreCase("s"))){
-            errors.add("Line "+lineNumber+":\tFirst column must be either \"buy\", \"sell\", \"b\", or \"s\"");
+            errors.add("Line "+lineNumber+":\tFirst column must be either \"buy\", \"sell\", \"b\", or \"s\""+
+                    "Value: "+line[0]);
             isError = true;
         }
 
             //Check if item or fluid is correctly specified
         if(!(line[1].equalsIgnoreCase("item") || line[1].equalsIgnoreCase("i")
                 || line[1].equals("fluid") || line[1].equalsIgnoreCase("f"))) {
-            errors.add("Line "+lineNumber+":\tSecond column must be either \"item\", \"fluid\", \"i\", or \"f\"");
+            errors.add("Line "+lineNumber+":\tSecond column must be either \"item\", \"fluid\", \"i\", or \"f\""+
+                    "Value: "+line[1]);
             isError = true;
         }
 
@@ -157,30 +156,15 @@ public class Shop {
             price = Integer.parseInt(line[3]);
         }catch (NumberFormatException e){
             price = 1;
-            errors.add("Line "+lineNumber+":\tFourth column must be a number, decimals optional.");
+            errors.add("Line "+lineNumber+":\tFourth column must be a whole number. Value:"+line[3]);
             isError = true;
         }
 
-            //Check if category index is an integer
-        int index = -1;
-        try{
-            index = Integer.parseInt(line[4]);
-        }catch (NumberFormatException e){
-            errors.add("Line "+lineNumber+":\tFifth column must be a whole number, with NO decimals.");
-            isError = true;
-        }
-
-            //Check if category index is out of bounds
+            //Check if buy or sell
         boolean isBuy = line[0].equalsIgnoreCase("buy") || line[0].equalsIgnoreCase("b");
-        List<String> categoryList = isBuy ? categoryNamesBuy : categoryNamesSell;
-        if(index > categoryList.size() || index < 0){
-            errors.add("Line "+lineNumber+":\tFifth column must be between 0 and the size of the category list.");
-            errors.add("\teg. Can't have a category index of 5 when there are only 2 categories defined.");
-            isError = true;
-        }
 
             //Check if both tag and buying
-        boolean isTag = line[2].indexOf("<tag:") != -1 || line[2].indexOf("#") != -1;
+        boolean isTag = line[2].contains("<tag:") || line[2].contains("#");
         if(isTag && isBuy){
             errors.add("Line "+lineNumber+":\tTags can only be sold, not bought." +
                     " Please specify a unique item or change the first column to sell");
@@ -264,8 +248,10 @@ public class Shop {
             //Continue anyway if no other errors have occurred yet
         }
 
-        List<List<ShopItem>> shopList = isBuy ? shopStockBuy : shopStockSell;
-        shopList.get(Integer.parseInt(line[4])).add(item);
+        List<ShopItem> shopList = isBuy ? shopStockBuy : shopStockSell;
+        Map<Item, ShopItem> shopMap = isBuy ? shopBuyMap : shopSellMap;
+        shopList.add(item);
+        shopMap.put(item.getItem().getItem(), item);
     }
 
     /**
@@ -287,13 +273,14 @@ public class Shop {
      * Generate a default shop file if one does not already exist
      */
     private void generateDefaultShopFile(){
-        if(Files.notExists(Path.of(SHOP_FILE_LOCATION))){
+        Path shop_file_path = Path.of(SHOP_FILE_LOCATION);
+        if(Files.notExists(shop_file_path)){
             try {
                 InputStream defStream = AdminShop.class.getClassLoader().getResourceAsStream(DEFAULT_SHOP_FILE);
                 byte [] buffer = new byte[defStream.available()];
                 defStream.read(buffer);
                 Files.createDirectories(Path.of("config/"+AdminShop.MODID));
-                Files.createFile(Path.of(SHOP_FILE_LOCATION));
+                Files.createFile(shop_file_path);
                 FileOutputStream outStream = new FileOutputStream(new File(SHOP_FILE_LOCATION));
                 outStream.write(buffer);
             }catch (IOException e){

@@ -3,9 +3,6 @@
 ,,,,
 // Blank lines are also ignored.,,"// Cells that begin with // are ignored, along with any cells to the right of them. Cells to the left won't be ignored if they do not have a //",,
 ,,,,
-// Category names to organize shop items by. They appear as blue rectangles on the left of the shop GUI. Start filling them from column B onwards,,,,
-Buy Categories:,Ores,Enchanted Books,,
-Sell Categories:,Ingots,Fish,,
 ,,,,
 "// Items can be formatted in different ways, using KubeJS or Crafttweaker syntax for easy copying from the game. See each cell in the next line for examples",,,,
 //,KubeJS style,Crafttweaker style,KubeJS tags,Crafttweaker tags
@@ -16,9 +13,7 @@ Sell Categories:,Ingots,Fish,,
 //,KubeJS style,Crafttweaker style,KubeJS tags,Crafttweaker tags
 //,minecraft:water,<fluid:minecraft:water>,#minecraft:water,<tag:fluid:minecraft:water>
 ,,,,
-,,,,
 // Define shop items below categories. They are as formatted:,,,,
-"// ""buy"" or ""sell"" (the letters b and s also work)","""fluid"" or ""item"" (letters f and i also work)",item or fluid name,price,"category index (starts at 0 for the first category defined on rows 7 and 8, column B)"
+"// ""buy"" or ""sell"" (the letters b and s also work)","""fluid"" or ""item"" (letters f and i also work)",item or fluid name,price
 buy,item,minecraft:iron_ore,10,0
-,,,,
 sell,item,minecraft:iron_ingot,2,0

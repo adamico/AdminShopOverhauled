@@ -6,7 +6,10 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.vnator.adminshop.AdminShop;
 import com.vnator.adminshop.blocks.ShopBlock;
 import com.vnator.adminshop.blocks.ShopContainer;
-import com.vnator.adminshop.client.gui.*;
+import com.vnator.adminshop.client.gui.BuySellButton;
+import com.vnator.adminshop.client.gui.ChangeAccountButton;
+import com.vnator.adminshop.client.gui.ScrollButton;
+import com.vnator.adminshop.client.gui.ShopButton;
 import com.vnator.adminshop.money.BankAccount;
 import com.vnator.adminshop.money.ClientMoneyData;
 import com.vnator.adminshop.network.MojangAPI;
@@ -40,10 +43,8 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
     public static final int SHOP_BUTTONS_PER_PAGE = 36;
     private final ShopContainer shopContainer;
 
-    private final List<List<ShopButton>> buyButtons;
-    private final List<List<ShopButton>> sellButtons;
-    private int[] buyCategoriesPage; //Current page for each category
-    private int[] sellCategoriesPage;
+    private final List<ShopButton> buyButtons;
+    private final List<ShopButton> sellButtons;
     private int buyCategory; //Currently selected category for the Buy option
     private int sellCategory;
     private boolean isBuy; //Whether the Buy option is currently selected
@@ -57,8 +58,6 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
     private BuySellButton buySellButton;
     private ScrollButton upButton;
     private ScrollButton downButton;
-    private final List<CategoryButton> buyCategoryButtons;
-    private final List<CategoryButton> sellCategoryButtons;
 
     public ShopScreen(ShopContainer container, Inventory inv, Component name) {
         super(container, inv, name);
@@ -94,9 +93,9 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
 
         buyButtons = new ArrayList<>();
         sellButtons = new ArrayList<>();
-        buyCategoryButtons = new ArrayList<>();
-        sellCategoryButtons = new ArrayList<>();
+
         isBuy = true;
+        printInfo();
     }
 
 //    @SuppressWarnings("resource")
@@ -109,11 +108,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         createShopButtons(false, relX, relY);
         createBuySellButton(relX, relY);
         createScrollButtons(relX, relY);
-        createCategoryButtons(true, relX, relY);
-        createCategoryButtons(false, relX, relY);
         createChangeAccountButton(relX, relY);
-        buyCategoriesPage = new int[buyButtons.size()];
-        sellCategoriesPage = new int[sellButtons.size()];
         refreshShopButtons();
 //        printInfo();
     }
@@ -162,27 +157,25 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
     }
 
     private void createShopButtons(boolean isBuy, int x, int y){
-        List<List<ShopItem>> shopItems = isBuy ? Shop.get().shopStockBuy : Shop.get().shopStockSell;
-        List<List<ShopButton>> shopButtons = isBuy ? buyButtons : sellButtons;
+        List<ShopItem> shopItems = isBuy ? Shop.get().getShopStockBuy() : Shop.get().getShopStockSell();
+        List<ShopButton> shopButtons = isBuy ? buyButtons : sellButtons;
         //Clear shop buttons if they already exist
-        shopButtons.forEach(l -> l.forEach(this::removeWidget));
+        shopButtons.forEach(this::removeWidget);
         shopButtons.clear();
-        for(int i = 0; i < shopItems.size(); i++){
-            shopButtons.add(new ArrayList<>());
-            for(int j = 0; j < shopItems.get(i).size(); j++){
-                final int i2 = i;
-                final int j2 = j;
-                ShopButton button = new ShopButton(shopItems.get(i).get(j),
-                        x+SHOP_BUTTON_X+SHOP_BUTTON_SIZE*(j%NUM_COLS),
-                        y+SHOP_BUTTON_Y+SHOP_BUTTON_SIZE*((j/NUM_COLS)%NUM_ROWS), itemRenderer, (b) -> {
-                    int quantity = ((ShopButton)b).getQuantity();
-                    attemptTransaction(this.usableAccounts.get(this.usableAccountsIndex), isBuy, i2, j2, quantity);
-                });
-                shopButtons.get(i).add(button);
-                button.visible = isBuy;
-                addRenderableWidget(button);
-            }
+
+        for(int j = 0; j < shopItems.size(); j++){
+            final int j2 = j;
+            ShopButton button = new ShopButton(shopItems.get(j),
+                    x+SHOP_BUTTON_X+SHOP_BUTTON_SIZE*(j%NUM_COLS),
+                    y+SHOP_BUTTON_Y+SHOP_BUTTON_SIZE*((j/NUM_COLS)%NUM_ROWS), itemRenderer, (b) -> {
+                int quantity = ((ShopButton)b).getQuantity();
+                attemptTransaction(this.usableAccounts.get(this.usableAccountsIndex), isBuy, shopItems.get(j2), quantity);
+            });
+            shopButtons.add(button);
+            button.visible = isBuy;
+            addRenderableWidget(button);
         }
+
     }
 
     private void createChangeAccountButton(int x, int y) {
@@ -280,9 +273,9 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         }
         upButton = new ScrollButton(x+170, y+18, true, b -> {
             if(isBuy) {
-                buyCategoriesPage[buyCategory] = Math.max(buyCategoriesPage[buyCategory] - 1, 0);
+//                buyCategoriesPage[buyCategory] = Math.max(buyCategoriesPage[buyCategory] - 1, 0);
             }else{
-                sellCategoriesPage[sellCategory] = Math.max(sellCategoriesPage[sellCategory] - 1, 0);
+//                sellCategoriesPage[sellCategory] = Math.max(sellCategoriesPage[sellCategory] - 1, 0);
             }
             refreshShopButtons();
         });
@@ -293,54 +286,20 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         }
         downButton = new ScrollButton(x+170, y+108, false, b -> {
             if(isBuy) {
-                int maxScroll = ((buyButtons.get(buyCategory).size()-1) / (NUM_ROWS * NUM_COLS));
-                buyCategoriesPage[buyCategory] = Math.min(buyCategoriesPage[buyCategory] + 1, maxScroll);
+                int maxScroll = ((buyButtons.size()-1) / (NUM_ROWS * NUM_COLS));
+//                buyCategoriesPage[buyCategory] = Math.min(buyCategoriesPage[buyCategory] + 1, maxScroll);
             }else{
-                int maxScroll = ((sellButtons.get(sellCategory).size()-1) / (NUM_ROWS * NUM_COLS));
-                sellCategoriesPage[sellCategory] = Math.min(sellCategoriesPage[sellCategory] + 1, maxScroll);
+                int maxScroll = ((sellButtons.size()-1) / (NUM_ROWS * NUM_COLS));
+//                sellCategoriesPage[sellCategory] = Math.min(sellCategoriesPage[sellCategory] + 1, maxScroll);
             }
             refreshShopButtons();
         });
         addRenderableWidget(downButton);
     }
 
-    private void createCategoryButtons(boolean isBuy, int x, int y){
-        List<CategoryButton> buttons = (isBuy ? buyCategoryButtons : sellCategoryButtons);
-        if(buttons != null){
-            buttons.forEach(this::removeWidget);
-            buttons.clear();
-        }
-        List<String> names = (isBuy ? Shop.get().categoryNamesBuy : Shop.get().categoryNamesSell);
-        for(int i = 0; i < names.size(); i++){
-            int index = i;
-            CategoryButton button = new CategoryButton(x+9, y+18+18*i, names.get(i), b -> {
-                if(isBuy){
-                    buyCategory = index;
-                    buyCategoryButtons.forEach(but -> ((CategoryButton)but).setSelected(false));
-                }else{
-                    sellCategory = index;
-                    sellCategoryButtons.forEach(but -> ((CategoryButton)but).setSelected(false));
-                }
-                ((CategoryButton)b).setSelected(true);
-                refreshShopButtons();
-            });
-            if(i == 0){
-                button.setSelected(true);
-            }
-            button.visible = isBuy == this.isBuy;
-
-            if (buttons != null) {
-                buttons.add(button);
-            }
-            addRenderableWidget(button);
-        }
-    }
-
     private void refreshShopButtons(){
-        buyButtons.forEach(l -> l.forEach(b -> b.visible = false));
-        sellButtons.forEach(l -> l.forEach(b -> b.visible = false));
-        buyCategoryButtons.forEach(b -> b.visible = false);
-        sellCategoryButtons.forEach(b -> b.visible = false);
+        buyButtons.forEach(b -> b.visible = false);
+        sellButtons.forEach(b -> b.visible = false);
         changeAccountButton.visible = false;
 //        List<ShopButton> buttons = (isBuy ? buyButtons : sellButtons)
 //                .get((isBuy ? buyCategory : sellCategory));
@@ -348,21 +307,18 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
 //        buttons = buttons.subList(page * NUM_ROWS*NUM_COLS,
 //                Math.min((page+1) * NUM_ROWS*NUM_COLS, buttons.size()) );
         getVisibleShopButtons().forEach(b -> b.visible = true);
-        (isBuy ? buyCategoryButtons : sellCategoryButtons).forEach(b -> b.visible = true);
         changeAccountButton.visible = true;
     }
 
     private List<ShopButton> getVisibleShopButtons(){
-        int shopPage = isBuy ? buyCategoriesPage[buyCategory] : sellCategoriesPage[sellCategory];
-        List<ShopButton> categoryButtons = (isBuy ? buyButtons : sellButtons)
-                .get(isBuy ? buyCategory : sellCategory);
+        int shopPage = isBuy ? buyCategory : sellCategory;
+        List<ShopButton> categoryButtons = isBuy ? buyButtons : sellButtons;
         int numPassed = NUM_ROWS*NUM_COLS*shopPage;
-        //return (isBuy ? buyButtons : sellButtons).stream().reduce((l1, l2)->{l1.addAll(l2); return l1;}).get();
         return categoryButtons.subList(numPassed, Math.min(numPassed+NUM_ROWS*NUM_COLS, categoryButtons.size()));
     }
 
-    private void attemptTransaction(Pair<String, Integer> bankAccount, boolean isBuy, int category, int index, int quantity){
-        Messages.sendToServer(new PacketPurchaseRequest(bankAccount, isBuy, category, index, quantity));
+    private void attemptTransaction(Pair<String, Integer> bankAccount, boolean isBuy, ShopItem item, int quantity){
+        Messages.sendToServer(new PacketPurchaseRequest(bankAccount, isBuy, item, quantity));
         // Refresh account map
         this.accountMap = ClientMoneyData.getAccountMap();
     }
@@ -374,17 +330,5 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         sellButtons.forEach(System.out::println);
 
         System.out.println();
-
-        System.out.println("Buy Category pages | Selected: "+buyCategory);
-        for (int i : buyCategoriesPage) {
-            System.out.print(i+" ");
-        }
-        System.out.println();
-        System.out.println("Sell Category pages | Selected: "+sellCategory);
-        for (int i : sellCategoriesPage) {
-            System.out.print(i+" ");
-        }
-
-        System.out.println("\n");
     }
 }

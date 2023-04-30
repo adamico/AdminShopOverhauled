@@ -19,7 +19,8 @@ import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.wrapper.PlayerMainInvWrapper;
 import net.minecraftforge.network.NetworkEvent;
 
-import java.util.*;
+import java.util.List;
+import java.util.UUID;
 import java.util.function.Supplier;
 
 import static java.lang.Math.ceil;
@@ -27,53 +28,51 @@ import static java.lang.Math.ceil;
 public class PacketPurchaseRequest {
 
     private final boolean isBuy;
-    private final int category;
-    private final int itemIndex;
     private final int quantity;
     private final String accOwner;
     private final int accID;
+    private final ShopItem item; // final
 
-    public PacketPurchaseRequest(BankAccount bankAccount, boolean isBuy, int category, int itemIndex, int quantity){
+    public PacketPurchaseRequest(BankAccount bankAccount, boolean isBuy, ShopItem item, int quantity){
         this.accOwner = bankAccount.getOwner();
         this.accID = bankAccount.getId();
         this.isBuy = isBuy;
-        this.category = category;
-        this.itemIndex = itemIndex;
-        this.quantity = quantity;
-    }
-    public PacketPurchaseRequest(Pair<String, Integer> bankAccount, boolean isBuy, int category, int itemIndex, int quantity){
-        this.accOwner = bankAccount.first;
-        this.accID = bankAccount.second;
-        this.isBuy = isBuy;
-        this.category = category;
-        this.itemIndex = itemIndex;
+        this.item = item;
         this.quantity = quantity;
     }
 
-    public PacketPurchaseRequest(String owner, int ownerId, boolean isBuy, int category, int itemIndex, int quantity){
+    public PacketPurchaseRequest(Pair<String, Integer> bankAccount, boolean isBuy, ShopItem item, int quantity){
+        this.accOwner = bankAccount.first;
+        this.accID = bankAccount.second;
+        this.isBuy = isBuy;
+        this.item = item;
+        this.quantity = quantity;
+    }
+
+    public PacketPurchaseRequest(String owner, int ownerId, boolean isBuy, ShopItem item, int quantity){
         this.accOwner = owner;
         this.accID = ownerId;
         this.isBuy = isBuy;
-        this.category = category;
-        this.itemIndex = itemIndex;
+        this.item = item;
         this.quantity = quantity;
     }
 
     public PacketPurchaseRequest(FriendlyByteBuf buf){
-        accOwner = buf.readUtf();
-        accID = buf.readInt();
-        isBuy = buf.readBoolean();
-        category = buf.readInt();
-        itemIndex = buf.readInt();
-        quantity = buf.readInt();
+        this.accOwner = buf.readUtf();
+        this.accID = buf.readInt();
+        this.isBuy = buf.readBoolean();
+        int shopItemIndex = buf.readInt();
+        List<ShopItem> shopItemList = isBuy ? Shop.get().getShopStockBuy() : Shop.get().getShopStockSell();
+        this.item = shopItemList.get(shopItemIndex);
+        this.quantity = buf.readInt();
     }
 
     public void toBytes(FriendlyByteBuf buf){
         buf.writeUtf(accOwner);
         buf.writeInt(accID);
         buf.writeBoolean(isBuy);
-        buf.writeInt(category);
-        buf.writeInt(itemIndex);
+        List<ShopItem> shopItemList = isBuy ? Shop.get().getShopStockBuy() : Shop.get().getShopStockSell();
+        buf.writeInt(shopItemList.indexOf(item));
         buf.writeInt(quantity);
     }
 
@@ -82,16 +81,14 @@ public class PacketPurchaseRequest {
         ctx.enqueueWork(() -> {
             //Client side accessed here
             //Do NOT call client-only code though, since server needs to access this too
-            System.out.println("Perform purchase on: "+isBuy+" , "+category+" , "+itemIndex+" , "+quantity);
-            ShopItem shopItem = isBuy ? Shop.get().shopStockBuy.get(category).get(itemIndex) : Shop.get().shopStockSell
-                    .get(category).get(itemIndex);
+            System.out.println("Perform purchase on: "+isBuy+" , "+item.getItem().getDisplayName().getString()+" , "+quantity);
 
-            System.out.println("Item: "+shopItem.getItem().getDisplayName().getString());
+            System.out.println("Item: "+item.getItem().getDisplayName().getString());
 
             if (isBuy) {
-                buyTransaction(supplier, shopItem, quantity);
+                buyTransaction(supplier, item, quantity);
             } else {
-                sellTransaction(supplier, shopItem, quantity);
+                sellTransaction(supplier, item, quantity);
             }
 
             // Sync money with affected clients
@@ -101,7 +98,6 @@ public class PacketPurchaseRequest {
 
             // Get current bank account
             MoneyManager moneyManager = MoneyManager.get(player.getLevel());
-            Set<BankAccount> accountSet = moneyManager.getAccountSet();
             BankAccount currentAccount = moneyManager.getBankAccount(this.accOwner, this.accID);
 
             // Sync money with bank account's members
@@ -145,9 +141,7 @@ public class PacketPurchaseRequest {
                     player.sendMessage(new TextComponent("Not enough money in account!"), player.getUUID());
                     AdminShop.LOGGER.error("Not enough money in account to perform transaction.");
                 }
-            } // else {
-                // TODO fluid logic
-            // }
+            } // fluids later
         });
     }
 

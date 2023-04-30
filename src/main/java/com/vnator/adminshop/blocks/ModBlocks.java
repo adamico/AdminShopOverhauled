@@ -21,6 +21,9 @@ public class ModBlocks {
     public static final RegistryObject<Block> SHOP = registerBlock("shop",
             ShopBlock::new, ModSetup.ITEM_GROUP);
 
+//    public static final RegistryObject<Block> SELLER = registerBlock("seller",
+//            SellerBlock::new, ModSetup.ITEM_GROUP);
+
     private static <T extends Block> RegistryObject<T> registerBlock(String name, Supplier<T> block, CreativeModeTab tab) {
         RegistryObject<T> toReturn = BLOCKS.register(name, block);
         registerBlockItem(name, toReturn, tab);
