@@ -12,9 +12,9 @@ public class ModBlockEntities {
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES =
             DeferredRegister.create(ForgeRegistries.BLOCK_ENTITIES, AdminShop.MODID);
 
-//    public static final RegistryObject<BlockEntityType<SellerBE>> SELLER =
-//            BLOCK_ENTITIES.register("seller", () -> BlockEntityType.Builder.of(SellerBE::new,
-//                    ModBlocks.SELLER.get()).build(null));
+    public static final RegistryObject<BlockEntityType<SellerBE>> SELLER =
+            BLOCK_ENTITIES.register("seller", () -> BlockEntityType.Builder.of(SellerBE::new,
+                    ModBlocks.SELLER.get()).build(null));
 
     public static final RegistryObject<BlockEntityType<ShopBE>> SHOP =
             BLOCK_ENTITIES.register("shop", () -> BlockEntityType.Builder.of(ShopBE::new,

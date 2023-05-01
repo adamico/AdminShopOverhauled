@@ -95,7 +95,6 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         sellButtons = new ArrayList<>();
 
         isBuy = true;
-        printInfo();
     }
 
 //    @SuppressWarnings("resource")
@@ -110,7 +109,6 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         createScrollButtons(relX, relY);
         createChangeAccountButton(relX, relY);
         refreshShopButtons();
-//        printInfo();
     }
 
     @Override

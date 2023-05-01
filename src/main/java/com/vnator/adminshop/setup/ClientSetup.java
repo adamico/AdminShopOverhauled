@@ -3,6 +3,7 @@ package com.vnator.adminshop.setup;
 import com.vnator.adminshop.AdminShop;
 import com.vnator.adminshop.blocks.ModBlocks;
 import com.vnator.adminshop.screen.ModMenuTypes;
+import com.vnator.adminshop.screen.SellerScreen;
 import com.vnator.adminshop.screen.ShopScreen;
 import com.vnator.adminshop.client.KeyInit;
 import net.minecraft.client.gui.screens.MenuScreens;
@@ -17,6 +18,7 @@ public class ClientSetup {
     public static void init(FMLClientSetupEvent event){
         event.enqueueWork(() -> {
             MenuScreens.register(ModMenuTypes.SHOP_MENU.get(), ShopScreen::new);
+            MenuScreens.register(ModMenuTypes.SELLER_MENU.get(), SellerScreen::new);
             ItemBlockRenderTypes.setRenderLayer(ModBlocks.SHOP.get(), RenderType.translucent());
             KeyInit.init();
         });

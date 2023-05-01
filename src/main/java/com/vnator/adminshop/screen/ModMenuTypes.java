@@ -15,8 +15,11 @@ public class ModMenuTypes {
     public static final DeferredRegister<MenuType<?>> MENUS =
             DeferredRegister.create(ForgeRegistries.CONTAINERS, AdminShop.MODID);
 
-    public static final RegistryObject<MenuType<ShopContainer>> SHOP_MENU = MENUS.register("shop",
+    public static final RegistryObject<MenuType<ShopContainer>> SHOP_MENU = MENUS.register("shop_menu",
             () -> IForgeMenuType.create(((windowId, inv, data) -> new ShopContainer(windowId, inv, inv.player))));
+
+    public static final RegistryObject<MenuType<SellerMenu>> SELLER_MENU = MENUS.register("seller",
+            () -> IForgeMenuType.create((SellerMenu::new)));
 
     private static <T extends AbstractContainerMenu> RegistryObject<MenuType<T>> registerMenuType(IContainerFactory<T> factory,
                                                                                                   String name) {
