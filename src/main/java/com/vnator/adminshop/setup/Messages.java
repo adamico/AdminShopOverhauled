@@ -50,6 +50,12 @@ public class Messages {
                 .consumer(PacketSyncShopToClient::handle)
                 .add();
 
+        net.messageBuilder(PacketMachineOwnerInfo.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(PacketMachineOwnerInfo::new)
+                .encoder(PacketMachineOwnerInfo::toBytes)
+                .consumer(PacketMachineOwnerInfo::handle)
+                .add();
+
     }
 
     public static <MSG> void sendToServer(MSG message) {

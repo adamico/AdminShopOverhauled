@@ -2,7 +2,9 @@ package com.vnator.adminshop.blocks.entity;
 
 import com.vnator.adminshop.AdminShop;
 import com.vnator.adminshop.money.BankAccount;
+import com.vnator.adminshop.money.MachineOwnerInfo;
 import com.vnator.adminshop.money.MoneyManager;
+import com.vnator.adminshop.network.MojangAPI;
 import com.vnator.adminshop.network.PacketSyncMoneyToClient;
 import com.vnator.adminshop.screen.SellerMenu;
 import com.vnator.adminshop.setup.Messages;
@@ -32,14 +34,14 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.UUID;
 
 public class SellerBE extends BlockEntity implements MenuProvider {
 
-    private String ownerUUID;
+    private String ownerUUID = "UNKNOWN";
+    private String ownerName = "UNKNOWN";
     private int accID = 1;
     private final ItemStackHandler itemHandler = new ItemStackHandler(1) {
         @Override
@@ -60,11 +62,37 @@ public class SellerBE extends BlockEntity implements MenuProvider {
     }
 
     public void setOwnerUUID(String ownerUUID) {
+        if (this.level == null || this.level.isClientSide) {
+            AdminShop.LOGGER.error("Do not set ownerUUID from client side!");
+            return;
+        }
         this.ownerUUID = ownerUUID;
+        this.ownerName = MojangAPI.getUsernameByUUID(ownerUUID);
+        syncMachineOwnerInfo((ServerLevel) this.level, this.getBlockPos(), this.ownerUUID, this.accID);
+        setChanged();
+    }
+
+    public String getOwnerName() {
+        return ownerName;
+    }
+
+    public String getOwnerUUID() {
+        return ownerUUID;
     }
 
     public void setAccID(int accID) {
+        if (this.level == null || this.level.isClientSide) {
+            AdminShop.LOGGER.error("Do not set accID from client side!");
+            return;
+        }
+        System.out.println("SETTING ACCID FROM setAccID");
         this.accID = accID;
+        syncMachineOwnerInfo((ServerLevel) this.level, this.getBlockPos(), this.ownerUUID, this.accID);
+        setChanged();
+    }
+
+    public int getAccID() {
+        return accID;
     }
 
     @Nullable
@@ -84,9 +112,9 @@ public class SellerBE extends BlockEntity implements MenuProvider {
         int count = entity.itemHandler.getStackInSlot(0).getCount();
         entity.itemHandler.extractItem(0, count, false);
         ShopItem shopItem = Shop.get().getShopSellMap().get(item);
-        System.out.println("Attempting sellTransaction(entity, "+entity.ownerUUID+","+entity.accID+", "+shopItem+", "+
-                count);
-        sellTransaction(entity, entity.ownerUUID, entity.accID, shopItem, count);
+        System.out.println("Attempting sellTransaction(entity, "+entity.ownerUUID+","+entity.getAccID()+", "+
+                shopItem+", "+count);
+        sellTransaction(entity, entity.ownerUUID, entity.getAccID(), shopItem, count);
     }
 
     private static void sellTransaction(SellerBE entity, String accOwner, int accID, ShopItem item, int quantity) {
@@ -107,15 +135,24 @@ public class SellerBE extends BlockEntity implements MenuProvider {
             AdminShop.LOGGER.error("Error selling item.");
             return;
         }
+        syncAccountData((ServerLevel) entity.level, accOwner, accID);
+    }
+
+    private static void syncAccountData(ServerLevel level, String accOwner, int accID) {
         // Get current bank account
+        MoneyManager moneyManager = MoneyManager.get(level);
+
         BankAccount currentAccount = moneyManager.getBankAccount(accOwner, accID);
         // Sync money with bank account's members
         assert currentAccount.getMembers().contains(accOwner);
         currentAccount.getMembers().forEach(memberUUID -> {
             List<BankAccount> usableAccounts = moneyManager.getSharedAccounts().get(memberUUID);
-            Messages.sendToPlayer(new PacketSyncMoneyToClient(usableAccounts), (ServerPlayer) entity.level.
+            Messages.sendToPlayer(new PacketSyncMoneyToClient(usableAccounts), (ServerPlayer) level.
                     getPlayerByUUID(UUID.fromString(memberUUID)));
         });
+    }
+    private static void syncMachineOwnerInfo(ServerLevel level, BlockPos pos, String owner, int id) {
+        MachineOwnerInfo.get(level).addMachineOwner(pos, owner, id);
     }
 
     private static boolean hasItem(SellerBE entity) {
@@ -146,14 +183,22 @@ public class SellerBE extends BlockEntity implements MenuProvider {
 
     @Override
     protected void saveAdditional(@NotNull CompoundTag tag) {
-        tag.put("inventory", itemHandler.serializeNBT());
+        tag.put("inventory", this.itemHandler.serializeNBT());
+        tag.putString("owner", this.ownerUUID);
+        System.out.println("SAVING OWNER AS "+this.ownerUUID);
+        System.out.println("SAVING ACCID AS "+this.accID);
+        tag.putInt("accid", this.accID);
         super.saveAdditional(tag);
     }
 
     @Override
-    public void load(CompoundTag nbt) {
-        super.load(nbt);
-        itemHandler.deserializeNBT(nbt.getCompound("inventory"));
+    public void load(CompoundTag tag) {
+        this.itemHandler.deserializeNBT(tag.getCompound("inventory"));
+        this.ownerUUID = tag.getString("owner");
+        this.accID = tag.getInt("accid");
+        System.out.println("SET OWNER TO "+this.ownerUUID);
+        System.out.println("SET ACCID TO "+this.accID);
+        super.load(tag);
     }
 
     public void drops() {

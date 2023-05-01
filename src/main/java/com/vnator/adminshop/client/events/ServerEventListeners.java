@@ -10,16 +10,11 @@ import com.vnator.adminshop.network.PacketSyncMoneyToClient;
 import com.vnator.adminshop.network.PacketSyncShopToClient;
 import com.vnator.adminshop.setup.Messages;
 import com.vnator.adminshop.shop.Shop;
-import net.minecraft.client.Minecraft;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import org.lwjgl.system.CallbackI;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +27,8 @@ public class ServerEventListeners {
     public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event){
         if(Shop.get().errors.size() > 0)
             Shop.get().printErrors(event.getPlayer());
-        Messages.sendToPlayer(new PacketSyncShopToClient(Shop.get().shopTextRaw), (ServerPlayer) event.getPlayer());
+        ServerPlayer player = (ServerPlayer) event.getPlayer();
+        Messages.sendToPlayer(new PacketSyncShopToClient(Shop.get().shopTextRaw), player);
         MoneyManager moneyManager = MoneyManager.get(event.getPlayer().getLevel());
         Map<String, List<BankAccount>> sharedAccounts = moneyManager.getSharedAccounts();
         List<BankAccount> usableAccounts;
@@ -48,7 +44,7 @@ public class ServerEventListeners {
             AdminShop.LOGGER.error("Could not get usableAccounts for player on login.");
             usableAccounts = new ArrayList<>();
         }
-        Messages.sendToPlayer(new PacketSyncMoneyToClient(usableAccounts), (ServerPlayer) event.getPlayer());
+        Messages.sendToPlayer(new PacketSyncMoneyToClient(usableAccounts), player);
     }
 
     @SubscribeEvent

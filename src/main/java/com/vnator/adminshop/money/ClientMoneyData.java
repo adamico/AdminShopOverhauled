@@ -2,6 +2,7 @@ package com.vnator.adminshop.money;
 
 import com.ibm.icu.impl.Pair;
 import com.vnator.adminshop.AdminShop;
+import net.minecraft.core.BlockPos;
 
 import java.util.*;
 
@@ -10,6 +11,7 @@ public class ClientMoneyData {
     // Only contains the list of accounts it is either an owner or member on
     private static final List<BankAccount> usableAccounts = new ArrayList<>();
     private static final Map<Pair<String, Integer>, BankAccount> accountMap = new HashMap<>();
+    private static final Map<BlockPos, Pair<String, Integer>> machineOwnerMap = new HashMap<>();
 
     public static List<BankAccount> getUsableAccounts() {
         return usableAccounts;
@@ -26,6 +28,19 @@ public class ClientMoneyData {
         ClientMoneyData.usableAccounts.forEach(account -> {
             ClientMoneyData.accountMap.put(Pair.of(account.getOwner(), account.getId()), account);
         });
+    }
+
+    public static void setMachineOwnerMap(Map<BlockPos, Pair<String, Integer>> machineOwnerMap) {
+        ClientMoneyData.machineOwnerMap.clear();
+        ClientMoneyData.machineOwnerMap.putAll(machineOwnerMap);
+    }
+
+    public static void addMachineOwnership(BlockPos pos, String owner, int id) {
+        machineOwnerMap.put(pos, Pair.of(owner, id));
+    }
+
+    public static Pair<String, Integer> getMachineOwnership(BlockPos pos) {
+        return machineOwnerMap.get(pos);
     }
 
     public static BankAccount addAccount(BankAccount newAccount) {

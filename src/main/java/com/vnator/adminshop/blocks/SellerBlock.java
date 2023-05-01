@@ -2,16 +2,23 @@ package com.vnator.adminshop.blocks;
 
 import com.vnator.adminshop.blocks.entity.ModBlockEntities;
 import com.vnator.adminshop.blocks.entity.SellerBE;
+import com.vnator.adminshop.money.MachineOwnerInfo;
+import com.vnator.adminshop.screen.SellerMenu;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -34,7 +41,6 @@ public class SellerBlock extends CustomDirectionalBlock implements EntityBlock {
                 .noOcclusion()
         );
     }
-
     private static final VoxelShape RENDER_SHAPE = Shapes.box(0.1, 0.1, 0.1, 0.9, 0.9, 0.9);
 
 
@@ -70,6 +76,21 @@ public class SellerBlock extends CustomDirectionalBlock implements EntityBlock {
 
     @Nullable
     @Override
+    public MenuProvider getMenuProvider(BlockState pState, Level pLevel, BlockPos pPos) {
+        return new SimpleMenuProvider((id, playerInventory, player) -> {
+//            if (!pLevel.isClientSide()) {
+//                SellerBE blockEntity = (SellerBE) pLevel.getBlockEntity(pPos);
+//                if (blockEntity != null) {
+//                    Messages.sendToPlayer(new PacketMachineOwnerInfo(blockEntity.getOwnerUUID(), blockEntity.getAccID(),
+//                            pPos), ((ServerPlayer) player));
+//                }
+//            }
+            return new SellerMenu(id, playerInventory, pLevel, pPos);
+        }, new TranslatableComponent("screen.adminshop.seller"));
+    }
+
+    @Nullable
+    @Override
     public BlockEntity newBlockEntity(BlockPos pPos, BlockState pState) {
         return new SellerBE(pPos, pState);
     }
@@ -84,9 +105,13 @@ public class SellerBlock extends CustomDirectionalBlock implements EntityBlock {
         super.setPlacedBy(pLevel, pPos, pState, pPlacer, pStack);
         if (!pLevel.isClientSide) {
             BlockEntity blockEntity = pLevel.getBlockEntity(pPos);
-            if (pPlacer instanceof Player && blockEntity instanceof SellerBE) {
-                ((SellerBE) blockEntity).setOwnerUUID(((Player) pPlacer).getStringUUID());
-            }
+            assert (pPlacer instanceof Player && blockEntity instanceof SellerBE);
+            System.out.println("SETTING BLOCK PLACED TO "+ pPlacer.getStringUUID());
+            ((SellerBE) blockEntity).setOwnerUUID(pPlacer.getStringUUID());
+            System.out.println("SETTING ACCID TO 1");
+            ((SellerBE) blockEntity).setAccID(1);
+            System.out.println("Adding to MachineOwnerInfo");
+            MachineOwnerInfo.get(pLevel).addMachineOwner(pPos, pPlacer.getStringUUID(), 1);
         }
     }
 

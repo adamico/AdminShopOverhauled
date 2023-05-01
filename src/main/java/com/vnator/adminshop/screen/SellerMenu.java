@@ -5,6 +5,7 @@ import com.vnator.adminshop.blocks.ModBlocks;
 import com.vnator.adminshop.blocks.entity.SellerBE;
 import com.vnator.adminshop.screen.slot.ModShopInputSlot;
 import com.vnator.adminshop.shop.Shop;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -28,7 +29,7 @@ public class SellerMenu extends AbstractContainerMenu {
     public SellerMenu(int windowId, Inventory inv, BlockEntity entity) {
         super(ModMenuTypes.SELLER_MENU.get(), windowId);
         checkContainerSize(inv, 1);
-        blockEntity = ((SellerBE) entity);
+        this.blockEntity = ((SellerBE) entity);
         this.level = inv.player.level;
 
         addPlayerInventory(inv);
@@ -37,6 +38,11 @@ public class SellerMenu extends AbstractContainerMenu {
         this.blockEntity.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY).ifPresent(handler -> {
             this.addSlot(new ModShopInputSlot(handler, 0, 56, 32));
         });
+
+    }
+
+    public SellerBE getBlockEntity() {
+        return blockEntity;
     }
 
     // CREDIT GOES TO: diesieben07 | https://github.com/diesieben07/SevenCommons
@@ -56,6 +62,10 @@ public class SellerMenu extends AbstractContainerMenu {
 
     // THIS YOU HAVE TO DEFINE!
     private static final int TE_INVENTORY_SLOT_COUNT = 1;  // must be the number of slots you have!
+
+    public SellerMenu(int id, Inventory playerInventory, Level pLevel, BlockPos pPos) {
+        this(id, playerInventory, pLevel.getBlockEntity(pPos));
+    }
 
     @Override
     protected boolean moveItemStackTo(ItemStack pStack, int pStartIndex, int pEndIndex, boolean pReverseDirection) {

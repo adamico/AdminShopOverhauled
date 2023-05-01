@@ -15,14 +15,4 @@ public class ShopBE extends BlockEntity {
         super.setRemoved();
     }
 
-//    @Override
-//    public Component getDisplayName() {
-//        return new TextComponent("Shop");
-//    }
-
-//    @Nullable
-//    @Override
-//    public AbstractContainerMenu createMenu(int pContainerId, Inventory pInventory, Player pPlayer) {
-//        return
-//    }
 }
