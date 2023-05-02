@@ -11,28 +11,27 @@ import java.util.List;
 import java.util.Map;
 
 public class ClientLocalData {
-
     // Only contains the list of accounts it is either an owner or member on
     private static final List<BankAccount> usableAccounts = new ArrayList<>();
     private static final Map<Pair<String, Integer>, BankAccount> accountMap = new HashMap<>();
 
-    private static final Map<BlockPos, Pair<String, Integer>> machineOwnerMap = new HashMap<>();
-    private static final Map<String, String> uuidToNameMap = new HashMap<>();
+    private static final Map<BlockPos, Pair<String, Integer>> machineAccountMap = new HashMap<>();
+    private static final Map<BlockPos, String> machineOwnerMap = new HashMap<>();
     public static List<BankAccount> getUsableAccounts() {
         return usableAccounts;
     }
 
-    public static void addMachineOwner(BlockPos pos, Pair<String, Integer> owner) {
+    public static void addMachineOwner(BlockPos pos, String owner) {
         machineOwnerMap.put(pos, owner);
     }
-    public static void addUuidToNameMap(String uuid, String name) {
-        uuidToNameMap.put(uuid, name);
-    }
-    public static String getNameFromUUID(String uuid) {
-        return uuidToNameMap.get(uuid);
-    }
-    public static Pair<String, Integer> getMachineOwner(BlockPos pos) {
+    public static String getMachineOwner(BlockPos pos) {
         return machineOwnerMap.get(pos);
+    }
+    public static void addMachineAccount(BlockPos pos, Pair<String, Integer> owner) {
+        machineAccountMap.put(pos, owner);
+    }
+    public static Pair<String, Integer> getMachineAccount(BlockPos pos) {
+        return machineAccountMap.get(pos);
     }
 
     public static Map<Pair<String, Integer>, BankAccount> getAccountMap() {

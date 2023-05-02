@@ -88,10 +88,10 @@ public class MoneyManager extends SavedData {
         } else {
             accountsOwned.put(owner, accountsOwned.get(owner)+1);
         }
+        // Add to sorted map
         if (!sortedAccountMap.containsKey(owner)) {
             sortedAccountMap.put(owner, new HashMap<>());
         }
-        // Add to sorted map
         sortedAccountMap.get(owner).put(id, newAccount);
         newAccount.getMembers().forEach(member -> {
             // If first account, initialize map
@@ -100,7 +100,7 @@ public class MoneyManager extends SavedData {
             }
             sharedAccounts.get(member).add(newAccount);
         });
-
+        setDirty();
         // return new account ID
         return id;
     }

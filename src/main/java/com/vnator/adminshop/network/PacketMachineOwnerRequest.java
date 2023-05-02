@@ -36,10 +36,11 @@ public class PacketMachineOwnerRequest {
             assert player != null;
             // Get Machine Owner Info
             MachineOwnerInfo machineOwnerInfo = MachineOwnerInfo.get(player.getLevel());
-            Pair<String, Integer> ownerInfo = machineOwnerInfo.getMachineOwner(this.pos);
-            assert ownerInfo != null;
+            Pair<String, Integer> accountInfo = machineOwnerInfo.getMachineAccount(this.pos);
+            String machineOwner = machineOwnerInfo.getMachineOwner(pos);
+            assert accountInfo != null;
             // Send owner info to player
-            Messages.sendToPlayer(new PacketMachineOwner(ownerInfo.first, ownerInfo.second, this.pos), player);
+            Messages.sendToPlayer(new PacketMachineOwner(machineOwner, accountInfo.first, accountInfo.second, this.pos), player);
         });
         return true;
     }

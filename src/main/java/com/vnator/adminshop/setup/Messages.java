@@ -67,6 +67,12 @@ public class Messages {
                 .encoder(PacketOpenMenu::toBytes)
                 .consumer(PacketOpenMenu::handle)
                 .add();
+
+        net.messageBuilder(PacketSellerAccountChange.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(PacketSellerAccountChange::new)
+                .encoder(PacketSellerAccountChange::toBytes)
+                .consumer(PacketSellerAccountChange::handle)
+                .add();
     }
 
     public static <MSG> void sendToServer(MSG message) {

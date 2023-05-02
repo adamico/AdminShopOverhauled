@@ -42,13 +42,12 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
     private static final int SHOP_BUTTON_X = 62;
     private static final int SHOP_BUTTON_Y = 18;
     private static final int SHOP_BUTTON_SIZE = 18;
+    private int rows_passed = 0;
     public static final int SHOP_BUTTONS_PER_PAGE = 36;
     private final ShopContainer shopContainer;
 
     private final List<ShopButton> buyButtons;
     private final List<ShopButton> sellButtons;
-    private int buyCategory; //Currently selected category for the Buy option
-    private int sellCategory;
     private boolean isBuy; //Whether the Buy option is currently selected
 //    private final String playerUUID;
     private Map<Pair<String, Integer>, BankAccount> accountMap;
@@ -182,18 +181,23 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         changeAccountButton = new ChangeAccountButton(x+9, y+108, (b) -> {
             changeAccounts();
             assert Minecraft.getInstance().player != null;
-            assert Minecraft.getInstance().level != null;
             Minecraft.getInstance().player.sendMessage(new TextComponent("Changed account to "+
                     MojangAPI.getUsernameByUUID(this.usableAccounts.get(this.usableAccountsIndex).getOwner())+":"+
                     this.usableAccounts.get(this.usableAccountsIndex).getId()), Minecraft.getInstance().player
                     .getUUID());
-            refreshShopButtons();
         });
         addRenderableWidget(changeAccountButton);
     }
 
     private void changeAccounts() {
-        // Refresh account map and usable accoutns
+//        System.out.println("UsableAccounts: ");
+//        usableAccounts.forEach(bankAccount -> {
+//            System.out.println(bankAccount.getOwner()+":"+bankAccount.getId());
+//        });
+//        System.out.println("UsableAccountsIndex: "+usableAccountsIndex);
+//        System.out.println("BankAccount: "+this.usableAccounts.get((this.usableAccountsIndex)).getOwner()+":"
+//                +this.usableAccounts.get((this.usableAccountsIndex)).getId());
+        // Refresh account map and usable accounts
         this.accountMap = ClientLocalData.getAccountMap();
         BankAccount bankAccount = usableAccounts.get(usableAccountsIndex);
         this.usableAccounts.clear();
@@ -204,8 +208,6 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         } else {
             this.usableAccountsIndex = (this.usableAccounts.indexOf(bankAccount) + 1) % this.usableAccounts.size();
         }
-
-
     }
     private void createBuySellButton(int x, int y){
         if(buySellButton != null){
@@ -224,11 +226,8 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
             removeWidget(upButton);
         }
         upButton = new ScrollButton(x+170, y+18, true, b -> {
-            if(isBuy) {
-//                buyCategoriesPage[buyCategory] = Math.max(buyCategoriesPage[buyCategory] - 1, 0);
-            }else{
-//                sellCategoriesPage[sellCategory] = Math.max(sellCategoriesPage[sellCategory] - 1, 0);
-            }
+            List<ShopButton> categoryButtons = isBuy ? buyButtons : sellButtons;
+            this.rows_passed = Math.min(this.rows_passed+1, categoryButtons.size()/NUM_COLS);
             refreshShopButtons();
         });
         addRenderableWidget(upButton);
@@ -237,13 +236,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
             removeWidget(downButton);
         }
         downButton = new ScrollButton(x+170, y+108, false, b -> {
-            if(isBuy) {
-                int maxScroll = ((buyButtons.size()-1) / (NUM_ROWS * NUM_COLS));
-//                buyCategoriesPage[buyCategory] = Math.min(buyCategoriesPage[buyCategory] + 1, maxScroll);
-            }else{
-                int maxScroll = ((sellButtons.size()-1) / (NUM_ROWS * NUM_COLS));
-//                sellCategoriesPage[sellCategory] = Math.min(sellCategoriesPage[sellCategory] + 1, maxScroll);
-            }
+            this.rows_passed = Math.max(this.rows_passed-1, 0);
             refreshShopButtons();
         });
         addRenderableWidget(downButton);
@@ -258,9 +251,8 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
     }
 
     private List<ShopButton> getVisibleShopButtons(){
-        int shopPage = isBuy ? buyCategory : sellCategory;
         List<ShopButton> categoryButtons = isBuy ? buyButtons : sellButtons;
-        int numPassed = NUM_ROWS*NUM_COLS*shopPage;
+        int numPassed = rows_passed*NUM_COLS;
         return categoryButtons.subList(numPassed, Math.min(numPassed+NUM_ROWS*NUM_COLS, categoryButtons.size()));
     }
 

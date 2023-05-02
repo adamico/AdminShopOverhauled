@@ -4,11 +4,10 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.vnator.adminshop.AdminShop;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
-
-import static net.minecraft.client.gui.GuiComponent.drawCenteredString;
 
 public class ChangeAccountButton extends Button {
     private final ResourceLocation GUI = new ResourceLocation(AdminShop.MODID, "textures/gui/shop_gui.png");
@@ -27,8 +26,26 @@ public class ChangeAccountButton extends Button {
         RenderSystem.setShaderTexture(0, GUI);
         this.blit(matrix, x, y, 195, 113, 50, 16);
 
-        drawCenteredString(matrix, Minecraft.getInstance().font, name, x+25,
-                y+8-Minecraft.getInstance().font.lineHeight/2, 0xFFFFFF);
+        drawSmallerCenteredString(matrix, Minecraft.getInstance().font, name, x+25,
+                y+10-Minecraft.getInstance().font.lineHeight/2, 0xFFFFFF);
 
+    }
+
+    public void drawSmallerCenteredString(PoseStack matrix, Font font, String text, int x, int y, int color) {
+        float scale = 0.62f; // Adjust this value to set the desired font size
+
+        matrix.pushPose(); // Save the current pose
+
+        // Apply the scaling
+        matrix.scale(scale, scale, scale);
+
+        // Calculate the new x and y positions based on the scaling
+        int scaledX = (int) (x / scale);
+        int scaledY = (int) (y / scale);
+
+        // Draw the centered string with the new positions
+        font.draw(matrix, text, (float) (scaledX - font.width(text) / 2), (float) scaledY, color);
+
+        matrix.popPose(); // Restore the saved pose
     }
 }

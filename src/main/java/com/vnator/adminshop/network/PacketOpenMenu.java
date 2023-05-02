@@ -1,9 +1,9 @@
 package com.vnator.adminshop.network;
 
-import com.vnator.adminshop.blocks.entity.SellerBE;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.network.NetworkEvent;
@@ -36,8 +36,8 @@ public class PacketOpenMenu {
                 // Open the menu
                 Level level = player.level;
                 BlockEntity blockEntity = level.getBlockEntity(this.pos);
-                if (blockEntity instanceof SellerBE) {
-                    NetworkHooks.openGui(player, (SellerBE)blockEntity, this.pos);
+                if (blockEntity instanceof MenuProvider) {
+                    NetworkHooks.openGui(player, (MenuProvider) blockEntity, this.pos);
                 }
             }
         });

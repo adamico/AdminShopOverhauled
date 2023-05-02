@@ -109,12 +109,14 @@ public class SellerBlock extends CustomDirectionalBlock implements EntityBlock {
         if (!pLevel.isClientSide) {
             BlockEntity blockEntity = pLevel.getBlockEntity(pPos);
             assert (pPlacer instanceof Player && blockEntity instanceof SellerBE);
-            System.out.println("SETTING BLOCK PLACED TO "+ pPlacer.getStringUUID());
-            ((SellerBE) blockEntity).setOwnerUUID(pPlacer.getStringUUID());
+            System.out.println("SETTING MACHINEOWNER TO "+ pPlacer.getStringUUID());
+            ((SellerBE) blockEntity).setMachineOwnerUUID(pPlacer.getStringUUID());
+            System.out.println("SETTING ACCOWNER TO "+ pPlacer.getStringUUID());
+            ((SellerBE) blockEntity).setAccOwnerUUID(pPlacer.getStringUUID());
             System.out.println("SETTING ACCID TO 1");
             ((SellerBE) blockEntity).setAccID(1);
             System.out.println("Adding to MachineOwnerInfo");
-            MachineOwnerInfo.get(pLevel).addMachineOwner(pPos, pPlacer.getStringUUID(), 1);
+            MachineOwnerInfo.get(pLevel).addMachineInfo(pPos, pPlacer.getStringUUID(), pPlacer.getStringUUID(), 1);
         }
     }
 
