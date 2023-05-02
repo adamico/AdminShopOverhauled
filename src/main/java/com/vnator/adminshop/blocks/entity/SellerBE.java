@@ -43,6 +43,7 @@ public class SellerBE extends BlockEntity implements MenuProvider {
     private String ownerUUID = "UNKNOWN";
     private String ownerName = "UNKNOWN";
     private int accID = 1;
+    private int tickCounter = 0;
     private final ItemStackHandler itemHandler = new ItemStackHandler(1) {
         @Override
         protected void onContentsChanged(int slot) {
@@ -103,7 +104,10 @@ public class SellerBE extends BlockEntity implements MenuProvider {
 
     public static void tick(Level pLevel, BlockPos pPos, BlockState pState, SellerBE pBlockEntity) {
         if(hasItem(pBlockEntity)) {
-            sellItem(pBlockEntity);
+            pBlockEntity.tickCounter++;
+            if (pBlockEntity.tickCounter % 20 == 0) {
+                sellItem(pBlockEntity);
+            }
         }
     }
 

@@ -1,6 +1,8 @@
 {
   "variants": {
     "facing=north": { "model": "adminshop:block/shop", "y": 0 },
+    "facing=up": { "model": "adminshop:block/shop", "y": 0 },
+    "facing=down": { "model": "adminshop:block/shop", "y": 0 },
     "facing=east": { "model": "adminshop:block/shop", "y": 90 },
     "facing=south": { "model": "adminshop:block/shop", "y": 180 },
     "facing=west": { "model": "adminshop:block/shop", "y": 270 }

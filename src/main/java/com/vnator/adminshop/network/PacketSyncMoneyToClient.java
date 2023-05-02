@@ -1,7 +1,7 @@
 package com.vnator.adminshop.network;
 
 import com.vnator.adminshop.money.BankAccount;
-import com.vnator.adminshop.money.ClientMoneyData;
+import com.vnator.adminshop.money.ClientLocalData;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
@@ -71,7 +71,7 @@ public class PacketSyncMoneyToClient {
         ctx.enqueueWork(() -> {
             //Client side accessed here
             //Do NOT call client-only code though, since server needs to access this too
-            ClientMoneyData.setUsableAccounts(usableAccounts);
+            ClientLocalData.setUsableAccounts(usableAccounts);
         });
         return true;
     }

@@ -11,7 +11,7 @@ import com.vnator.adminshop.client.gui.ChangeAccountButton;
 import com.vnator.adminshop.client.gui.ScrollButton;
 import com.vnator.adminshop.client.gui.ShopButton;
 import com.vnator.adminshop.money.BankAccount;
-import com.vnator.adminshop.money.ClientMoneyData;
+import com.vnator.adminshop.money.ClientLocalData;
 import com.vnator.adminshop.network.MojangAPI;
 import com.vnator.adminshop.network.PacketPurchaseRequest;
 import com.vnator.adminshop.setup.Messages;
@@ -68,15 +68,15 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
 
         this.playerUUID = Minecraft.getInstance().player.getStringUUID();
         this.personalAccount = Pair.of(this.playerUUID, 1);
-        this.accountMap = ClientMoneyData.getAccountMap();
+        this.accountMap = ClientLocalData.getAccountMap();
 
         if (!this.accountMap.containsKey(personalAccount)) {
             AdminShop.LOGGER.warn("Couldn't find personal account, creating one.");
             AdminShop.LOGGER.warn(personalAccount.first+":"+personalAccount.second);
-            BankAccount personalBankAccount = ClientMoneyData.addAccount(new BankAccount(this.personalAccount.first,
+            BankAccount personalBankAccount = ClientLocalData.addAccount(new BankAccount(this.personalAccount.first,
                     this.personalAccount.second));
             // Refresh account map
-            this.accountMap = ClientMoneyData.getAccountMap();
+            this.accountMap = ClientLocalData.getAccountMap();
         }
 
         this.usableAccounts.clear();
@@ -130,7 +130,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
 
         //Player Balance
         drawString(matrixStack, Minecraft.getInstance().font,
-                I18n.get(GUI_MONEY) + ClientMoneyData.getMoney(this.usableAccounts.get(this.usableAccountsIndex)),
+                I18n.get(GUI_MONEY) + ClientLocalData.getMoney(this.usableAccounts.get(this.usableAccountsIndex)),
                 getXSize() - font.width(I18n.get(GUI_MONEY) + "00000000") - 4,
                 6, 0xffffff); //x, y, color
 
@@ -212,7 +212,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
 
     private void changeAccounts() {
         // Refresh account map
-        this.accountMap = ClientMoneyData.getAccountMap();
+        this.accountMap = ClientLocalData.getAccountMap();
 
         // Check for new accounts
         Set<Pair<String, Integer>> newUsableAccounts = accountMap.values().stream().filter(account -> (account.getMembers()
@@ -318,7 +318,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
     private void attemptTransaction(Pair<String, Integer> bankAccount, boolean isBuy, ShopItem item, int quantity){
         Messages.sendToServer(new PacketPurchaseRequest(bankAccount, isBuy, item, quantity));
         // Refresh account map
-        this.accountMap = ClientMoneyData.getAccountMap();
+        this.accountMap = ClientLocalData.getAccountMap();
     }
 
     private void printInfo(){

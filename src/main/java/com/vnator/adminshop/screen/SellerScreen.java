@@ -1,8 +1,10 @@
 package com.vnator.adminshop.screen;
 
+import com.ibm.icu.impl.Pair;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.vnator.adminshop.AdminShop;
+import com.vnator.adminshop.money.ClientLocalData;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.core.BlockPos;
@@ -15,9 +17,15 @@ public class SellerScreen extends AbstractContainerScreen<SellerMenu> {
             new ResourceLocation(AdminShop.MODID, "textures/gui/seller.png");
     private final BlockPos blockPos;
 
+    // Pair <UUID, accID>
+    private final Pair<String, Integer> bankAccount;
+    private final String ownerName;
+
     public SellerScreen(SellerMenu pMenu, Inventory pPlayerInventory, Component pTitle, BlockPos blockPos) {
         super(pMenu, pPlayerInventory, pTitle);
         this.blockPos = blockPos;
+        this.bankAccount = ClientLocalData.getMachineOwner(this.blockPos);
+        this.ownerName = ClientLocalData.getNameFromUUID(this.bankAccount.first);
     }
 
     @Override
@@ -39,8 +47,7 @@ public class SellerScreen extends AbstractContainerScreen<SellerMenu> {
     @Override
     protected void renderLabels(PoseStack pPoseStack, int pMouseX, int pMouseY) {
         super.renderLabels(pPoseStack, pMouseX, pMouseY);
-        drawString(pPoseStack, font, blockPos.toString(), // TODO get owner uuid and string from blockPos
-                7, 62, 0xffffff);
+        drawString(pPoseStack, font, ownerName,7, 62, 0xffffff);
     }
 
     @Override

@@ -3,10 +3,11 @@ package com.vnator.adminshop.blocks;
 import com.vnator.adminshop.blocks.entity.ModBlockEntities;
 import com.vnator.adminshop.blocks.entity.SellerBE;
 import com.vnator.adminshop.money.MachineOwnerInfo;
+import com.vnator.adminshop.network.PacketMachineOwnerRequest;
 import com.vnator.adminshop.screen.SellerMenu;
+import com.vnator.adminshop.setup.Messages;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.TranslatableComponent;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.MenuProvider;
@@ -28,7 +29,6 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.minecraftforge.network.NetworkHooks;
 import org.jetbrains.annotations.Nullable;
 
 public class SellerBlock extends CustomDirectionalBlock implements EntityBlock {
@@ -58,9 +58,10 @@ public class SellerBlock extends CustomDirectionalBlock implements EntityBlock {
     public InteractionResult use(BlockState pState, Level pLevel, BlockPos pPos,
                                  Player pPlayer, InteractionHand pHand, BlockHitResult pHit) {
         if (!pLevel.isClientSide()) {
-            BlockEntity entity = pLevel.getBlockEntity(pPos);
-            if(entity instanceof SellerBE) {
-                NetworkHooks.openGui(((ServerPlayer)pPlayer), (SellerBE)entity, pPos);
+            if(pLevel.getBlockEntity(pPos) instanceof SellerBE) {
+//                NetworkHooks.openGui(((ServerPlayer)pPlayer), (SellerBE)entity, pPos);
+                // Send the request packet
+                Messages.sendToServer(new PacketMachineOwnerRequest(pPos));
             } else {
                 throw new IllegalStateException("Our Container provider is missing!");
             }
@@ -68,6 +69,8 @@ public class SellerBlock extends CustomDirectionalBlock implements EntityBlock {
 
         return InteractionResult.sidedSuccess(pLevel.isClientSide());
     }
+
+
 
     @Override
     public VoxelShape getShape(BlockState pState, BlockGetter pLevel, BlockPos pPos, CollisionContext pContext) {

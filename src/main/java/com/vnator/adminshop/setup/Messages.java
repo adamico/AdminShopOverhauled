@@ -50,12 +50,23 @@ public class Messages {
                 .consumer(PacketSyncShopToClient::handle)
                 .add();
 
-        net.messageBuilder(PacketMachineOwnerInfo.class, id(), NetworkDirection.PLAY_TO_CLIENT)
-                .decoder(PacketMachineOwnerInfo::new)
-                .encoder(PacketMachineOwnerInfo::toBytes)
-                .consumer(PacketMachineOwnerInfo::handle)
+        net.messageBuilder(PacketMachineOwner.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(PacketMachineOwner::new)
+                .encoder(PacketMachineOwner::toBytes)
+                .consumer(PacketMachineOwner::handle)
                 .add();
 
+        net.messageBuilder(PacketMachineOwnerRequest.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(PacketMachineOwnerRequest::new)
+                .encoder(PacketMachineOwnerRequest::toBytes)
+                .consumer(PacketMachineOwnerRequest::handle)
+                .add();
+
+        net.messageBuilder(PacketOpenSellerMenu.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(PacketOpenSellerMenu::new)
+                .encoder(PacketOpenSellerMenu::toBytes)
+                .consumer(PacketOpenSellerMenu::handle)
+                .add();
     }
 
     public static <MSG> void sendToServer(MSG message) {
