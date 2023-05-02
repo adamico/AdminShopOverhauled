@@ -22,6 +22,7 @@ public class MachineOwnerInfo extends SavedData {
 
     public void addMachineOwner(BlockPos pos, String owner, int accid) {
         machineOwnerMap.put(pos, Pair.of(owner, accid));
+        setDirty();
     }
     public Pair<String, Integer> getMachineOwner(BlockPos pos) {
         if (!machineOwnerMap.containsKey(pos)) {

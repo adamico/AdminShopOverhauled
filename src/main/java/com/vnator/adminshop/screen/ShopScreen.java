@@ -26,8 +26,10 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
 
@@ -48,10 +50,10 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
     private int buyCategory; //Currently selected category for the Buy option
     private int sellCategory;
     private boolean isBuy; //Whether the Buy option is currently selected
-    private final String playerUUID;
+//    private final String playerUUID;
     private Map<Pair<String, Integer>, BankAccount> accountMap;
-    private Pair<String, Integer> personalAccount;
-    private final List<Pair<String, Integer>> usableAccounts = new ArrayList<>();
+//    private Pair<String, Integer> personalAccount;
+    private final List<BankAccount> usableAccounts = new ArrayList<>();
     private int usableAccountsIndex;
 
     private ChangeAccountButton changeAccountButton;
@@ -66,25 +68,20 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         assert Minecraft.getInstance().level != null;
         assert Minecraft.getInstance().level.isClientSide;
 
-        this.playerUUID = Minecraft.getInstance().player.getStringUUID();
-        this.personalAccount = Pair.of(this.playerUUID, 1);
+        String playerUUID = Minecraft.getInstance().player.getStringUUID();
+        Pair<String, Integer> personalAccount = Pair.of(playerUUID, 1);
         this.accountMap = ClientLocalData.getAccountMap();
 
         if (!this.accountMap.containsKey(personalAccount)) {
             AdminShop.LOGGER.warn("Couldn't find personal account, creating one.");
             AdminShop.LOGGER.warn(personalAccount.first+":"+personalAccount.second);
-            BankAccount personalBankAccount = ClientLocalData.addAccount(new BankAccount(this.personalAccount.first,
-                    this.personalAccount.second));
+            BankAccount personalBankAccount = ClientLocalData.addAccount(new BankAccount(personalAccount.first,
+                    personalAccount.second));
             // Refresh account map
             this.accountMap = ClientLocalData.getAccountMap();
         }
-
         this.usableAccounts.clear();
-        List<BankAccount> usableBankAccounts = this.accountMap.values().stream().filter(account -> (account.getMembers()
-                .contains(playerUUID) || account.getOwner().equals(playerUUID))).toList();
-        this.usableAccounts.addAll(usableBankAccounts.stream().map(account -> Pair.of(account.getOwner(),
-                account.getId())).collect(Collectors.toSet()));
-        sortUsableAccounts();
+        this.usableAccounts.addAll(ClientLocalData.getUsableAccounts());
         this.usableAccountsIndex = 0;
 
         this.shopContainer = container;
@@ -129,8 +126,10 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         drawString(matrixStack, font, playerInventoryTitle, 16, getYSize()-94, 0xffffff);
 
         //Player Balance
+        BankAccount selectedAccount = this.usableAccounts.get(this.usableAccountsIndex);
+        Pair<String, Integer> selectedAccountInfo = Pair.of(selectedAccount.getOwner(), selectedAccount.getId());
         drawString(matrixStack, Minecraft.getInstance().font,
-                I18n.get(GUI_MONEY) + ClientLocalData.getMoney(this.usableAccounts.get(this.usableAccountsIndex)),
+                I18n.get(GUI_MONEY) + ClientLocalData.getMoney(selectedAccountInfo),
                 getXSize() - font.width(I18n.get(GUI_MONEY) + "00000000") - 4,
                 6, 0xffffff); //x, y, color
 
@@ -185,72 +184,27 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
             assert Minecraft.getInstance().player != null;
             assert Minecraft.getInstance().level != null;
             Minecraft.getInstance().player.sendMessage(new TextComponent("Changed account to "+
-                    MojangAPI.getUsernameByUUID(this.usableAccounts.get(this.usableAccountsIndex).first)+":"+
-                    this.usableAccounts.get(this.usableAccountsIndex).second), Minecraft.getInstance().player.getUUID());
+                    MojangAPI.getUsernameByUUID(this.usableAccounts.get(this.usableAccountsIndex).getOwner())+":"+
+                    this.usableAccounts.get(this.usableAccountsIndex).getId()), Minecraft.getInstance().player
+                    .getUUID());
             refreshShopButtons();
         });
         addRenderableWidget(changeAccountButton);
     }
 
-    // Sort usableAccounts, first by pair.first == playerUUID, if not sort alphabetically, then by pair.second in
-    // ascending order. Index is preserved to the original account it pointed to.
-    private void sortUsableAccounts() {
-        Pair<String, Integer> selectedBankAccount = usableAccounts.get(usableAccountsIndex);
-        this.usableAccounts.sort((o1, o2) -> {
-            if (o1.first.equals(playerUUID) && !o2.first.equals(playerUUID)) {
-                return -1;
-            } else if (!o1.first.equals(playerUUID) && o2.first.equals(playerUUID)) {
-                return 1;
-            } else if (o1.first.equals(o2.first)) {
-                return o1.second.compareTo(o2.second);
-            } else {
-                return o1.first.compareTo(o2.first);
-            }
-        });
-        this.usableAccountsIndex = usableAccounts.indexOf(selectedBankAccount);
-    }
-
     private void changeAccounts() {
-        // Refresh account map
+        // Refresh account map and usable accoutns
         this.accountMap = ClientLocalData.getAccountMap();
-
-        // Check for new accounts
-        Set<Pair<String, Integer>> newUsableAccounts = accountMap.values().stream().filter(account -> (account.getMembers()
-                .contains(playerUUID) || account.getOwner().equals(playerUUID))).map(account ->
-                Pair.of(account.getOwner(), account.getId())).collect(Collectors.toSet());
-
-        // If usableAccounts doesn't contain all, add the new one
-        if(!new HashSet<>(this.usableAccounts).containsAll(newUsableAccounts)) {
-            newUsableAccounts.forEach(account -> {
-                if(!this.usableAccounts.contains(account)) {
-                    // Add new account, and sort
-                    usableAccounts.add(account);
-                    sortUsableAccounts();
-                }
-            });
+        BankAccount bankAccount = usableAccounts.get(usableAccountsIndex);
+        this.usableAccounts.clear();
+        this.usableAccounts.addAll(ClientLocalData.getUsableAccounts());
+        // Change account, either by resetting to first (personal) account or moving to next sorted account
+        if (!this.usableAccounts.contains(bankAccount)) {
+            this.usableAccountsIndex = 0;
+        } else {
+            this.usableAccountsIndex = (this.usableAccounts.indexOf(bankAccount) + 1) % this.usableAccounts.size();
         }
 
-        // If newUsableAccounts doesn't contain all, remove the deleted one
-        if(!newUsableAccounts.containsAll(this.usableAccounts)) {
-            usableAccounts.forEach(account -> {
-                if(!newUsableAccounts.contains(account)) {
-                    boolean isCurrentIndex = usableAccounts.indexOf(account) == this.usableAccountsIndex;
-                    // We can never remove the first account (personal account)
-                    if (!(this.usableAccounts.size() > 1 && !this.usableAccounts.get(0).equals(account))) {
-                        AdminShop.LOGGER.error("Missing personal account in accountMap!");
-                    } else {
-                        // Remove this account
-                        this.usableAccounts.remove(account);
-                        // reset index if removed account used to be the current index
-                        if (isCurrentIndex) {
-                            this.usableAccountsIndex = 0;
-                        }
-                    }
-                }
-            });
-        }
-
-        this.usableAccountsIndex = (this.usableAccountsIndex + 1) % this.usableAccounts.size();
 
     }
     private void createBuySellButton(int x, int y){
@@ -299,11 +253,6 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         buyButtons.forEach(b -> b.visible = false);
         sellButtons.forEach(b -> b.visible = false);
         changeAccountButton.visible = false;
-//        List<ShopButton> buttons = (isBuy ? buyButtons : sellButtons)
-//                .get((isBuy ? buyCategory : sellCategory));
-//        int page = (isBuy ? buyCategoriesPage[buyCategory] : sellCategoriesPage[sellCategory]);
-//        buttons = buttons.subList(page * NUM_ROWS*NUM_COLS,
-//                Math.min((page+1) * NUM_ROWS*NUM_COLS, buttons.size()) );
         getVisibleShopButtons().forEach(b -> b.visible = true);
         changeAccountButton.visible = true;
     }
@@ -315,8 +264,9 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         return categoryButtons.subList(numPassed, Math.min(numPassed+NUM_ROWS*NUM_COLS, categoryButtons.size()));
     }
 
-    private void attemptTransaction(Pair<String, Integer> bankAccount, boolean isBuy, ShopItem item, int quantity){
-        Messages.sendToServer(new PacketPurchaseRequest(bankAccount, isBuy, item, quantity));
+    private void attemptTransaction(BankAccount bankAccount, boolean isBuy, ShopItem item, int quantity){
+        Pair<String, Integer> accountInfo = Pair.of(bankAccount.getOwner(), bankAccount.getId());
+        Messages.sendToServer(new PacketPurchaseRequest(accountInfo, isBuy, item, quantity));
         // Refresh account map
         this.accountMap = ClientLocalData.getAccountMap();
     }

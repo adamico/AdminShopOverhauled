@@ -62,10 +62,10 @@ public class Messages {
                 .consumer(PacketMachineOwnerRequest::handle)
                 .add();
 
-        net.messageBuilder(PacketOpenSellerMenu.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(PacketOpenSellerMenu::new)
-                .encoder(PacketOpenSellerMenu::toBytes)
-                .consumer(PacketOpenSellerMenu::handle)
+        net.messageBuilder(PacketOpenMenu.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(PacketOpenMenu::new)
+                .encoder(PacketOpenMenu::toBytes)
+                .consumer(PacketOpenMenu::handle)
                 .add();
     }
 

@@ -11,13 +11,13 @@ import net.minecraftforge.network.NetworkHooks;
 
 import java.util.function.Supplier;
 
-public class PacketOpenSellerMenu {
+public class PacketOpenMenu {
     private BlockPos pos;
 
-    public PacketOpenSellerMenu(BlockPos pos) {
+    public PacketOpenMenu(BlockPos pos) {
         this.pos = pos;
     }
-    public PacketOpenSellerMenu(FriendlyByteBuf buf) {
+    public PacketOpenMenu(FriendlyByteBuf buf) {
         this.pos = buf.readBlockPos();
     }
 
@@ -32,11 +32,10 @@ public class PacketOpenSellerMenu {
             //Do NOT call client-only code though, since server needs to access this too
             ServerPlayer player = ctx.getSender();
             if (player != null) {
-                System.out.println("Opening seller menu pos " + this.pos + ", player "+player.getName().getString());
+                System.out.println("Opening menu at pos " + this.pos + ", player "+player.getName().getString());
                 // Open the menu
                 Level level = player.level;
                 BlockEntity blockEntity = level.getBlockEntity(this.pos);
-
                 if (blockEntity instanceof SellerBE) {
                     NetworkHooks.openGui(player, (SellerBE)blockEntity, this.pos);
                 }

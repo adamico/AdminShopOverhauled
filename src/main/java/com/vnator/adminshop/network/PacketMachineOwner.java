@@ -54,7 +54,7 @@ public class PacketMachineOwner {
                 Level level = player.level;
                 BlockEntity blockEntity = level.getBlockEntity(this.pos);
                 if (blockEntity instanceof SellerBE) {
-                    Messages.sendToServer(new PacketOpenSellerMenu(this.pos));
+                    Messages.sendToServer(new PacketOpenMenu(this.pos));
                 }
             }
         });
