@@ -68,10 +68,10 @@ public class Messages {
                 .consumer(PacketOpenMenu::handle)
                 .add();
 
-        net.messageBuilder(PacketSellerAccountChange.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(PacketSellerAccountChange::new)
-                .encoder(PacketSellerAccountChange::toBytes)
-                .consumer(PacketSellerAccountChange::handle)
+        net.messageBuilder(PacketMachineAccountChange.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(PacketMachineAccountChange::new)
+                .encoder(PacketMachineAccountChange::toBytes)
+                .consumer(PacketMachineAccountChange::handle)
                 .add();
     }
 

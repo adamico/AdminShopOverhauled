@@ -1,7 +1,7 @@
 package com.vnator.adminshop.network;
 
 import com.vnator.adminshop.AdminShop;
-import com.vnator.adminshop.blocks.entity.SellerBE;
+import com.vnator.adminshop.blocks.MachineWithOwnerAndAccount;
 import com.vnator.adminshop.money.BankAccount;
 import com.vnator.adminshop.money.MachineOwnerInfo;
 import com.vnator.adminshop.money.MoneyManager;
@@ -17,19 +17,19 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-public class PacketSellerAccountChange {
+public class PacketMachineAccountChange {
     private final String machineOwner;
     private final String accOwner;
     private final int accID;
     private final BlockPos pos;
 
-    public PacketSellerAccountChange(String machineOwner, String accOwner, int accID, BlockPos pos) {
+    public PacketMachineAccountChange(String machineOwner, String accOwner, int accID, BlockPos pos) {
         this.machineOwner = machineOwner;
         this.accOwner = accOwner;
         this.accID = accID;
         this.pos = pos;
     }
-    public PacketSellerAccountChange(FriendlyByteBuf buf) {
+    public PacketMachineAccountChange(FriendlyByteBuf buf) {
         this.machineOwner = buf.readUtf();
         this.accOwner = buf.readUtf();
         this.accID = buf.readInt();
@@ -56,13 +56,12 @@ public class PacketSellerAccountChange {
                 // Get SellerBE
                 Level level = player.level;
                 BlockEntity blockEntity = level.getBlockEntity(this.pos);
-                if (!(blockEntity instanceof SellerBE)) {
-                    AdminShop.LOGGER.error("BlockEntity at pos is not SellerBE");
+                if (!(blockEntity instanceof MachineWithOwnerAndAccount machineEntity)) {
+                    AdminShop.LOGGER.error("BlockEntity at pos is not MachineWithOwnerAndAccount");
                     return;
                 }
-                SellerBE sellerBE = (SellerBE) blockEntity;
                 // Check if player is the machine owner
-                if (!player.getStringUUID().equals(sellerBE.getMachineOwnerUUID())) {
+                if (!player.getStringUUID().equals(machineEntity.getMachineOwnerUUID())) {
                     AdminShop.LOGGER.error("Player is not the machine's owner");
                     return;
                 }
@@ -82,8 +81,8 @@ public class PacketSellerAccountChange {
                     return;
                 }
                 System.out.println("Saving machine account information.");
-                // Apply changes to sellerBE
-                sellerBE.setAccInfo(this.accOwner, this.accID);
+                // Apply changes to blockEntity
+                (machineEntity).setAccInfo(this.accOwner, this.accID);
                 // Apply changes to MachineOwnerInfo
                 machineOwnerInfo.addMachineInfo(this.pos, this.machineOwner, this.accOwner, this.accID);
             }

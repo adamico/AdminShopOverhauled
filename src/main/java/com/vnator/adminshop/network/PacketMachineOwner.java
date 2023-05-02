@@ -1,12 +1,13 @@
 package com.vnator.adminshop.network;
 
 import com.ibm.icu.impl.Pair;
+import com.vnator.adminshop.AdminShop;
+import com.vnator.adminshop.blocks.MachineWithOwnerAndAccount;
 import com.vnator.adminshop.money.ClientLocalData;
 import com.vnator.adminshop.setup.Messages;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -57,9 +58,11 @@ public class PacketMachineOwner {
                 // Send open menu packet
                 Level level = player.level;
                 BlockEntity blockEntity = level.getBlockEntity(this.pos);
-                if (blockEntity instanceof MenuProvider) {
-                    Messages.sendToServer(new PacketOpenMenu(this.pos));
+                if (!(blockEntity instanceof MachineWithOwnerAndAccount)) {
+                    AdminShop.LOGGER.error("BlockEntity is not MachineWithOwnerAndAccount");
+                    return;
                 }
+                Messages.sendToServer(new PacketOpenMenu(this.pos));
             }
         });
         return true;

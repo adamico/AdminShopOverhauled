@@ -1,6 +1,7 @@
 package com.vnator.adminshop.blocks.entity;
 
 import com.vnator.adminshop.AdminShop;
+import com.vnator.adminshop.blocks.MachineWithOwnerAndAccount;
 import com.vnator.adminshop.money.BankAccount;
 import com.vnator.adminshop.money.MachineOwnerInfo;
 import com.vnator.adminshop.money.MoneyManager;
@@ -17,7 +18,6 @@ import net.minecraft.network.chat.TextComponent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Containers;
-import net.minecraft.world.MenuProvider;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -33,11 +33,12 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
 import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.UUID;
 
-public class SellerBE extends BlockEntity implements MenuProvider {
+public class SellerBE extends BlockEntity implements MachineWithOwnerAndAccount {
     private String machineOwnerUUID = "UNKNOWN";
     private String accOwnerUUID = "UNKNOWN";
     private int accID = 1;

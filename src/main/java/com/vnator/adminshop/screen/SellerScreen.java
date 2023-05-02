@@ -8,7 +8,7 @@ import com.vnator.adminshop.client.gui.ChangeAccountButton;
 import com.vnator.adminshop.money.BankAccount;
 import com.vnator.adminshop.money.ClientLocalData;
 import com.vnator.adminshop.network.MojangAPI;
-import com.vnator.adminshop.network.PacketSellerAccountChange;
+import com.vnator.adminshop.network.PacketMachineAccountChange;
 import com.vnator.adminshop.setup.Messages;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -103,7 +103,7 @@ public class SellerScreen extends AbstractContainerScreen<SellerMenu> {
         }
         // Send change package
         System.out.println("Registering account change with server...");
-        Messages.sendToServer(new PacketSellerAccountChange(this.ownerUUID, getBankAccount().first,
+        Messages.sendToServer(new PacketMachineAccountChange(this.ownerUUID, getBankAccount().first,
                 getBankAccount().second, this.blockPos));
     }
     @Override
