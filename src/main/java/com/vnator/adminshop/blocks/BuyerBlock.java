@@ -1,9 +1,9 @@
 package com.vnator.adminshop.blocks;
 
+import com.vnator.adminshop.blocks.entity.BuyerBE;
 import com.vnator.adminshop.blocks.entity.ModBlockEntities;
-import com.vnator.adminshop.blocks.entity.SellerBE;
 import com.vnator.adminshop.network.PacketMachineOwnerRequest;
-import com.vnator.adminshop.screen.SellerMenu;
+import com.vnator.adminshop.screen.BuyerMenu;
 import com.vnator.adminshop.setup.Messages;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.TranslatableComponent;
@@ -30,8 +30,8 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
-public class SellerBlock extends CustomDirectionalBlock implements EntityBlock {
-    public SellerBlock() {
+public class BuyerBlock extends CustomDirectionalBlock implements EntityBlock {
+    public BuyerBlock() {
         super(Properties.of(Material.METAL)
                 .sound(SoundType.METAL)
                 .strength(1.0f)
@@ -47,8 +47,8 @@ public class SellerBlock extends CustomDirectionalBlock implements EntityBlock {
     public void onRemove(BlockState pState, Level pLevel, BlockPos pPos, BlockState pNewState, boolean pIsMoving) {
         if (pState.getBlock() != pNewState.getBlock()) {
             BlockEntity blockEntity = pLevel.getBlockEntity(pPos);
-            if (blockEntity instanceof SellerBE) {
-                ((SellerBE) blockEntity).drops();
+            if (blockEntity instanceof BuyerBE buyerEntity) {
+                buyerEntity.drops();
             }
         }
     }
@@ -58,7 +58,8 @@ public class SellerBlock extends CustomDirectionalBlock implements EntityBlock {
                                  Player pPlayer, InteractionHand pHand, BlockHitResult pHit) {
         if (!pLevel.isClientSide()) {
             System.out.println("Block at position: " + pLevel.getBlockState(pPos).getBlock());
-            if(pLevel.getBlockEntity(pPos) instanceof SellerBE) {
+            System.out.println(pLevel.getBlockEntity(pPos).getClass());
+            if(pLevel.getBlockEntity(pPos) instanceof BuyerBE) {
                 // Send the request packet
                 Messages.sendToServer(new PacketMachineOwnerRequest(pPos));
             } else {
@@ -79,21 +80,14 @@ public class SellerBlock extends CustomDirectionalBlock implements EntityBlock {
     @Override
     public MenuProvider getMenuProvider(BlockState pState, Level pLevel, BlockPos pPos) {
         return new SimpleMenuProvider((id, playerInventory, player) -> {
-//            if (!pLevel.isClientSide()) {
-//                SellerBE blockEntity = (SellerBE) pLevel.getBlockEntity(pPos);
-//                if (blockEntity != null) {
-//                    Messages.sendToPlayer(new PacketMachineOwnerInfo(blockEntity.getOwnerUUID(), blockEntity.getAccID(),
-//                            pPos), ((ServerPlayer) player));
-//                }
-//            }
-            return new SellerMenu(id, playerInventory, pLevel, pPos);
-        }, new TranslatableComponent("screen.adminshop.seller"));
+            return new BuyerMenu(id, playerInventory, pLevel, pPos);
+        }, new TranslatableComponent("screen.adminshop.buyer"));
     }
 
     @Nullable
     @Override
     public BlockEntity newBlockEntity(BlockPos pPos, BlockState pState) {
-        return new SellerBE(pPos, pState);
+        return new BuyerBE(pPos, pState);
     }
 
     @Override
@@ -106,9 +100,9 @@ public class SellerBlock extends CustomDirectionalBlock implements EntityBlock {
         super.setPlacedBy(pLevel, pPos, pState, pPlacer, pStack);
         if (!pLevel.isClientSide) {
             BlockEntity blockEntity = pLevel.getBlockEntity(pPos);
-            assert (pPlacer instanceof Player && blockEntity instanceof SellerBE);
+            assert (pPlacer instanceof Player && blockEntity instanceof BuyerBE);
             // Set account info
-            ((SellerBE) blockEntity).setAccInfo(pPlacer.getStringUUID(), pPlacer.getStringUUID(), 1);
+            ((BuyerBE) blockEntity).setAccInfo(pPlacer.getStringUUID(), pPlacer.getStringUUID(), 1);
 //            MachineOwnerInfo.get(pLevel).addMachineInfo(pPos, pPlacer.getStringUUID(), pPlacer.getStringUUID(), 1);
         }
     }
@@ -116,8 +110,8 @@ public class SellerBlock extends CustomDirectionalBlock implements EntityBlock {
     @Nullable
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level pLevel, BlockState pState, BlockEntityType<T> pBlockEntityType) {
-        return pLevel.isClientSide() ? null : checkType(pBlockEntityType, ModBlockEntities.SELLER.get(),
-                (level, pos, state, blockEntity) -> SellerBE.tick(level, pos, state, (SellerBE) blockEntity));
+        return pLevel.isClientSide() ? null : checkType(pBlockEntityType, ModBlockEntities.BUYER.get(),
+                (level, pos, state, blockEntity) -> BuyerBE.tick(level, pos, state, (BuyerBE) blockEntity));
     }
 
     private static <T extends BlockEntity> BlockEntityTicker<T> checkType(BlockEntityType<T> blockEntityType, BlockEntityType<?> expectedType, BlockEntityTicker<? super T> ticker) {

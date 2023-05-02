@@ -6,7 +6,7 @@ import com.vnator.adminshop.money.BankAccount;
 import com.vnator.adminshop.money.MachineOwnerInfo;
 import com.vnator.adminshop.money.MoneyManager;
 import com.vnator.adminshop.network.PacketSyncMoneyToClient;
-import com.vnator.adminshop.screen.SellerMenu;
+import com.vnator.adminshop.screen.BuyerMenu;
 import com.vnator.adminshop.setup.Messages;
 import com.vnator.adminshop.shop.Shop;
 import com.vnator.adminshop.shop.ShopItem;
@@ -38,11 +38,13 @@ import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.UUID;
 
-public class SellerBE extends BlockEntity implements MachineWithOwnerAndAccount {
+public class BuyerBE extends BlockEntity implements MachineWithOwnerAndAccount {
     private String machineOwnerUUID = "UNKNOWN";
     private String accOwnerUUID = "UNKNOWN";
     private int accID = 1;
     private int tickCounter = 0;
+    // TODO GET SHOPITEM
+    private ShopItem item;
     private final ItemStackHandler itemHandler = new ItemStackHandler(1) {
         @Override
         protected void onContentsChanged(int slot) {
@@ -52,13 +54,13 @@ public class SellerBE extends BlockEntity implements MachineWithOwnerAndAccount 
 
     private LazyOptional<IItemHandler> lazyItemHandler = LazyOptional.empty();
 
-    public SellerBE(BlockPos pWorldPosition, BlockState pBlockState) {
-        super(ModBlockEntities.SELLER.get(), pWorldPosition, pBlockState);
+    public BuyerBE(BlockPos pWorldPosition, BlockState pBlockState) {
+        super(ModBlockEntities.BUYER.get(), pWorldPosition, pBlockState);
     }
 
     @Override
     public Component getDisplayName() {
-        return new TextComponent("Auto-Seller");
+        return new TextComponent("Auto-Buyer");
     }
 
     public void setAccOwnerUUID(String accOwnerUUID) {
@@ -135,29 +137,31 @@ public class SellerBE extends BlockEntity implements MachineWithOwnerAndAccount 
     @Nullable
     @Override
     public AbstractContainerMenu createMenu(int pContainerId, Inventory pInventory, Player pPlayer) {
-        return new SellerMenu(pContainerId, pInventory, this);
+        return new BuyerMenu(pContainerId, pInventory, this);
     }
 
-    public static void tick(Level pLevel, BlockPos pPos, BlockState pState, SellerBE pBlockEntity) {
-        if(hasItem(pBlockEntity)) {
-            pBlockEntity.tickCounter++;
-            if (pBlockEntity.tickCounter % 20 == 0) {
-                sellItem(pBlockEntity);
-            }
+    // TODO TICKER
+    public static void tick(Level pLevel, BlockPos pPos, BlockState pState, BuyerBE pBlockEntity) {
+        pBlockEntity.tickCounter++;
+        if (pBlockEntity.tickCounter % 20 == 0) {
+            buyItem(pBlockEntity);
         }
     }
 
-    private static void sellItem(SellerBE entity) {
+
+    // TODO BUY ITEM
+    private static void buyItem(BuyerBE entity) {
         Item item = entity.itemHandler.getStackInSlot(0).getItem();
         int count = entity.itemHandler.getStackInSlot(0).getCount();
         entity.itemHandler.extractItem(0, count, false);
         ShopItem shopItem = Shop.get().getShopSellMap().get(item);
         System.out.println("Attempting sellTransaction(entity, "+entity.getAccOwnerUUID()+","+entity.getAccID()+", "+
                 shopItem+", "+count);
-        sellTransaction(entity, entity.accOwnerUUID, entity.getAccID(), shopItem, count);
+        buyTransaction(entity, entity.accOwnerUUID, entity.getAccID(), shopItem, count);
     }
 
-    private static void sellTransaction(SellerBE entity, String accOwner, int accID, ShopItem item, int quantity) {
+    // TODO BUY TRANSACTION
+    private static void buyTransaction(BuyerBE entity, String accOwner, int accID, ShopItem item, int quantity) {
         int itemCost = item.getPrice();
         long price = (long) quantity * itemCost;
         if (quantity == 0) {
@@ -197,17 +201,12 @@ public class SellerBE extends BlockEntity implements MachineWithOwnerAndAccount 
         MachineOwnerInfo.get(level).addMachineInfo(pos, machineOwner, accOwner, id);
     }
 
-    private static boolean hasItem(SellerBE entity) {
-        return !entity.itemHandler.getStackInSlot(0).isEmpty();
-    }
-
     @Nonnull
     @Override
     public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> cap, @javax.annotation.Nullable Direction side) {
         if (cap == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
             return lazyItemHandler.cast();
         }
-
         return super.getCapability(cap, side);
     }
 

@@ -22,6 +22,7 @@ public class MachineOwnerInfo extends SavedData {
     private final Map<BlockPos, String> machineOwnerMap = new HashMap<>();
 
     public void addMachineInfo(BlockPos pos, String machineOwner, String accowner, int accid) {
+        System.out.println("Adding machine info");
         machineOwnerMap.put(pos, machineOwner);
         machineAccountMap.put(pos, Pair.of(accowner, accid));
         setDirty();
@@ -31,6 +32,7 @@ public class MachineOwnerInfo extends SavedData {
     }
     public Pair<String, Integer> getMachineAccount(BlockPos pos) {
         if (!machineAccountMap.containsKey(pos)) {
+            System.out.println("KEY POS NOT FOUND");
             return null;
         }
         return machineAccountMap.get(pos);
@@ -55,13 +57,16 @@ public class MachineOwnerInfo extends SavedData {
             ListTag ledger = tag.getList(COMPOUND_TAG_NAME, 10);
             machineAccountMap.clear();
             ledger.forEach(ownerTag -> {
-                int posx = tag.getInt("posx");
-                int posy = tag.getInt("posy");
-                int posz = tag.getInt("posz");
-                String machineOwner = tag.getString("machineowner");
-                String accowner = tag.getString("accowner");
-                int accid = tag.getInt("accid");
+                CompoundTag ctag = ((CompoundTag) ownerTag);
+                int posx = ctag.getInt("posx");
+                int posy = ctag.getInt("posy");
+                int posz = ctag.getInt("posz");
+                String machineOwner = ctag.getString("machineowner");
+                String accowner = ctag.getString("accowner");
+                int accid = ctag.getInt("accid");
                 BlockPos pos = new BlockPos(posx, posy, posz);
+                System.out.println("LOADING BLOCK POS:"+pos.toShortString()+", MOWN:"+machineOwner+", AOWN:"+accowner+
+                        ", AID:"+accid);
                 machineOwnerMap.put(pos, machineOwner);
                 machineAccountMap.put(pos, Pair.of(accowner, accid));
             });
@@ -71,13 +76,15 @@ public class MachineOwnerInfo extends SavedData {
     public @NotNull CompoundTag save(CompoundTag tag) {
         ListTag ledger = new ListTag();
         machineAccountMap.forEach((pos, account) -> {
+            System.out.println("SAVING BLOCK POS:"+pos.toShortString()+", MOWN:"+machineOwnerMap.get(pos)+", AOWN:"+
+                    account.first+", AID:"+account.second);
             CompoundTag ownertag = new CompoundTag();
-            tag.putInt("posx", pos.getX());
-            tag.putInt("posy", pos.getY());
-            tag.putInt("posz", pos.getZ());
-            tag.putString("machineowner", machineOwnerMap.get(pos));
-            tag.putString("accowner", account.first);
-            tag.putInt("accid", account.second);
+            ownertag.putInt("posx", pos.getX());
+            ownertag.putInt("posy", pos.getY());
+            ownertag.putInt("posz", pos.getZ());
+            ownertag.putString("machineowner", machineOwnerMap.get(pos));
+            ownertag.putString("accowner", account.first);
+            ownertag.putInt("accid", account.second);
             ledger.add(ownertag);
         });
         tag.put(COMPOUND_TAG_NAME, ledger);

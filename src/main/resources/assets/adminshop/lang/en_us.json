@@ -14,5 +14,6 @@
   "block.adminshop.buyer": "Buyer",
   "item.adminshop.check": "Check",
   "itemGroup.adminshop": "Admin Shop",
-  "screen.adminshop.seller": "Auto-Seller"
+  "screen.adminshop.seller": "Auto-Seller",
+  "screen.adminshop.buyer": "Auto-Buyer"
 }

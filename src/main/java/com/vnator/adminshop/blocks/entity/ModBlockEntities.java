@@ -20,6 +20,10 @@ public class ModBlockEntities {
             BLOCK_ENTITIES.register("shop", () -> BlockEntityType.Builder.of(ShopBE::new,
                     ModBlocks.SHOP.get()).build(null));
 
+    public static final RegistryObject<BlockEntityType<BuyerBE>> BUYER =
+            BLOCK_ENTITIES.register("buyer", () -> BlockEntityType.Builder.of(BuyerBE::new,
+                    ModBlocks.BUYER.get()).build(null));
+
     public static void register(IEventBus eventBus) {
         BLOCK_ENTITIES.register(eventBus);
     }

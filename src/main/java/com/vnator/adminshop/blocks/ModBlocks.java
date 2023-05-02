@@ -20,6 +20,8 @@ public class ModBlocks {
 
     public static final RegistryObject<Block> SHOP = registerBlock("shop",
             ShopBlock::new, ModSetup.ITEM_GROUP);
+    public static final RegistryObject<Block> BUYER = registerBlock("buyer",
+            BuyerBlock::new, ModSetup.ITEM_GROUP);
 
     public static final RegistryObject<Block> SELLER = registerBlock("seller",
             SellerBlock::new, ModSetup.ITEM_GROUP);

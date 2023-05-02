@@ -16,8 +16,11 @@ public class ModMenuTypes {
     public static final RegistryObject<MenuType<ShopContainer>> SHOP_MENU = MENUS.register("shop_menu",
             () -> IForgeMenuType.create(((windowId, inv, data) -> new ShopContainer(windowId, inv, inv.player))));
 
-    public static final RegistryObject<MenuType<SellerMenu>> SELLER_MENU = MENUS.register("seller",
+    public static final RegistryObject<MenuType<SellerMenu>> SELLER_MENU = MENUS.register("seller_menu",
             () -> IForgeMenuType.create((SellerMenu::new)));
+
+    public static final RegistryObject<MenuType<BuyerMenu>> BUYER_MENU = MENUS.register("buyer_menu",
+            () -> IForgeMenuType.create((BuyerMenu::new)));
 
     public static void register(IEventBus eventBus) {
         MENUS.register(eventBus);
