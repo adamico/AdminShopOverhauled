@@ -141,7 +141,8 @@ public class SellerBE extends BlockEntity implements AutoShopMachine {
     public static void tick(Level pLevel, BlockPos pPos, BlockState pState, SellerBE pBlockEntity) {
         if(hasItem(pBlockEntity)) {
             pBlockEntity.tickCounter++;
-            if (pBlockEntity.tickCounter % 20 == 0) {
+            if (pBlockEntity.tickCounter > 20) {
+                pBlockEntity.tickCounter = 0;
                 sellItem(pBlockEntity);
             }
         }

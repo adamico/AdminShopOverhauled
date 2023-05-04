@@ -165,7 +165,8 @@ public class BuyerBE extends BlockEntity implements AutoShopMachine {
     public static void tick(Level pLevel, BlockPos pPos, BlockState pState, BuyerBE pBlockEntity) {
         if(pBlockEntity.hasTarget) {
             pBlockEntity.tickCounter++;
-            if (pBlockEntity.tickCounter % 20 == 0) {
+            if (pBlockEntity.tickCounter > 20) {
+                pBlockEntity.tickCounter = 0;
                 buyItem(pBlockEntity);
             }
         }

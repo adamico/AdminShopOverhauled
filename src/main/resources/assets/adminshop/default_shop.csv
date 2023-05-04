@@ -15,5 +15,16 @@
 ,,,,
 // Define shop items below categories. They are as formatted:,,,,
 "// ""buy"" or ""sell"" (the letters b and s also work)","""fluid"" or ""item"" (letters f and i also work)",item or fluid name,price
-buy,item,minecraft:iron_ore,10,0
-sell,item,minecraft:iron_ingot,2,0
+buy,item,minecraft:iron_ore,15,0
+buy,item,minecraft:copper_ore,10,0
+buy,item,minecraft:coal_ore,5,0
+buy,item,minecraft:gold_ore,30,0
+buy,item,minecraft:redstone_ore,15,0
+buy,item,minecraft:emerald_ore,80,0
+buy,item,minecraft:lapis_ore,25,0
+buy,item,minecraft:diamond_ore,100,0
+buy,item,minecraft:nether_quartz_ore,30,0
+sell,item,minecraft:iron_ingot,8,0
+sell,item,minecraft:copper_ingot,3,0
+sell,item,minecraft:gold_ingot,15,0
+sell,item,minecraft:diamond,60,0
