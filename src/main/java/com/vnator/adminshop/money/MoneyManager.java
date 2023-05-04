@@ -272,6 +272,7 @@ public class MoneyManager extends SavedData {
     }
 
 
+    @Deprecated
     public boolean addBalance(String player, long amount){
         setDirty();
         return getBankAccount(player, 1).addBalance(amount);
@@ -281,6 +282,7 @@ public class MoneyManager extends SavedData {
         return getBankAccount(player, id).addBalance(amount);
     }
 
+    @Deprecated
     public boolean subtractBalance(String player, long amount){
         setDirty();
         return getBankAccount(player, 1).subtractBalance(amount);

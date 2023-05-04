@@ -17,7 +17,6 @@ import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.server.level.ServerPlayer;
 
-import java.lang.reflect.Member;
 import java.util.*;
 
 public class ShopAccountsCommand {
@@ -80,12 +79,29 @@ public class ShopAccountsCommand {
                 });
         removeMemberCommand.then(removeMemberCommandID.then(removeMemberCommandMember));
 
+        // /shopAccounts transfer [amount] [accountFrom] [accountTo]
+        LiteralArgumentBuilder<CommandSourceStack> transferCommand = Commands.literal("transfer");
+        RequiredArgumentBuilder<CommandSourceStack, Integer> transferCommandAmount = Commands.argument("amount",
+                IntegerArgumentType.integer());
+        RequiredArgumentBuilder<CommandSourceStack, String> transferCommandFrom = Commands.argument("from",
+                StringArgumentType.string());
+        RequiredArgumentBuilder<CommandSourceStack, String> transferCommandTo = Commands.argument("to",
+                StringArgumentType.string())
+                        .executes(command -> {
+                            int amount = IntegerArgumentType.getInteger(command, "amount");
+                            String from = StringArgumentType.getString(command, "from");
+                            String to = StringArgumentType.getString(command, "to");
+                            return transferMoney(command.getSource(), amount, from, to);
+                        });
+        transferCommand.then(transferCommandAmount.then(transferCommandFrom.then(transferCommandTo)));
+
         shopAccountsCommand.then(infoCommand)
                     .then(listAccountsCommand)
                     .then(createAccountCommand)
                     .then(deleteAccountCommand)
                     .then(addMemberCommand)
-                    .then(removeMemberCommand);
+                    .then(removeMemberCommand)
+                    .then(transferCommand);
         dispatcher.register(shopAccountsCommand);
     }
 
@@ -376,6 +392,89 @@ public class ShopAccountsCommand {
                 memberPlayer));
 
         source.sendSuccess(new TextComponent("Successfully removed "+member+" from account."), true);
+        return 1;
+    }
+
+    private static int transferMoney(CommandSourceStack source, int amount, String from, String to) throws CommandSyntaxException {
+        // Check if accounts are valid format
+        String[] fromparts = from.split(":");
+        String[] toparts = to.split(":");
+        // Check if they only have two elements
+        if (!(fromparts.length == 2) && !(toparts.length == 2)) {
+            AdminShop.LOGGER.error("Accounts format is invalid");
+            source.sendFailure(new TextComponent("Accounts format is invalid"));
+            return 0;
+        }
+        // Extract values
+        String fromName = fromparts[0];
+        String toName = toparts[0];
+        int fromId, toId;
+        try {
+            fromId = Integer.parseInt(fromparts[1]);
+            toId = Integer.parseInt(toparts[1]);
+        }catch (NumberFormatException e){
+            AdminShop.LOGGER.error("Accounts format is invalid");
+            source.sendFailure(new TextComponent("Accounts format is invalid"));
+            return 0;
+        }
+        // Get player and moneyManager
+        ServerPlayer player = source.getPlayerOrException();
+        MoneyManager moneyManager = MoneyManager.get(source.getLevel());
+        // Get accounts UUIDs, fail if can't
+        String fromUUID, toUUID;
+        List<ServerPlayer> onlinePlayers = source.getLevel().players();
+        Optional<ServerPlayer> searchPlayer;
+        searchPlayer = onlinePlayers.stream().filter(serverPlayer -> serverPlayer.getName()
+                .getString().equals(fromName)).findAny();
+        if(searchPlayer.isEmpty()) {
+            AdminShop.LOGGER.error("Couldn't find player "+fromName+"! Both account owners must be online");
+            source.sendFailure(new TextComponent("Couldn't find player "+fromName+"! Both account owners must be online"));
+            return 0;
+        }
+        fromUUID = searchPlayer.get().getStringUUID();
+        searchPlayer = onlinePlayers.stream().filter(serverPlayer -> serverPlayer.getName()
+                .getString().equals(toName)).findAny();
+        if(searchPlayer.isEmpty()) {
+            AdminShop.LOGGER.error("Couldn't find player "+toName+"! Both account owners must be online");
+            source.sendFailure(new TextComponent("Couldn't find player "+toName+"! Both account owners must be online"));
+            return 0;
+        }
+        toUUID = searchPlayer.get().getStringUUID();
+        // Process request
+        AdminShop.LOGGER.info("Transfering "+amount+" from "+fromUUID+":"+fromId+" to "+toUUID+":"+toId);
+        // Check if both accounts exist
+        if (!moneyManager.existsBankAccount(fromUUID, fromId)) {
+            AdminShop.LOGGER.error("Source account doesn't exist.");
+            source.sendFailure(new TextComponent("Source account doesn't exist! Use an existing " +
+                    "ID from /shopAccounts listAccounts"));
+            return 0;
+        }
+        if (!moneyManager.existsBankAccount(toUUID, toId)) {
+            AdminShop.LOGGER.error("Destination account doesn't exist.");
+            source.sendFailure(new TextComponent("Destination account doesn't exist! Use an existing " +
+                    "ID from /shopAccounts listAccounts"));
+            return 0;
+        }
+        // Check if source account has enough balance
+        if (moneyManager.getBalance(fromUUID, fromId) < amount) {
+            AdminShop.LOGGER.error("Source account doesn't have enough funds");
+            source.sendFailure(new TextComponent("Source account doesn't have enough funds"));
+            return 0;
+        }
+        // Perform transfer
+        boolean subtractSuccess = moneyManager.subtractBalance(fromUUID, fromId, amount);
+        if (!subtractSuccess) {
+            AdminShop.LOGGER.error("Error subtracting from source account");
+            source.sendFailure(new TextComponent("Error subtracting from source account"));
+            return 0;
+        }
+        boolean addSuccess = moneyManager.addBalance(toUUID, toId, amount);
+        if (!addSuccess) {
+            AdminShop.LOGGER.error("Error adding to destination account");
+            source.sendFailure(new TextComponent("Error adding to destination account"));
+        }
+        AdminShop.LOGGER.info("Transfer successful");
+        source.sendSuccess(new TextComponent("Transfer successful!"), true);
         return 1;
     }
 }
