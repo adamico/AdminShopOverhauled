@@ -2,7 +2,7 @@ package com.vnator.adminshop.blocks;
 
 import com.vnator.adminshop.blocks.entity.BuyerBE;
 import com.vnator.adminshop.blocks.entity.ModBlockEntities;
-import com.vnator.adminshop.network.PacketMachineOwnerRequest;
+import com.vnator.adminshop.network.PacketBuyerInfoRequest;
 import com.vnator.adminshop.screen.BuyerMenu;
 import com.vnator.adminshop.setup.Messages;
 import net.minecraft.core.BlockPos;
@@ -61,7 +61,7 @@ public class BuyerBlock extends CustomDirectionalBlock implements EntityBlock {
             System.out.println(pLevel.getBlockEntity(pPos).getClass());
             if(pLevel.getBlockEntity(pPos) instanceof BuyerBE) {
                 // Send the request packet
-                Messages.sendToServer(new PacketMachineOwnerRequest(pPos));
+                Messages.sendToServer(new PacketBuyerInfoRequest(pPos));
             } else {
                 throw new IllegalStateException("Our Container provider is missing!");
             }
@@ -103,7 +103,6 @@ public class BuyerBlock extends CustomDirectionalBlock implements EntityBlock {
             assert (pPlacer instanceof Player && blockEntity instanceof BuyerBE);
             // Set account info
             ((BuyerBE) blockEntity).setAccInfo(pPlacer.getStringUUID(), pPlacer.getStringUUID(), 1);
-//            MachineOwnerInfo.get(pLevel).addMachineInfo(pPos, pPlacer.getStringUUID(), pPlacer.getStringUUID(), 1);
         }
     }
 

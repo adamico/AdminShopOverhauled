@@ -190,13 +190,6 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
     }
 
     private void changeAccounts() {
-//        System.out.println("UsableAccounts: ");
-//        usableAccounts.forEach(bankAccount -> {
-//            System.out.println(bankAccount.getOwner()+":"+bankAccount.getId());
-//        });
-//        System.out.println("UsableAccountsIndex: "+usableAccountsIndex);
-//        System.out.println("BankAccount: "+this.usableAccounts.get((this.usableAccountsIndex)).getOwner()+":"
-//                +this.usableAccounts.get((this.usableAccountsIndex)).getId());
         // Refresh account map and usable accounts
         this.accountMap = ClientLocalData.getAccountMap();
         BankAccount bankAccount = usableAccounts.get(usableAccountsIndex);

@@ -141,7 +141,7 @@ public class PacketPurchaseRequest {
                     player.sendMessage(new TextComponent("Not enough money in account!"), player.getUUID());
                     AdminShop.LOGGER.error("Not enough money in account to perform transaction.");
                 }
-            } // fluids later
+            }
         });
     }
 

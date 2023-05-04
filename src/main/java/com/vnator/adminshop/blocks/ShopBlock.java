@@ -50,6 +50,7 @@ public class ShopBlock extends CustomDirectionalBlock implements EntityBlock {
         return RenderShape.MODEL;
     }
 
+
     @Override
     public VoxelShape getShape(BlockState pState, BlockGetter pLevel, BlockPos pPos, CollisionContext pContext) {
         return RENDER_SHAPE;

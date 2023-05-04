@@ -80,12 +80,6 @@ public class SellerScreen extends AbstractContainerScreen<SellerMenu> {
     }
 
     private void changeAccounts() {
-//        System.out.println("UsableAccounts: ");
-//        usableAccounts.forEach(bankAccount -> {
-//            System.out.println(bankAccount.getOwner()+":"+bankAccount.getId());
-//        });
-//        System.out.println("UsableAccountsIndex: "+usableAccountsIndex);
-//        System.out.println("BankAccount: "+bankAccount.first+":"+bankAccount.second);
         // Check if bankAccount was in usableAccountsIndex
         if (this.usableAccountsIndex == -1) {
             AdminShop.LOGGER.error("BankAccount is not in usableAccountsIndex");

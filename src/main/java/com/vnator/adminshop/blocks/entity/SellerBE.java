@@ -1,7 +1,7 @@
 package com.vnator.adminshop.blocks.entity;
 
 import com.vnator.adminshop.AdminShop;
-import com.vnator.adminshop.blocks.MachineWithOwnerAndAccount;
+import com.vnator.adminshop.blocks.AutoShopMachine;
 import com.vnator.adminshop.money.BankAccount;
 import com.vnator.adminshop.money.MachineOwnerInfo;
 import com.vnator.adminshop.money.MoneyManager;
@@ -38,7 +38,7 @@ import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.UUID;
 
-public class SellerBE extends BlockEntity implements MachineWithOwnerAndAccount {
+public class SellerBE extends BlockEntity implements AutoShopMachine {
     private String machineOwnerUUID = "UNKNOWN";
     private String accOwnerUUID = "UNKNOWN";
     private int accID = 1;

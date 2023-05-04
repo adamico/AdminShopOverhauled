@@ -25,53 +25,55 @@ public class Messages {
                 .serverAcceptedVersions(s -> true)
                 .simpleChannel();
         INSTANCE = net;
-
         net.messageBuilder(PacketSyncMoneyToClient.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(PacketSyncMoneyToClient::new)
                 .encoder(PacketSyncMoneyToClient::toBytes)
                 .consumer(PacketSyncMoneyToClient::handle)
                 .add();
-
         net.messageBuilder(PacketPurchaseRequest.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(PacketPurchaseRequest::new)
                 .encoder(PacketPurchaseRequest::toBytes)
                 .consumer(PacketPurchaseRequest::handle)
                 .add();
-
-        net.messageBuilder(PacketATMWithdraw.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(PacketATMWithdraw::new)
-                .encoder(PacketATMWithdraw::toBytes)
-                .consumer(PacketATMWithdraw::handle)
-                .add();
-
         net.messageBuilder(PacketSyncShopToClient.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(PacketSyncShopToClient::new)
                 .encoder(PacketSyncShopToClient::toBytes)
                 .consumer(PacketSyncShopToClient::handle)
                 .add();
-
-        net.messageBuilder(PacketMachineOwner.class, id(), NetworkDirection.PLAY_TO_CLIENT)
-                .decoder(PacketMachineOwner::new)
-                .encoder(PacketMachineOwner::toBytes)
-                .consumer(PacketMachineOwner::handle)
+        net.messageBuilder(PacketSellerOwner.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(PacketSellerOwner::new)
+                .encoder(PacketSellerOwner::toBytes)
+                .consumer(PacketSellerOwner::handle)
                 .add();
-
-        net.messageBuilder(PacketMachineOwnerRequest.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(PacketMachineOwnerRequest::new)
-                .encoder(PacketMachineOwnerRequest::toBytes)
-                .consumer(PacketMachineOwnerRequest::handle)
+        net.messageBuilder(PacketSellerOwnerRequest.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(PacketSellerOwnerRequest::new)
+                .encoder(PacketSellerOwnerRequest::toBytes)
+                .consumer(PacketSellerOwnerRequest::handle)
                 .add();
-
         net.messageBuilder(PacketOpenMenu.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(PacketOpenMenu::new)
                 .encoder(PacketOpenMenu::toBytes)
                 .consumer(PacketOpenMenu::handle)
                 .add();
-
         net.messageBuilder(PacketMachineAccountChange.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(PacketMachineAccountChange::new)
                 .encoder(PacketMachineAccountChange::toBytes)
                 .consumer(PacketMachineAccountChange::handle)
+                .add();
+        net.messageBuilder(PacketSetBuyerTarget.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(PacketSetBuyerTarget::new)
+                .encoder(PacketSetBuyerTarget::toBytes)
+                .consumer(PacketSetBuyerTarget::handle)
+                .add();
+        net.messageBuilder(PacketBuyerInfoRequest.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(PacketBuyerInfoRequest::new)
+                .encoder(PacketBuyerInfoRequest::toBytes)
+                .consumer(PacketBuyerInfoRequest::handle)
+                .add();
+        net.messageBuilder(PacketBuyerInfo.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(PacketBuyerInfo::new)
+                .encoder(PacketBuyerInfo::toBytes)
+                .consumer(PacketBuyerInfo::handle)
                 .add();
     }
 

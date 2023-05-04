@@ -2,6 +2,7 @@ package com.vnator.adminshop.money;
 
 import com.ibm.icu.impl.Pair;
 import com.vnator.adminshop.AdminShop;
+import com.vnator.adminshop.shop.ShopItem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 
@@ -17,6 +18,18 @@ public class ClientLocalData {
 
     private static final Map<BlockPos, Pair<String, Integer>> machineAccountMap = new HashMap<>();
     private static final Map<BlockPos, String> machineOwnerMap = new HashMap<>();
+    private static final Map<BlockPos, ShopItem> buyerTargetMap = new HashMap<>();
+
+    public static void addBuyerTarget(BlockPos pos, ShopItem target) {
+        System.out.println("Added target to client local data");
+        buyerTargetMap.put(pos, target);
+    }
+    public static boolean hasTarget(BlockPos pos) {
+        return buyerTargetMap.containsKey(pos);
+    }
+    public static ShopItem getBuyerTarget(BlockPos pos) {
+        return buyerTargetMap.get(pos);
+    }
     public static List<BankAccount> getUsableAccounts() {
         return usableAccounts;
     }

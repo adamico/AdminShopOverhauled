@@ -2,7 +2,7 @@ package com.vnator.adminshop.network;
 
 import com.ibm.icu.impl.Pair;
 import com.vnator.adminshop.AdminShop;
-import com.vnator.adminshop.blocks.MachineWithOwnerAndAccount;
+import com.vnator.adminshop.blocks.entity.SellerBE;
 import com.vnator.adminshop.money.ClientLocalData;
 import com.vnator.adminshop.setup.Messages;
 import net.minecraft.client.Minecraft;
@@ -15,21 +15,21 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public class PacketMachineOwner {
+public class PacketSellerOwner {
 
     private final String machineOwnerUUID;
     private final String accOwnerUUID;
     private final int accID;
     private final BlockPos pos;
 
-    public PacketMachineOwner(String machineOwnerUUID, String accOwnerUUID, int accID, BlockPos pos) {
+    public PacketSellerOwner(String machineOwnerUUID, String accOwnerUUID, int accID, BlockPos pos) {
         this.machineOwnerUUID = machineOwnerUUID;
         this.accOwnerUUID = accOwnerUUID;
         this.accID = accID;
         this.pos = pos;
     }
 
-    public PacketMachineOwner(FriendlyByteBuf buf) {
+    public PacketSellerOwner(FriendlyByteBuf buf) {
         this.machineOwnerUUID = buf.readUtf();
         this.accOwnerUUID = buf.readUtf();
         this.accID = buf.readInt();
@@ -51,17 +51,18 @@ public class PacketMachineOwner {
             Player player = Minecraft.getInstance().player;
 
             if (player != null) {
-                System.out.println("Sending machine ownership info for "+this.pos+" to "+player.getName().getString());
+                System.out.println("Sending seller info for "+this.pos+" to "+player.getName().getString());
                 // Update ClientLocalData with received data
                 ClientLocalData.addMachineAccount(this.pos, Pair.of(this.accOwnerUUID, this.accID));
                 ClientLocalData.addMachineOwner(this.pos, this.machineOwnerUUID);
                 // Send open menu packet
                 Level level = player.level;
                 BlockEntity blockEntity = level.getBlockEntity(this.pos);
-                if (!(blockEntity instanceof MachineWithOwnerAndAccount)) {
-                    AdminShop.LOGGER.error("BlockEntity is not MachineWithOwnerAndAccount");
+                if (!(blockEntity instanceof SellerBE)) {
+                    AdminShop.LOGGER.error("BlockEntity is not Seller");
                     return;
                 }
+                // Request to open menu
                 Messages.sendToServer(new PacketOpenMenu(this.pos));
             }
         });

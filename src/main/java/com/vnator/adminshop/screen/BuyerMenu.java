@@ -61,6 +61,13 @@ public class BuyerMenu extends AbstractContainerMenu {
     // THIS YOU HAVE TO DEFINE!
     private static final int TE_INVENTORY_SLOT_COUNT = 1;  // must be the number of slots you have!
 
+    protected int getTeInventoryFirstSlotIndex() {
+        return TE_INVENTORY_FIRST_SLOT_INDEX;
+    }
+    protected int getTeInventorySlotCount() {
+        return TE_INVENTORY_SLOT_COUNT;
+    }
+
     public BuyerMenu(int id, Inventory playerInventory, Level pLevel, BlockPos pPos) {
         this(id, playerInventory, pLevel.getBlockEntity(pPos));
     }

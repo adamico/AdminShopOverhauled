@@ -1,7 +1,7 @@
 package com.vnator.adminshop.network;
 
 import com.vnator.adminshop.AdminShop;
-import com.vnator.adminshop.blocks.MachineWithOwnerAndAccount;
+import com.vnator.adminshop.blocks.AutoShopMachine;
 import com.vnator.adminshop.money.BankAccount;
 import com.vnator.adminshop.money.MachineOwnerInfo;
 import com.vnator.adminshop.money.MoneyManager;
@@ -40,6 +40,7 @@ public class PacketMachineAccountChange {
         buf.writeUtf(this.accOwner);
         buf.writeInt(this.accID);
         buf.writeBlockPos(this.pos);
+
     }
 
     public boolean handle(Supplier<NetworkEvent.Context> supplier){
@@ -56,7 +57,7 @@ public class PacketMachineAccountChange {
                 // Get SellerBE
                 Level level = player.level;
                 BlockEntity blockEntity = level.getBlockEntity(this.pos);
-                if (!(blockEntity instanceof MachineWithOwnerAndAccount machineEntity)) {
+                if (!(blockEntity instanceof AutoShopMachine machineEntity)) {
                     AdminShop.LOGGER.error("BlockEntity at pos is not MachineWithOwnerAndAccount");
                     return;
                 }

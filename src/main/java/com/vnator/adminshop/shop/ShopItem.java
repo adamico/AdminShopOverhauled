@@ -3,13 +3,10 @@ package com.vnator.adminshop.shop;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.FluidTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.material.Fluid;
-import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.Optional;
@@ -27,9 +24,7 @@ public class ShopItem {
     private int price;
 
     private ItemStack item;
-    private FluidStack fluid;
     private TagKey<Item> itemTag;
-    private TagKey<Fluid> fluidTag;
     private CompoundTag nbt; //Used with nbt + tags
 
     private ShopItem(){
@@ -41,10 +36,7 @@ public class ShopItem {
     public int getPrice() {
         return price;
     }
-
-    public FluidStack getFluid(){return fluid;}
     public TagKey<Item> getTagItem(){return itemTag;}
-    public TagKey<Fluid> getTagFluid(){return fluidTag;}
     public CompoundTag getNbt(){return nbt;}
     public boolean isBuy(){return isBuy;}
     public boolean isItem(){return isItem;}
@@ -91,17 +83,6 @@ public class ShopItem {
                     instance.item = new ItemStack(item.orElse(null));
                     instance.nbt = nbt;
                 }
-            }else{
-                if(!instance.isTag){
-                    instance.fluid = new FluidStack(ForgeRegistries.FLUIDS.getValue(resource), 1, nbt);
-                }else{
-                    instance.fluidTag = FluidTags.create(resource);
-                    Optional<Fluid> fluid = ForgeRegistries.FLUIDS.getValues().stream()
-                            .filter(f -> ForgeRegistries.FLUIDS.getHolder(f).get().is(instance.fluidTag))
-                            .findFirst();
-                    instance.fluid = new FluidStack(fluid.get(), 1);
-                    instance.nbt = nbt;
-                }
             }
             return this;
         }
@@ -118,11 +99,7 @@ public class ShopItem {
     public String toString(){
         if(isItem && !isTag) {   //Item
             return item.getItem().getDefaultInstance().getDisplayName().getString();
-        } else if(isItem)         //Item Tag
+        } else       //Item Tag
             return I18n.get("gui.item_tag") + ": " + itemTag.location();
-        else if(!isTag)         //Fluid
-            return fluid.getDisplayName().getString();
-        else                    //Fluid Tag
-            return I18n.get("gui.fluid_tag") + ": " + itemTag.registry().toString() + "/" + itemTag.location();
     }
 }

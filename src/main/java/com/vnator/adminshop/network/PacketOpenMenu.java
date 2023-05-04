@@ -1,7 +1,7 @@
 package com.vnator.adminshop.network;
 
 import com.vnator.adminshop.AdminShop;
-import com.vnator.adminshop.blocks.MachineWithOwnerAndAccount;
+import com.vnator.adminshop.blocks.AutoShopMachine;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
@@ -37,8 +37,8 @@ public class PacketOpenMenu {
                 // Open the menu
                 Level level = player.level;
                 BlockEntity blockEntity = level.getBlockEntity(this.pos);
-                if (!(blockEntity instanceof MachineWithOwnerAndAccount machineEntity)) {
-                    AdminShop.LOGGER.error("Cant open GUI of non-MachineWithOwnerAndAccount");
+                if (!(blockEntity instanceof AutoShopMachine machineEntity)) {
+                    AdminShop.LOGGER.error("Cant open GUI of non-AutoShopMachine");
                     return;
                 }
                 NetworkHooks.openGui(player, machineEntity, this.pos);

@@ -9,16 +9,23 @@ import com.vnator.adminshop.money.BankAccount;
 import com.vnator.adminshop.money.ClientLocalData;
 import com.vnator.adminshop.network.MojangAPI;
 import com.vnator.adminshop.network.PacketMachineAccountChange;
+import com.vnator.adminshop.network.PacketSetBuyerTarget;
 import com.vnator.adminshop.setup.Messages;
+import com.vnator.adminshop.shop.Shop;
+import com.vnator.adminshop.shop.ShopItem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -109,6 +116,31 @@ public class BuyerScreen extends AbstractContainerScreen<BuyerMenu> {
     }
 
     @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        Slot slot = this.getSlotUnderMouse();
+        if (slot != null) {
+            ItemStack itemStack = slot.getItem();
+            boolean isMachineSlot = slot.index >= this.menu.getTeInventoryFirstSlotIndex() && slot.index < this.menu
+                    .getTeInventoryFirstSlotIndex() + this.menu.getTeInventorySlotCount();
+            if (!itemStack.isEmpty() && !isMachineSlot) {
+                // Get item clicked on
+                Item item = itemStack.getItem();
+                System.out.println("Clicked on item "+item.getRegistryName());
+                // Check if item is in buy map
+                if (Shop.get().getShopBuyMap().containsKey(item)) {
+                    System.out.println("Item is in buy map");
+                    ShopItem shopItem = Shop.get().getShopBuyMap().get(item);
+                    Messages.sendToServer(new PacketSetBuyerTarget(this.blockPos, shopItem.getItem().getItem()
+                            .getRegistryName()));
+                    ClientLocalData.addBuyerTarget(this.blockPos, shopItem);
+                    return false;
+                }
+            }
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
     protected void renderBg(PoseStack pPoseStack, float pPartialTicks, int pMouseX, int pMouseY) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
@@ -117,6 +149,9 @@ public class BuyerScreen extends AbstractContainerScreen<BuyerMenu> {
         int y = (height - imageHeight) / 2;
 
         this.blit(pPoseStack, x, y, 0, 0, imageWidth, imageHeight);
+        if (ClientLocalData.hasTarget(this.blockPos)) {
+            renderItem(pPoseStack, ClientLocalData.getBuyerTarget(this.blockPos).getItem().getItem(), x+104, y+14);
+        }
     }
 
     @Override
@@ -131,5 +166,11 @@ public class BuyerScreen extends AbstractContainerScreen<BuyerMenu> {
         renderBackground(pPoseStack);
         super.render(pPoseStack, mouseX, mouseY, delta);
         renderTooltip(pPoseStack, mouseX, mouseY);
+    }
+
+    private void renderItem(PoseStack matrixStack, Item item, int x, int y) {
+        ItemRenderer itemRenderer = this.minecraft.getItemRenderer();
+        ItemStack itemStack = new ItemStack(item);
+        itemRenderer.renderAndDecorateFakeItem(itemStack, x, y);
     }
 }

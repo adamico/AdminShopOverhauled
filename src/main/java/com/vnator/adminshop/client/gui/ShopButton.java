@@ -8,11 +8,8 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
-import net.minecraft.world.inventory.InventoryMenu;
-import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
 
@@ -31,15 +28,6 @@ public class ShopButton extends Button {
         super(x, y, 16, 16, new TextComponent(""), listener);
         this.itemRenderer = renderer;
         this.item = item;
-        if(!item.isItem()) {
-            fluidTexture = Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS)
-                    .apply(item.getFluid().getFluid().getAttributes().getStillTexture(item.getFluid()));
-            int fcol = item.getFluid().getFluid().getAttributes().getColor(item.getFluid());
-            fluidColorR = ((fcol >> 16) & 0xFF) / 255.0F;
-            fluidColorG = ((fcol >> 8) & 0xFF) / 255.0F;
-            fluidColorB = (fcol & 0xFF) / 255.0F;
-            fluidColorA = ((fcol >> 24) & 0xFF) / 255.0F;
-        }
     }
 
     @Override
@@ -50,18 +38,9 @@ public class ShopButton extends Button {
 
         matrix.pushPose();
 
-        //Draw item (or fluid)
+        //Draw item
         if(item.isItem()) {
             itemRenderer.renderGuiItem(item.getItem(), x, y);
-        }else{
-            itemRenderer.renderGuiItem(new ItemStack(item.getFluid().getFluid().getBucket()), x, y);
-            /*
-            RenderSystem.setShaderColor(fluidColorR, fluidColorG, fluidColorB, fluidColorA);
-            RenderSystem.setShaderTexture(0,
-                    fluidTexture.atlas().location());
-            blit(matrix, x, y, 0, 0, 16, 16);
-            RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
-             */
         }
 
         //Highlight background and write item name if hovered or focused

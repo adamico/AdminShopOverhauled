@@ -1,8 +1,9 @@
 package com.vnator.adminshop.blocks.entity;
 
 import com.vnator.adminshop.AdminShop;
-import com.vnator.adminshop.blocks.MachineWithOwnerAndAccount;
+import com.vnator.adminshop.blocks.AutoShopMachine;
 import com.vnator.adminshop.money.BankAccount;
+import com.vnator.adminshop.money.BuyerTargetInfo;
 import com.vnator.adminshop.money.MachineOwnerInfo;
 import com.vnator.adminshop.money.MoneyManager;
 import com.vnator.adminshop.network.PacketSyncMoneyToClient;
@@ -15,6 +16,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Containers;
@@ -23,6 +25,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -30,7 +33,9 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.ItemStackHandler;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -38,13 +43,30 @@ import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.UUID;
 
-public class BuyerBE extends BlockEntity implements MachineWithOwnerAndAccount {
+import static java.lang.Math.ceil;
+
+public class BuyerBE extends BlockEntity implements AutoShopMachine {
     private String machineOwnerUUID = "UNKNOWN";
     private String accOwnerUUID = "UNKNOWN";
     private int accID = 1;
     private int tickCounter = 0;
-    // TODO GET SHOPITEM
-    private ShopItem item;
+
+    private final int buySize = 4;
+    private boolean hasTarget = false;
+    private ShopItem targetItem;
+
+    public void setTargetItem(ShopItem targetItem) {
+        System.out.println("setTargetItem("+targetItem.getItem().getDisplayName().getString()+")");
+        this.targetItem = targetItem;
+        this.hasTarget = true;
+        syncBuyerTarget((ServerLevel) this.level, this.getBlockPos(), this.targetItem);
+        setChanged();
+    }
+
+    public ShopItem getTargetItem() {
+        return targetItem;
+    }
+
     private final ItemStackHandler itemHandler = new ItemStackHandler(1) {
         @Override
         protected void onContentsChanged(int slot) {
@@ -140,41 +162,48 @@ public class BuyerBE extends BlockEntity implements MachineWithOwnerAndAccount {
         return new BuyerMenu(pContainerId, pInventory, this);
     }
 
-    // TODO TICKER
     public static void tick(Level pLevel, BlockPos pPos, BlockState pState, BuyerBE pBlockEntity) {
-        pBlockEntity.tickCounter++;
-        if (pBlockEntity.tickCounter % 20 == 0) {
-            buyItem(pBlockEntity);
+        if(pBlockEntity.hasTarget) {
+            pBlockEntity.tickCounter++;
+            if (pBlockEntity.tickCounter % 20 == 0) {
+                buyItem(pBlockEntity);
+            }
         }
     }
 
 
     // TODO BUY ITEM
     private static void buyItem(BuyerBE entity) {
-        Item item = entity.itemHandler.getStackInSlot(0).getItem();
-        int count = entity.itemHandler.getStackInSlot(0).getCount();
-        entity.itemHandler.extractItem(0, count, false);
-        ShopItem shopItem = Shop.get().getShopSellMap().get(item);
-        System.out.println("Attempting sellTransaction(entity, "+entity.getAccOwnerUUID()+","+entity.getAccID()+", "+
-                shopItem+", "+count);
-        buyTransaction(entity, entity.accOwnerUUID, entity.getAccID(), shopItem, count);
+        ShopItem shopItem = entity.getTargetItem();
+        System.out.println("Attempting buyTransaction(entity, "+entity.getAccOwnerUUID()+","+entity.getAccID()+", "+
+                shopItem+", "+entity.buySize);
+        buyTransaction(entity, entity.accOwnerUUID, entity.getAccID(), shopItem, entity.buySize);
     }
 
     // TODO BUY TRANSACTION
-    private static void buyTransaction(BuyerBE entity, String accOwner, int accID, ShopItem item, int quantity) {
-        int itemCost = item.getPrice();
-        long price = (long) quantity * itemCost;
-        if (quantity == 0) {
-            AdminShop.LOGGER.error("No items sold.");
+    private static void buyTransaction(BuyerBE entity, String accOwner, int accID, ShopItem shopItem, int buySize) {
+        // item logic
+        // Attempt to insert the items, and only perform transaction on what can fit
+        Item item = shopItem.getItem().getItem();
+        ItemStack toInsert = new ItemStack(item);
+        toInsert.setCount(buySize);
+        IItemHandler handler = entity.itemHandler;
+        ItemStack returned = ItemHandlerHelper.insertItemStacked(handler, toInsert, true);
+        if(returned.getCount() == buySize) {
+            System.out.println("Buyer is full");
             return;
         }
-        // Get local MoneyManager and attempt transaction
+        int itemCost = shopItem.getPrice();
+        long price = (long) ceil((buySize - returned.getCount()) * itemCost);
+        // Get MoneyManager and attempt transaction
+        System.out.println("subtractBalance("+accOwner+", "+accID+", "+price+")");
         assert entity.level != null;
         assert entity.level instanceof ServerLevel;
         MoneyManager moneyManager = MoneyManager.get(entity.level);
-        boolean success = moneyManager.addBalance(accOwner, accID, price);
+        boolean success = moneyManager.subtractBalance(accOwner, accID, price);
         if (success) {
-            AdminShop.LOGGER.info("Sold item.");
+            ItemHandlerHelper.insertItemStacked(handler, toInsert, false);
+            AdminShop.LOGGER.info("Bought item.");
         } else {
             AdminShop.LOGGER.error("Error selling item.");
             return;
@@ -183,9 +212,8 @@ public class BuyerBE extends BlockEntity implements MachineWithOwnerAndAccount {
     }
 
     private static void syncAccountData(ServerLevel level, String accOwner, int accID) {
-        // Get current bank account
+        // Get MoneyManager and bank account
         MoneyManager moneyManager = MoneyManager.get(level);
-
         BankAccount currentAccount = moneyManager.getBankAccount(accOwner, accID);
         // Sync money with bank account's members
         assert currentAccount.getMembers().contains(accOwner);
@@ -197,8 +225,13 @@ public class BuyerBE extends BlockEntity implements MachineWithOwnerAndAccount {
     }
     private static void syncMachineOwnerInfo(ServerLevel level, BlockPos pos, String machineOwner, String accOwner,
                                              int id) {
-        System.out.println("Syncing with MachineOwnerInfo");
+        AdminShop.LOGGER.info("Syncing with MachineOwnerInfo");
         MachineOwnerInfo.get(level).addMachineInfo(pos, machineOwner, accOwner, id);
+    }
+
+    private static void syncBuyerTarget(ServerLevel level, BlockPos pos, ShopItem target) {
+        AdminShop.LOGGER.info("Syncing with BuyerTargetInfo");
+        BuyerTargetInfo.get(level).addBuyerTarget(pos, target);
     }
 
     @Nonnull
@@ -228,6 +261,12 @@ public class BuyerBE extends BlockEntity implements MachineWithOwnerAndAccount {
         tag.putString("machineowner", this.machineOwnerUUID);
         tag.putString("accowner", this.accOwnerUUID);
         tag.putInt("accid", this.accID);
+        tag.putBoolean("hasTarget", this.hasTarget);
+        if (this.hasTarget) {
+            ResourceLocation registryName = this.targetItem.getItem().getItem().getRegistryName();
+            assert registryName != null;
+            tag.putString("targetLocation", registryName.toString());
+        }
         super.saveAdditional(tag);
     }
 
@@ -237,6 +276,14 @@ public class BuyerBE extends BlockEntity implements MachineWithOwnerAndAccount {
         this.machineOwnerUUID = tag.getString("machineowner");
         this.accOwnerUUID = tag.getString("accowner");
         this.accID = tag.getInt("accid");
+        this.hasTarget = tag.getBoolean("hasTarget");
+        if (this.hasTarget) {
+            String registryString;
+            registryString = tag.getString("targetLocation");
+            ResourceLocation registryLocation = new ResourceLocation(registryString);
+            Item item = ForgeRegistries.ITEMS.getValue(registryLocation);
+            this.targetItem = Shop.get().getShopBuyMap().get(item);
+        }
         super.load(tag);
     }
 

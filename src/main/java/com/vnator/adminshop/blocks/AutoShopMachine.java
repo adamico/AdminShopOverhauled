@@ -2,7 +2,7 @@ package com.vnator.adminshop.blocks;
 
 import net.minecraft.world.MenuProvider;
 
-public interface MachineWithOwnerAndAccount extends MenuProvider {
+public interface AutoShopMachine extends MenuProvider {
     void setAccOwnerUUID(String accOwnerUUID);
     void setAccID(int accID);
 

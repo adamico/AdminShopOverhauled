@@ -2,7 +2,7 @@ package com.vnator.adminshop.blocks;
 
 import com.vnator.adminshop.blocks.entity.ModBlockEntities;
 import com.vnator.adminshop.blocks.entity.SellerBE;
-import com.vnator.adminshop.network.PacketMachineOwnerRequest;
+import com.vnator.adminshop.network.PacketSellerOwnerRequest;
 import com.vnator.adminshop.screen.SellerMenu;
 import com.vnator.adminshop.setup.Messages;
 import net.minecraft.core.BlockPos;
@@ -60,7 +60,7 @@ public class SellerBlock extends CustomDirectionalBlock implements EntityBlock {
             System.out.println("Block at position: " + pLevel.getBlockState(pPos).getBlock());
             if(pLevel.getBlockEntity(pPos) instanceof SellerBE) {
                 // Send the request packet
-                Messages.sendToServer(new PacketMachineOwnerRequest(pPos));
+                Messages.sendToServer(new PacketSellerOwnerRequest(pPos));
             } else {
                 throw new IllegalStateException("Our Container provider is missing!");
             }

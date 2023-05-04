@@ -235,13 +235,13 @@ public class Shop {
                 .build();
 
             //Check if ShopItem was created correctly
-        if(!isTag && item.getItem() == null && item.getFluid() == null){
+        if(!isTag && item.getItem() == null){
             errors.add("Line "+lineNumber+":\tShop Item could not be created. The item or fluid name does not map to" +
                     " an existing item or fluid.");
             isError = true;
         }
             //Check if ShopItem found a matching item/fluid for the supplied tag
-        if(isTag && item.getItem() == null && item.getFluid() == null){
+        if(isTag && item.getItem() == null){
             errors.add("Line "+lineNumber+":\t[WARNING] Supplied tag does not match any existing item or fluid." +
                     " The shop item will still be created, but will be virtually useless until something is mapped to" +
                     " the supplied tag.");

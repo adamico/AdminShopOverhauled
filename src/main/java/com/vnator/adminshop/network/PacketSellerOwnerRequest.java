@@ -10,14 +10,14 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public class PacketMachineOwnerRequest {
+public class PacketSellerOwnerRequest {
     private final BlockPos pos;
 
-    public PacketMachineOwnerRequest(BlockPos pos) {
+    public PacketSellerOwnerRequest(BlockPos pos) {
         this.pos = pos;
     }
 
-    public PacketMachineOwnerRequest(FriendlyByteBuf buf) {
+    public PacketSellerOwnerRequest(FriendlyByteBuf buf) {
         this.pos = buf.readBlockPos();
     }
 
@@ -40,7 +40,7 @@ public class PacketMachineOwnerRequest {
             String machineOwner = machineOwnerInfo.getMachineOwner(pos);
             assert accountInfo != null;
             // Send owner info to player
-            Messages.sendToPlayer(new PacketMachineOwner(machineOwner, accountInfo.first, accountInfo.second, this.pos), player);
+            Messages.sendToPlayer(new PacketSellerOwner(machineOwner, accountInfo.first, accountInfo.second, this.pos), player);
         });
         return true;
     }

@@ -1,6 +1,7 @@
 package com.vnator.adminshop.money;
 
 import com.ibm.icu.impl.Pair;
+import com.vnator.adminshop.AdminShop;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -22,7 +23,7 @@ public class MachineOwnerInfo extends SavedData {
     private final Map<BlockPos, String> machineOwnerMap = new HashMap<>();
 
     public void addMachineInfo(BlockPos pos, String machineOwner, String accowner, int accid) {
-        System.out.println("Adding machine info");
+        AdminShop.LOGGER.info("Adding machine info");
         machineOwnerMap.put(pos, machineOwner);
         machineAccountMap.put(pos, Pair.of(accowner, accid));
         setDirty();
@@ -32,7 +33,7 @@ public class MachineOwnerInfo extends SavedData {
     }
     public Pair<String, Integer> getMachineAccount(BlockPos pos) {
         if (!machineAccountMap.containsKey(pos)) {
-            System.out.println("KEY POS NOT FOUND");
+            AdminShop.LOGGER.warn("MACHINE KEY POS NOT FOUND");
             return null;
         }
         return machineAccountMap.get(pos);
@@ -65,7 +66,7 @@ public class MachineOwnerInfo extends SavedData {
                 String accowner = ctag.getString("accowner");
                 int accid = ctag.getInt("accid");
                 BlockPos pos = new BlockPos(posx, posy, posz);
-                System.out.println("LOADING BLOCK POS:"+pos.toShortString()+", MOWN:"+machineOwner+", AOWN:"+accowner+
+                AdminShop.LOGGER.info("LOADING MACHINE POS:"+pos.toShortString()+", MOWN:"+machineOwner+", AOWN:"+accowner+
                         ", AID:"+accid);
                 machineOwnerMap.put(pos, machineOwner);
                 machineAccountMap.put(pos, Pair.of(accowner, accid));
@@ -76,7 +77,7 @@ public class MachineOwnerInfo extends SavedData {
     public @NotNull CompoundTag save(CompoundTag tag) {
         ListTag ledger = new ListTag();
         machineAccountMap.forEach((pos, account) -> {
-            System.out.println("SAVING BLOCK POS:"+pos.toShortString()+", MOWN:"+machineOwnerMap.get(pos)+", AOWN:"+
+            AdminShop.LOGGER.info("SAVING MACHINE POS:"+pos.toShortString()+", MOWN:"+machineOwnerMap.get(pos)+", AOWN:"+
                     account.first+", AID:"+account.second);
             CompoundTag ownertag = new CompoundTag();
             ownertag.putInt("posx", pos.getX());
