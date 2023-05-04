@@ -18,12 +18,16 @@ import com.vnator.adminshop.setup.Messages;
 import com.vnator.adminshop.shop.Shop;
 import com.vnator.adminshop.shop.ShopItem;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -142,6 +146,29 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         });
         matrixStack.popPose();
 
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        assert minecraft != null;
+        Slot slot = this.getSlotUnderMouse();
+        if (slot != null && Screen.hasShiftDown()) {
+            ItemStack itemStack = slot.getItem();
+            if (!itemStack.isEmpty()) {
+                // Get item clicked on
+                Item item = itemStack.getItem();
+                System.out.println("Shift-clicked on item "+item.getRegistryName());
+                // Check if item is in sell map
+                if (Shop.get().getShopSellMap().containsKey(item)) {
+                    System.out.println("Item is in sell map");
+                    ShopItem shopItem = Shop.get().getShopSellMap().get(item);
+                    // Attempt to sell it
+                    attemptTransaction(this.usableAccounts.get(this.usableAccountsIndex), false, shopItem, itemStack.getCount());
+                    return false;
+                }
+            }
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override

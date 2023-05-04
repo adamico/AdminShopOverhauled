@@ -72,6 +72,8 @@ public class BuyerMenu extends AbstractContainerMenu {
         this(id, playerInventory, pLevel.getBlockEntity(pPos));
     }
 
+
+
     @Override
     protected boolean moveItemStackTo(ItemStack pStack, int pStartIndex, int pEndIndex, boolean pReverseDirection) {
         if (pStartIndex >= TE_INVENTORY_FIRST_SLOT_INDEX && pEndIndex < TE_INVENTORY_FIRST_SLOT_INDEX
