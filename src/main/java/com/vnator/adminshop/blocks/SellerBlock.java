@@ -1,7 +1,9 @@
 package com.vnator.adminshop.blocks;
 
+import com.vnator.adminshop.AdminShop;
 import com.vnator.adminshop.blocks.entity.ModBlockEntities;
 import com.vnator.adminshop.blocks.entity.SellerBE;
+import com.vnator.adminshop.money.MachineOwnerInfo;
 import com.vnator.adminshop.network.PacketSellerOwnerRequest;
 import com.vnator.adminshop.screen.SellerMenu;
 import com.vnator.adminshop.setup.Messages;
@@ -47,8 +49,15 @@ public class SellerBlock extends CustomDirectionalBlock implements EntityBlock {
     public void onRemove(BlockState pState, Level pLevel, BlockPos pPos, BlockState pNewState, boolean pIsMoving) {
         if (pState.getBlock() != pNewState.getBlock()) {
             BlockEntity blockEntity = pLevel.getBlockEntity(pPos);
-            if (blockEntity instanceof SellerBE) {
-                ((SellerBE) blockEntity).drops();
+            if (blockEntity instanceof SellerBE sellerEntity) {
+                sellerEntity.drops();
+                sellerEntity.setRemoved();
+                if (pLevel.isClientSide) {
+                    AdminShop.LOGGER.error("Don't access this from client side!");
+                } else {
+                    MachineOwnerInfo.get(pLevel).removeMachineInfo(pPos);
+                }
+
             }
         }
     }

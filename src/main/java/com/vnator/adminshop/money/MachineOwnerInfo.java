@@ -22,6 +22,12 @@ public class MachineOwnerInfo extends SavedData {
     private final Map<BlockPos, Pair<String, Integer>> machineAccountMap = new HashMap<>();
     private final Map<BlockPos, String> machineOwnerMap = new HashMap<>();
 
+    public void removeMachineInfo(BlockPos pos) {
+        AdminShop.LOGGER.info("Removing machine info");
+        machineOwnerMap.remove(pos);
+        machineAccountMap.remove(pos);
+        setDirty();
+    }
     public void addMachineInfo(BlockPos pos, String machineOwner, String accowner, int accid) {
         AdminShop.LOGGER.info("Adding machine info");
         machineOwnerMap.put(pos, machineOwner);

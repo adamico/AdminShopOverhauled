@@ -1,7 +1,10 @@
 package com.vnator.adminshop.blocks;
 
+import com.vnator.adminshop.AdminShop;
 import com.vnator.adminshop.blocks.entity.BuyerBE;
 import com.vnator.adminshop.blocks.entity.ModBlockEntities;
+import com.vnator.adminshop.money.BuyerTargetInfo;
+import com.vnator.adminshop.money.MachineOwnerInfo;
 import com.vnator.adminshop.network.PacketBuyerInfoRequest;
 import com.vnator.adminshop.screen.BuyerMenu;
 import com.vnator.adminshop.setup.Messages;
@@ -49,6 +52,13 @@ public class BuyerBlock extends CustomDirectionalBlock implements EntityBlock {
             BlockEntity blockEntity = pLevel.getBlockEntity(pPos);
             if (blockEntity instanceof BuyerBE buyerEntity) {
                 buyerEntity.drops();
+                buyerEntity.setRemoved();
+                if (pLevel.isClientSide) {
+                    AdminShop.LOGGER.error("Don't access this from client side!");
+                } else {
+                    MachineOwnerInfo.get(pLevel).removeMachineInfo(pPos);
+                    BuyerTargetInfo.get(pLevel).removeBuyerTarget(pPos);
+                }
             }
         }
     }

@@ -25,6 +25,11 @@ public class BuyerTargetInfo extends SavedData {
     private final String COMPOUND_TAG_NAME = "adminshop_buyertargets";
     private final Map<BlockPos, ShopItem> buyerTargetMap = new HashMap<>();
 
+    public void removeBuyerTarget(BlockPos pos) {
+        System.out.println("Removing buyer target");
+        buyerTargetMap.remove(pos);
+        setDirty();
+    }
     public void addBuyerTarget(BlockPos pos, ShopItem target) {
         System.out.println("Setting buyer target");
         buyerTargetMap.put(pos, target);
