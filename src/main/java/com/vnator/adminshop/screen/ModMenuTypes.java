@@ -22,6 +22,12 @@ public class ModMenuTypes {
     public static final RegistryObject<MenuType<BuyerMenu>> BUYER_MENU = MENUS.register("buyer_menu",
             () -> IForgeMenuType.create((BuyerMenu::new)));
 
+    public static final RegistryObject<MenuType<Buyer2Menu>> BUYER_2_MENU = MENUS.register("buyer_2_menu",
+            () -> IForgeMenuType.create((Buyer2Menu::new)));
+
+    public static final RegistryObject<MenuType<Buyer3Menu>> BUYER_3_MENU = MENUS.register("buyer_3_menu",
+            () -> IForgeMenuType.create((Buyer3Menu::new)));
+
     public static void register(IEventBus eventBus) {
         MENUS.register(eventBus);
     }

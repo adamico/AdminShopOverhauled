@@ -1,12 +1,13 @@
 package com.vnator.adminshop.blocks.entity;
 
 import com.vnator.adminshop.AdminShop;
-import com.vnator.adminshop.blocks.AutoShopMachine;
+import com.vnator.adminshop.blocks.IBuyerBE;
 import com.vnator.adminshop.money.BankAccount;
+import com.vnator.adminshop.money.BuyerTargetInfo;
 import com.vnator.adminshop.money.MachineOwnerInfo;
 import com.vnator.adminshop.money.MoneyManager;
 import com.vnator.adminshop.network.PacketSyncMoneyToClient;
-import com.vnator.adminshop.screen.SellerMenu;
+import com.vnator.adminshop.screen.Buyer3Menu;
 import com.vnator.adminshop.setup.Messages;
 import com.vnator.adminshop.shop.Shop;
 import com.vnator.adminshop.shop.ShopItem;
@@ -15,6 +16,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Containers;
@@ -23,6 +25,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -30,7 +33,9 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.ItemStackHandler;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -38,12 +43,32 @@ import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.UUID;
 
-public class SellerBE extends BlockEntity implements AutoShopMachine {
+import static java.lang.Math.ceil;
+
+public class Buyer3BE extends BlockEntity implements IBuyerBE {
     private String machineOwnerUUID = "UNKNOWN";
     private String accOwnerUUID = "UNKNOWN";
     private int accID = 1;
     private int tickCounter = 0;
-    private final ItemStackHandler itemHandler = new ItemStackHandler(1) {
+
+    private final int buySize = 64;
+    private final int slotSize = 5;
+    private boolean hasTarget = false;
+    private ShopItem targetItem;
+
+    public void setTargetItem(ShopItem targetItem) {
+//        System.out.println("setTargetItem("+targetItem.getItem().getDisplayName().getString()+")");
+        this.targetItem = targetItem;
+        this.hasTarget = true;
+        syncBuyerTarget((ServerLevel) this.level, this.getBlockPos(), this.targetItem);
+        setChanged();
+    }
+
+    public ShopItem getTargetItem() {
+        return targetItem;
+    }
+
+    private final ItemStackHandler itemHandler = new ItemStackHandler(slotSize) {
         @Override
         protected void onContentsChanged(int slot) {
             setChanged();
@@ -52,13 +77,13 @@ public class SellerBE extends BlockEntity implements AutoShopMachine {
 
     private LazyOptional<IItemHandler> lazyItemHandler = LazyOptional.empty();
 
-    public SellerBE(BlockPos pWorldPosition, BlockState pBlockState) {
-        super(ModBlockEntities.SELLER.get(), pWorldPosition, pBlockState);
+    public Buyer3BE(BlockPos pWorldPosition, BlockState pBlockState) {
+        super(ModBlockEntities.BUYER_3.get(), pWorldPosition, pBlockState);
     }
 
     @Override
     public Component getDisplayName() {
-        return new TextComponent("Auto-Seller");
+        return new TextComponent("Auto-Buyer");
     }
 
     public void setAccOwnerUUID(String accOwnerUUID) {
@@ -135,52 +160,68 @@ public class SellerBE extends BlockEntity implements AutoShopMachine {
     @Nullable
     @Override
     public AbstractContainerMenu createMenu(int pContainerId, Inventory pInventory, Player pPlayer) {
-        return new SellerMenu(pContainerId, pInventory, this);
+        return new Buyer3Menu(pContainerId, pInventory, this);
     }
 
-    public static void tick(Level pLevel, BlockPos pPos, BlockState pState, SellerBE pBlockEntity) {
-        if(hasItem(pBlockEntity)) {
+    public static void tick(Level pLevel, BlockPos pPos, BlockState pState, Buyer3BE pBlockEntity) {
+        if(pBlockEntity.hasTarget) {
             pBlockEntity.tickCounter++;
             if (pBlockEntity.tickCounter > 20) {
                 pBlockEntity.tickCounter = 0;
-                sellItem(pBlockEntity);
+                buyItem(pBlockEntity);
             }
         }
     }
 
-    private static void sellItem(SellerBE entity) {
-        Item item = entity.itemHandler.getStackInSlot(0).getItem();
-        int count = entity.itemHandler.getStackInSlot(0).getCount();
-        entity.itemHandler.extractItem(0, count, false);
-        ShopItem shopItem = Shop.get().getShopSellMap().get(item);
-        sellTransaction(entity, entity.accOwnerUUID, entity.getAccID(), shopItem, count);
+    private static void buyItem(Buyer3BE entity) {
+        ShopItem shopItem = entity.getTargetItem();
+        buyTransaction(entity, entity.accOwnerUUID, entity.getAccID(), shopItem, entity.buySize);
     }
 
-    private static void sellTransaction(SellerBE entity, String accOwner, int accID, ShopItem item, int quantity) {
-        int itemCost = item.getPrice();
-        long price = (long) quantity * itemCost;
-        if (quantity == 0) {
-//            AdminShop.LOGGER.error("No items sold.");
+    private static void buyTransaction(Buyer3BE entity, String accOwner, int accID, ShopItem shopItem, int buySize) {
+        // item logic
+        // Attempt to insert the items, and only perform transaction on what can fit
+        Item item = shopItem.getItem().getItem();
+        ItemStack toInsert = new ItemStack(item);
+        toInsert.setCount(buySize);
+        IItemHandler handler = entity.itemHandler;
+        ItemStack returned = ItemHandlerHelper.insertItemStacked(handler, toInsert, true);
+        if(returned.getCount() == buySize) {
             return;
         }
-        // Get local MoneyManager and attempt transaction
+        int itemCost = shopItem.getPrice();
+        long price = (long) ceil((buySize - returned.getCount()) * itemCost);
+        // Get MoneyManager and attempt transaction
         assert entity.level != null;
         assert entity.level instanceof ServerLevel;
         MoneyManager moneyManager = MoneyManager.get(entity.level);
-        boolean success = moneyManager.addBalance(accOwner, accID, price);
+        // Check if account has enough money, if not reduce amount
+        long balance = moneyManager.getBalance(accOwner, accID);
+        if (price > balance) {
+            if (itemCost > balance) {
+                // not enough money to buy one
+                return;
+            }
+            // Find max amount he can buy
+            buySize = (int) (balance / itemCost);
+            price = (long) ceil(buySize * itemCost);
+            toInsert.setCount(buySize);
+        }
+        System.out.println("subtractBalance("+accOwner+", "+accID+", "+price+")");
+        boolean success = moneyManager.subtractBalance(accOwner, accID, price);
         if (success) {
-//            AdminShop.LOGGER.info("Sold item.");
+            ItemHandlerHelper.insertItemStacked(handler, toInsert, false);
+//            AdminShop.LOGGER.info("Bought item.");
         } else {
-            AdminShop.LOGGER.error("Error selling item.");
+            AdminShop.LOGGER.error("Error buying item.");
             return;
         }
         syncAccountData((ServerLevel) entity.level, accOwner, accID);
     }
 
     private static void syncAccountData(ServerLevel level, String accOwner, int accID) {
-        // Get current bank account
+        // Get MoneyManager and bank account
         MoneyManager moneyManager = MoneyManager.get(level);
-
         BankAccount currentAccount = moneyManager.getBankAccount(accOwner, accID);
         // Sync money with bank account's members
         assert currentAccount.getMembers().contains(accOwner);
@@ -192,12 +233,13 @@ public class SellerBE extends BlockEntity implements AutoShopMachine {
     }
     private static void syncMachineOwnerInfo(ServerLevel level, BlockPos pos, String machineOwner, String accOwner,
                                              int id) {
-        System.out.println("Syncing with MachineOwnerInfo");
+        AdminShop.LOGGER.info("Syncing with MachineOwnerInfo");
         MachineOwnerInfo.get(level).addMachineInfo(pos, machineOwner, accOwner, id);
     }
 
-    private static boolean hasItem(SellerBE entity) {
-        return !entity.itemHandler.getStackInSlot(0).isEmpty();
+    private static void syncBuyerTarget(ServerLevel level, BlockPos pos, ShopItem target) {
+        AdminShop.LOGGER.info("Syncing with BuyerTargetInfo");
+        BuyerTargetInfo.get(level).addBuyerTarget(pos, target);
     }
 
     @Nonnull
@@ -206,7 +248,6 @@ public class SellerBE extends BlockEntity implements AutoShopMachine {
         if (cap == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY) {
             return lazyItemHandler.cast();
         }
-
         return super.getCapability(cap, side);
     }
 
@@ -228,6 +269,12 @@ public class SellerBE extends BlockEntity implements AutoShopMachine {
         tag.putString("machineowner", this.machineOwnerUUID);
         tag.putString("accowner", this.accOwnerUUID);
         tag.putInt("accid", this.accID);
+        tag.putBoolean("hasTarget", this.hasTarget);
+        if (this.hasTarget) {
+            ResourceLocation registryName = this.targetItem.getItem().getItem().getRegistryName();
+            assert registryName != null;
+            tag.putString("targetLocation", registryName.toString());
+        }
         super.saveAdditional(tag);
     }
 
@@ -237,6 +284,14 @@ public class SellerBE extends BlockEntity implements AutoShopMachine {
         this.machineOwnerUUID = tag.getString("machineowner");
         this.accOwnerUUID = tag.getString("accowner");
         this.accID = tag.getInt("accid");
+        this.hasTarget = tag.getBoolean("hasTarget");
+        if (this.hasTarget) {
+            String registryString;
+            registryString = tag.getString("targetLocation");
+            ResourceLocation registryLocation = new ResourceLocation(registryString);
+            Item item = ForgeRegistries.ITEMS.getValue(registryLocation);
+            this.targetItem = Shop.get().getShopBuyMap().get(item);
+        }
         super.load(tag);
     }
 

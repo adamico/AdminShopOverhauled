@@ -1,8 +1,0 @@
-{
-  "replace": false,
-  "values": [
-    "adminshop:shop",
-    "adminshop:buyer",
-    "adminshop:seller"
-  ]
-}

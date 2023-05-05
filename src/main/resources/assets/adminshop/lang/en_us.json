@@ -8,12 +8,13 @@
   "gui.money_message": "$",
   "gui.item_tag": "Item Tag",
   "gui.fluid_tag": "Fluid Tag",
-  "block.adminshop.atm": "ATM",
   "block.adminshop.shop": "Shop",
   "block.adminshop.seller": "Seller",
-  "block.adminshop.buyer": "Buyer",
+  "block.adminshop.buyer_1": "T1 Buyer",
+  "block.adminshop.buyer_2": "T2 Buyer",
+  "block.adminshop.buyer_3": "T3 Buyer",
   "item.adminshop.check": "Check",
   "itemGroup.adminshop": "Admin Shop",
-  "screen.adminshop.seller": "Auto-Seller",
-  "screen.adminshop.buyer": "Auto-Buyer"
+  "screen.adminshop.seller": "Seller",
+  "screen.adminshop.buyer": "Buyer"
 }

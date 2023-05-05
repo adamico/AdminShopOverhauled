@@ -2,7 +2,7 @@ package com.vnator.adminshop.screen;
 
 import com.vnator.adminshop.AdminShop;
 import com.vnator.adminshop.blocks.ModBlocks;
-import com.vnator.adminshop.blocks.entity.BuyerBE;
+import com.vnator.adminshop.blocks.entity.Buyer2BE;
 import com.vnator.adminshop.screen.slot.ModResultSlot;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
@@ -16,31 +16,33 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.items.CapabilityItemHandler;
 
-public class BuyerMenu extends AbstractContainerMenu {
+public class Buyer2Menu extends AbstractContainerMenu {
 
-    private final BuyerBE blockEntity;
+    private final Buyer2BE blockEntity;
     private final Level level;
 
-    public BuyerMenu(int windowId, Inventory inv, FriendlyByteBuf extraData) {
+    public Buyer2Menu(int windowId, Inventory inv, FriendlyByteBuf extraData) {
         this(windowId, inv, inv.player.level.getBlockEntity(extraData.readBlockPos()));
     }
 
-    public BuyerMenu(int windowId, Inventory inv, BlockEntity entity) {
-        super(ModMenuTypes.BUYER_MENU.get(), windowId);
+    public Buyer2Menu(int windowId, Inventory inv, BlockEntity entity) {
+        super(ModMenuTypes.BUYER_2_MENU.get(), windowId);
         checkContainerSize(inv, TE_INVENTORY_SLOT_COUNT);
-        this.blockEntity = ((BuyerBE) entity);
+        this.blockEntity = ((Buyer2BE) entity);
         this.level = inv.player.level;
 
         addPlayerInventory(inv);
         addPlayerHotbar(inv);
 
         this.blockEntity.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY).ifPresent(handler -> {
-            this.addSlot(new ModResultSlot(handler, 0, 80, 42));
+            this.addSlot(new ModResultSlot(handler, 0, 62, 42));
+            this.addSlot(new ModResultSlot(handler, 1, 80, 42));
+            this.addSlot(new ModResultSlot(handler, 2, 98, 42));
         });
 
     }
 
-    public BuyerBE getBlockEntity() {
+    public Buyer2BE getBlockEntity() {
         return blockEntity;
     }
     // CREDIT GOES TO: diesieben07 | https://github.com/diesieben07/SevenCommons
@@ -59,7 +61,7 @@ public class BuyerMenu extends AbstractContainerMenu {
     private static final int TE_INVENTORY_FIRST_SLOT_INDEX = VANILLA_FIRST_SLOT_INDEX + VANILLA_SLOT_COUNT;
 
     // THIS YOU HAVE TO DEFINE!
-    private static final int TE_INVENTORY_SLOT_COUNT = 1;  // must be the number of slots you have!
+    private static final int TE_INVENTORY_SLOT_COUNT = 3;  // must be the number of slots you have!
 
     protected int getTeInventoryFirstSlotIndex() {
         return TE_INVENTORY_FIRST_SLOT_INDEX;
@@ -68,7 +70,7 @@ public class BuyerMenu extends AbstractContainerMenu {
         return TE_INVENTORY_SLOT_COUNT;
     }
 
-    public BuyerMenu(int id, Inventory playerInventory, Level pLevel, BlockPos pPos) {
+    public Buyer2Menu(int id, Inventory playerInventory, Level pLevel, BlockPos pPos) {
         this(id, playerInventory, pLevel.getBlockEntity(pPos));
     }
 
@@ -91,10 +93,10 @@ public class BuyerMenu extends AbstractContainerMenu {
         if (sourceSlot == null || !sourceSlot.hasItem()) return ItemStack.EMPTY;  //EMPTY_ITEM
         ItemStack sourceStack = sourceSlot.getItem();
         ItemStack copyOfSourceStack = sourceStack.copy();
-        System.out.println("quickMoveStack()");
+//        System.out.println("quickMoveStack()");
         // Check if the slot clicked is one of the block container slots
         if (index >= TE_INVENTORY_FIRST_SLOT_INDEX && index < TE_INVENTORY_FIRST_SLOT_INDEX + TE_INVENTORY_SLOT_COUNT) {
-            System.out.println("Is in one of the block container slots");
+//            System.out.println("Is in one of the block container slots");
             // Fail couldn't be moved
             if (!moveItemStackTo(sourceStack, TE_INVENTORY_FIRST_SLOT_INDEX, TE_INVENTORY_FIRST_SLOT_INDEX
                     + TE_INVENTORY_SLOT_COUNT, false)) {
@@ -118,7 +120,7 @@ public class BuyerMenu extends AbstractContainerMenu {
     @Override
     public boolean stillValid(Player pPlayer) {
         return stillValid(ContainerLevelAccess.create(level, blockEntity.getBlockPos()),
-                pPlayer, ModBlocks.BUYER_1.get());
+                pPlayer, ModBlocks.BUYER_2.get());
     }
 
     private void addPlayerInventory(Inventory playerInventory) {

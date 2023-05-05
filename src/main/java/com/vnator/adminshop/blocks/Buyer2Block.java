@@ -1,7 +1,7 @@
 package com.vnator.adminshop.blocks;
 
 import com.vnator.adminshop.AdminShop;
-import com.vnator.adminshop.blocks.entity.BuyerBE;
+import com.vnator.adminshop.blocks.entity.Buyer2BE;
 import com.vnator.adminshop.blocks.entity.ModBlockEntities;
 import com.vnator.adminshop.money.BuyerTargetInfo;
 import com.vnator.adminshop.money.MachineOwnerInfo;
@@ -33,8 +33,8 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
-public class BuyerBlock extends CustomDirectionalBlock implements EntityBlock {
-    public BuyerBlock() {
+public class Buyer2Block extends CustomDirectionalBlock implements EntityBlock {
+    public Buyer2Block() {
         super(Properties.of(Material.METAL)
                 .sound(SoundType.METAL)
                 .strength(1.0f)
@@ -50,7 +50,7 @@ public class BuyerBlock extends CustomDirectionalBlock implements EntityBlock {
     public void onRemove(BlockState pState, Level pLevel, BlockPos pPos, BlockState pNewState, boolean pIsMoving) {
         if (pState.getBlock() != pNewState.getBlock()) {
             BlockEntity blockEntity = pLevel.getBlockEntity(pPos);
-            if (blockEntity instanceof BuyerBE buyerEntity) {
+            if (blockEntity instanceof Buyer2BE buyerEntity) {
                 buyerEntity.drops();
                 buyerEntity.setRemoved();
                 if (pLevel.isClientSide) {
@@ -67,7 +67,7 @@ public class BuyerBlock extends CustomDirectionalBlock implements EntityBlock {
     public InteractionResult use(BlockState pState, Level pLevel, BlockPos pPos,
                                  Player pPlayer, InteractionHand pHand, BlockHitResult pHit) {
         if (!pLevel.isClientSide()) {
-            if(pLevel.getBlockEntity(pPos) instanceof BuyerBE) {
+            if(pLevel.getBlockEntity(pPos) instanceof Buyer2BE) {
                 // Send the request packet
                 Messages.sendToServer(new PacketBuyerInfoRequest(pPos));
             } else {
@@ -95,7 +95,7 @@ public class BuyerBlock extends CustomDirectionalBlock implements EntityBlock {
     @Nullable
     @Override
     public BlockEntity newBlockEntity(BlockPos pPos, BlockState pState) {
-        return new BuyerBE(pPos, pState);
+        return new Buyer2BE(pPos, pState);
     }
 
     @Override
@@ -108,17 +108,17 @@ public class BuyerBlock extends CustomDirectionalBlock implements EntityBlock {
         super.setPlacedBy(pLevel, pPos, pState, pPlacer, pStack);
         if (!pLevel.isClientSide) {
             BlockEntity blockEntity = pLevel.getBlockEntity(pPos);
-            assert (pPlacer instanceof Player && blockEntity instanceof BuyerBE);
+            assert (pPlacer instanceof Player && blockEntity instanceof Buyer2BE);
             // Set account info
-            ((BuyerBE) blockEntity).setAccInfo(pPlacer.getStringUUID(), pPlacer.getStringUUID(), 1);
+            ((Buyer2BE) blockEntity).setAccInfo(pPlacer.getStringUUID(), pPlacer.getStringUUID(), 1);
         }
     }
 
     @Nullable
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level pLevel, BlockState pState, BlockEntityType<T> pBlockEntityType) {
-        return pLevel.isClientSide() ? null : checkType(pBlockEntityType, ModBlockEntities.BUYER_1.get(),
-                (level, pos, state, blockEntity) -> BuyerBE.tick(level, pos, state, (BuyerBE) blockEntity));
+        return pLevel.isClientSide() ? null : checkType(pBlockEntityType, ModBlockEntities.BUYER_2.get(),
+                (level, pos, state, blockEntity) -> Buyer2BE.tick(level, pos, state, (Buyer2BE) blockEntity));
     }
 
     private static <T extends BlockEntity> BlockEntityTicker<T> checkType(BlockEntityType<T> blockEntityType, BlockEntityType<?> expectedType, BlockEntityTicker<? super T> ticker) {

@@ -24,6 +24,12 @@ public class ClientSetup {
             MenuScreens.<BuyerMenu, BuyerScreen>register(ModMenuTypes.BUYER_MENU.get(), (BuyerMenu menu,
             Inventory playerInventory, Component title) -> new BuyerScreen(menu, playerInventory, title,
                     menu.getBlockEntity().getBlockPos()));
+            MenuScreens.<Buyer2Menu, Buyer2Screen>register(ModMenuTypes.BUYER_2_MENU.get(), (Buyer2Menu menu,
+            Inventory playerInventory, Component title) -> new Buyer2Screen(menu, playerInventory, title,
+                    menu.getBlockEntity().getBlockPos()));
+            MenuScreens.<Buyer3Menu, Buyer3Screen>register(ModMenuTypes.BUYER_3_MENU.get(), (Buyer3Menu menu,
+            Inventory playerInventory, Component title) -> new Buyer3Screen(menu, playerInventory, title,
+                    menu.getBlockEntity().getBlockPos()));
             ItemBlockRenderTypes.setRenderLayer(ModBlocks.SHOP.get(), RenderType.translucent());
             KeyInit.init();
         });

@@ -2,7 +2,7 @@ package com.vnator.adminshop.network;
 
 import com.ibm.icu.impl.Pair;
 import com.vnator.adminshop.AdminShop;
-import com.vnator.adminshop.blocks.entity.BuyerBE;
+import com.vnator.adminshop.blocks.IBuyerBE;
 import com.vnator.adminshop.money.ClientLocalData;
 import com.vnator.adminshop.setup.Messages;
 import com.vnator.adminshop.shop.Shop;
@@ -98,7 +98,7 @@ public class PacketBuyerInfo {
                 // Send open menu packet
                 Level level = player.level;
                 BlockEntity blockEntity = level.getBlockEntity(this.pos);
-                if (!(blockEntity instanceof BuyerBE)) {
+                if (!(blockEntity instanceof IBuyerBE)) {
                     AdminShop.LOGGER.error("BlockEntity is not Buyer");
                     return;
                 }

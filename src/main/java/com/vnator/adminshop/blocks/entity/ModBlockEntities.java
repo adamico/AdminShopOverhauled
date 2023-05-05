@@ -20,9 +20,16 @@ public class ModBlockEntities {
             BLOCK_ENTITIES.register("shop", () -> BlockEntityType.Builder.of(ShopBE::new,
                     ModBlocks.SHOP.get()).build(null));
 
-    public static final RegistryObject<BlockEntityType<BuyerBE>> BUYER =
-            BLOCK_ENTITIES.register("buyer", () -> BlockEntityType.Builder.of(BuyerBE::new,
-                    ModBlocks.BUYER.get()).build(null));
+    public static final RegistryObject<BlockEntityType<BuyerBE>> BUYER_1 =
+            BLOCK_ENTITIES.register("buyer_1", () -> BlockEntityType.Builder.of(BuyerBE::new,
+                    ModBlocks.BUYER_1.get()).build(null));
+
+    public static final RegistryObject<BlockEntityType<Buyer2BE>> BUYER_2 =
+            BLOCK_ENTITIES.register("buyer_2", () -> BlockEntityType.Builder.of(Buyer2BE::new,
+                    ModBlocks.BUYER_2.get()).build(null));
+    public static final RegistryObject<BlockEntityType<Buyer3BE>> BUYER_3 =
+            BLOCK_ENTITIES.register("buyer_3", () -> BlockEntityType.Builder.of(Buyer3BE::new,
+                    ModBlocks.BUYER_3.get()).build(null));
 
     public static void register(IEventBus eventBus) {
         BLOCK_ENTITIES.register(eventBus);

@@ -1,7 +1,7 @@
 package com.vnator.adminshop.blocks.entity;
 
 import com.vnator.adminshop.AdminShop;
-import com.vnator.adminshop.blocks.AutoShopMachine;
+import com.vnator.adminshop.blocks.IBuyerBE;
 import com.vnator.adminshop.money.BankAccount;
 import com.vnator.adminshop.money.BuyerTargetInfo;
 import com.vnator.adminshop.money.MachineOwnerInfo;
@@ -45,18 +45,19 @@ import java.util.UUID;
 
 import static java.lang.Math.ceil;
 
-public class BuyerBE extends BlockEntity implements AutoShopMachine {
+public class BuyerBE extends BlockEntity implements IBuyerBE {
     private String machineOwnerUUID = "UNKNOWN";
     private String accOwnerUUID = "UNKNOWN";
     private int accID = 1;
     private int tickCounter = 0;
 
     private final int buySize = 4;
+    private final int slotSize = 1;
     private boolean hasTarget = false;
     private ShopItem targetItem;
 
     public void setTargetItem(ShopItem targetItem) {
-        System.out.println("setTargetItem("+targetItem.getItem().getDisplayName().getString()+")");
+//        System.out.println("setTargetItem("+targetItem.getItem().getDisplayName().getString()+")");
         this.targetItem = targetItem;
         this.hasTarget = true;
         syncBuyerTarget((ServerLevel) this.level, this.getBlockPos(), this.targetItem);
@@ -67,7 +68,7 @@ public class BuyerBE extends BlockEntity implements AutoShopMachine {
         return targetItem;
     }
 
-    private final ItemStackHandler itemHandler = new ItemStackHandler(1) {
+    private final ItemStackHandler itemHandler = new ItemStackHandler(slotSize) {
         @Override
         protected void onContentsChanged(int slot) {
             setChanged();
@@ -77,7 +78,7 @@ public class BuyerBE extends BlockEntity implements AutoShopMachine {
     private LazyOptional<IItemHandler> lazyItemHandler = LazyOptional.empty();
 
     public BuyerBE(BlockPos pWorldPosition, BlockState pBlockState) {
-        super(ModBlockEntities.BUYER.get(), pWorldPosition, pBlockState);
+        super(ModBlockEntities.BUYER_1.get(), pWorldPosition, pBlockState);
     }
 
     @Override
@@ -90,7 +91,6 @@ public class BuyerBE extends BlockEntity implements AutoShopMachine {
             AdminShop.LOGGER.error("Do not set accOwnerUUID from client side!");
             return;
         }
-        System.out.println("setAccOwnerUUID("+accOwnerUUID+")");
         this.accOwnerUUID = accOwnerUUID;
         syncMachineOwnerInfo((ServerLevel) this.level, this.getBlockPos(), this.machineOwnerUUID, this.accOwnerUUID,
                 this.accID);
@@ -101,7 +101,6 @@ public class BuyerBE extends BlockEntity implements AutoShopMachine {
             AdminShop.LOGGER.error("Do not set accID from client side!");
             return;
         }
-        System.out.println("setAccID("+accID+")");
         this.accID = accID;
         syncMachineOwnerInfo((ServerLevel) this.level, this.getBlockPos(), this.machineOwnerUUID, this.accOwnerUUID, this.accID);
         setChanged();
@@ -112,7 +111,7 @@ public class BuyerBE extends BlockEntity implements AutoShopMachine {
             AdminShop.LOGGER.error("Do not set accInfo from client side!");
             return;
         }
-        System.out.println("setAccInfo("+accID+", "+accId+")");
+//        System.out.println("setAccInfo("+accID+", "+accId+")");
         this.accID = accId;
         this.accOwnerUUID = accOwner;
         syncMachineOwnerInfo((ServerLevel) this.level, this.getBlockPos(), this.machineOwnerUUID, accOwner, accId);
@@ -124,7 +123,7 @@ public class BuyerBE extends BlockEntity implements AutoShopMachine {
             AdminShop.LOGGER.error("Do not set accInfo from client side!");
             return;
         }
-        System.out.println("setAccInfo("+machineOwner+", "+accID+", "+accId+")");
+//        System.out.println("setAccInfo("+machineOwner+", "+accID+", "+accId+")");
         this.machineOwnerUUID = machineOwner;
         this.accID = accId;
         this.accOwnerUUID = accOwner;
@@ -137,7 +136,6 @@ public class BuyerBE extends BlockEntity implements AutoShopMachine {
             AdminShop.LOGGER.error("Do not set machineOwnerUUID from client side!");
             return;
         }
-        System.out.println("setMachineOwnerUUID("+machineOwnerUUID+")");
         this.machineOwnerUUID = machineOwnerUUID;
         syncMachineOwnerInfo((ServerLevel) this.level, this.getBlockPos(), this.machineOwnerUUID, this.accOwnerUUID,
                 this.accID);
@@ -172,16 +170,11 @@ public class BuyerBE extends BlockEntity implements AutoShopMachine {
         }
     }
 
-
-    // TODO BUY ITEM
     private static void buyItem(BuyerBE entity) {
         ShopItem shopItem = entity.getTargetItem();
-        System.out.println("Attempting buyTransaction(entity, "+entity.getAccOwnerUUID()+","+entity.getAccID()+", "+
-                shopItem+", "+entity.buySize);
         buyTransaction(entity, entity.accOwnerUUID, entity.getAccID(), shopItem, entity.buySize);
     }
 
-    // TODO BUY TRANSACTION
     private static void buyTransaction(BuyerBE entity, String accOwner, int accID, ShopItem shopItem, int buySize) {
         // item logic
         // Attempt to insert the items, and only perform transaction on what can fit
@@ -191,20 +184,31 @@ public class BuyerBE extends BlockEntity implements AutoShopMachine {
         IItemHandler handler = entity.itemHandler;
         ItemStack returned = ItemHandlerHelper.insertItemStacked(handler, toInsert, true);
         if(returned.getCount() == buySize) {
-            System.out.println("Buyer is full");
             return;
         }
         int itemCost = shopItem.getPrice();
         long price = (long) ceil((buySize - returned.getCount()) * itemCost);
         // Get MoneyManager and attempt transaction
-        System.out.println("subtractBalance("+accOwner+", "+accID+", "+price+")");
         assert entity.level != null;
         assert entity.level instanceof ServerLevel;
         MoneyManager moneyManager = MoneyManager.get(entity.level);
+        // Check if account has enough money, if not reduce amount
+        long balance = moneyManager.getBalance(accOwner, accID);
+        if (price > balance) {
+            if (itemCost > balance) {
+                // not enough money to buy one
+                return;
+            }
+            // Find max amount he can buy
+            buySize = (int) (balance / itemCost);
+            price = (long) ceil(buySize * itemCost);
+            toInsert.setCount(buySize);
+        }
+//        System.out.println("subtractBalance("+accOwner+", "+accID+", "+price+")");
         boolean success = moneyManager.subtractBalance(accOwner, accID, price);
         if (success) {
             ItemHandlerHelper.insertItemStacked(handler, toInsert, false);
-            AdminShop.LOGGER.info("Bought item.");
+//            AdminShop.LOGGER.info("Bought item.");
         } else {
             AdminShop.LOGGER.error("Error selling item.");
             return;

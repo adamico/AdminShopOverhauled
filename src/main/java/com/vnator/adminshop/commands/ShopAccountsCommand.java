@@ -125,7 +125,7 @@ public class ShopAccountsCommand {
 
         MoneyManager moneyManager = MoneyManager.get(source.getLevel());
         if (!moneyManager.getSharedAccounts().containsKey(playerUUID)) {
-            AdminShop.LOGGER.error("No accounts found for "+player.getName().getString());
+            AdminShop.LOGGER.warn("No accounts found for "+player.getName().getString());
             returnMessage.append("None");
         } else {
             List<BankAccount> sharedAccountsSorted = moneyManager.getSharedAccounts().get(playerUUID);
