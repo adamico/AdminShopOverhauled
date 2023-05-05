@@ -91,13 +91,12 @@ public class BuyerMenu extends AbstractContainerMenu {
         if (sourceSlot == null || !sourceSlot.hasItem()) return ItemStack.EMPTY;  //EMPTY_ITEM
         ItemStack sourceStack = sourceSlot.getItem();
         ItemStack copyOfSourceStack = sourceStack.copy();
-        System.out.println("quickMoveStack()");
+//        System.out.println("quickMoveStack()");
         // Check if the slot clicked is one of the block container slots
         if (index >= TE_INVENTORY_FIRST_SLOT_INDEX && index < TE_INVENTORY_FIRST_SLOT_INDEX + TE_INVENTORY_SLOT_COUNT) {
-            System.out.println("Is in one of the block container slots");
-            // Fail couldn't be moved
-            if (!moveItemStackTo(sourceStack, TE_INVENTORY_FIRST_SLOT_INDEX, TE_INVENTORY_FIRST_SLOT_INDEX
-                    + TE_INVENTORY_SLOT_COUNT, false)) {
+//            System.out.println("Is in one of the block container slots");
+            // This is a TE slot so merge the stack into the players inventory
+            if (!moveItemStackTo(sourceStack, VANILLA_FIRST_SLOT_INDEX, VANILLA_FIRST_SLOT_INDEX + VANILLA_SLOT_COUNT, false)) {
                 return ItemStack.EMPTY;
             }
         }

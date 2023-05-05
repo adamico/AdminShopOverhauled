@@ -97,9 +97,8 @@ public class Buyer2Menu extends AbstractContainerMenu {
         // Check if the slot clicked is one of the block container slots
         if (index >= TE_INVENTORY_FIRST_SLOT_INDEX && index < TE_INVENTORY_FIRST_SLOT_INDEX + TE_INVENTORY_SLOT_COUNT) {
 //            System.out.println("Is in one of the block container slots");
-            // Fail couldn't be moved
-            if (!moveItemStackTo(sourceStack, TE_INVENTORY_FIRST_SLOT_INDEX, TE_INVENTORY_FIRST_SLOT_INDEX
-                    + TE_INVENTORY_SLOT_COUNT, false)) {
+            // This is a TE slot so merge the stack into the players inventory
+            if (!moveItemStackTo(sourceStack, VANILLA_FIRST_SLOT_INDEX, VANILLA_FIRST_SLOT_INDEX + VANILLA_SLOT_COUNT, false)) {
                 return ItemStack.EMPTY;
             }
         }

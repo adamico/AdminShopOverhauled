@@ -79,19 +79,25 @@ public class ShopAccountsCommand {
                 });
         removeMemberCommand.then(removeMemberCommandID.then(removeMemberCommandMember));
 
-        // /shopAccounts transfer [amount] [accountFrom] [accountTo]
+        // /shopAccounts transfer [amount] [fromOwner] [fromId] [toOwner] [toId]
         LiteralArgumentBuilder<CommandSourceStack> transferCommand = Commands.literal("transfer");
         RequiredArgumentBuilder<CommandSourceStack, Integer> transferCommandAmount = Commands.argument("amount",
                 IntegerArgumentType.integer());
-        RequiredArgumentBuilder<CommandSourceStack, String> transferCommandFrom = Commands.argument("from",
+        RequiredArgumentBuilder<CommandSourceStack, String> transferCommandFrom = Commands.argument("fromOwner",
                 StringArgumentType.string());
-        RequiredArgumentBuilder<CommandSourceStack, String> transferCommandTo = Commands.argument("to",
-                StringArgumentType.string())
+        RequiredArgumentBuilder<CommandSourceStack, Integer> transferCommandFromId = Commands.argument("fromId",
+                IntegerArgumentType.integer());
+        RequiredArgumentBuilder<CommandSourceStack, String> transferCommandTo = Commands.argument("toOwner",
+                StringArgumentType.string());
+        RequiredArgumentBuilder<CommandSourceStack, Integer> transferCommandToId = Commands.argument("toId",
+                IntegerArgumentType.integer())
                         .executes(command -> {
                             int amount = IntegerArgumentType.getInteger(command, "amount");
-                            String from = StringArgumentType.getString(command, "from");
-                            String to = StringArgumentType.getString(command, "to");
-                            return transferMoney(command.getSource(), amount, from, to);
+                            String fromOwner = StringArgumentType.getString(command, "fromOwner");
+                            int fromId = IntegerArgumentType.getInteger(command, "fromId");
+                            String toOwner = StringArgumentType.getString(command, "toOwner");
+                            int toId = IntegerArgumentType.getInteger(command, "toId");
+                            return transferMoney(command.getSource(), amount, fromOwner, fromId, toOwner, toId);
                         });
         transferCommand.then(transferCommandAmount.then(transferCommandFrom.then(transferCommandTo)));
 
@@ -395,28 +401,8 @@ public class ShopAccountsCommand {
         return 1;
     }
 
-    private static int transferMoney(CommandSourceStack source, int amount, String from, String to) throws CommandSyntaxException {
-        // Check if accounts are valid format
-        String[] fromparts = from.split(":");
-        String[] toparts = to.split(":");
-        // Check if they only have two elements
-        if (!(fromparts.length == 2) && !(toparts.length == 2)) {
-            AdminShop.LOGGER.error("Accounts format is invalid");
-            source.sendFailure(new TextComponent("Accounts format is invalid"));
-            return 0;
-        }
-        // Extract values
-        String fromName = fromparts[0];
-        String toName = toparts[0];
-        int fromId, toId;
-        try {
-            fromId = Integer.parseInt(fromparts[1]);
-            toId = Integer.parseInt(toparts[1]);
-        }catch (NumberFormatException e){
-            AdminShop.LOGGER.error("Accounts format is invalid");
-            source.sendFailure(new TextComponent("Accounts format is invalid"));
-            return 0;
-        }
+    private static int transferMoney(CommandSourceStack source, int amount, String fromName, int fromId, String toName,
+                                     int toId) throws CommandSyntaxException {
         // Get player and moneyManager
         ServerPlayer player = source.getPlayerOrException();
         MoneyManager moneyManager = MoneyManager.get(source.getLevel());
