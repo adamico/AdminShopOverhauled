@@ -75,13 +75,14 @@ public class Buyer2BE extends BlockEntity implements AutoShopMachine {
     }
 
     public static void tick(Level pLevel, BlockPos pPos, BlockState pState, Buyer2BE pBlockEntity) {
-        if(ClientLocalData.hasTarget(pPos)) {
+        if(!pLevel.isClientSide) {
             pBlockEntity.tickCounter++;
             if (pBlockEntity.tickCounter > 20) {
                 pBlockEntity.tickCounter = 0;
                 // Send buy item transaction (send pos and buySize)
-                if (!pLevel.isClientSide) {
-                    assert pLevel instanceof ServerLevel;
+                assert pLevel instanceof ServerLevel;
+                BuyerTargetInfo buyerTargetInfo = BuyerTargetInfo.get(pLevel);
+                if (buyerTargetInfo.hasTarget(pPos)) {
                     buyerTransaction(pPos, (ServerLevel) pLevel, pBlockEntity, pBlockEntity.buySize);
                 }
             }
