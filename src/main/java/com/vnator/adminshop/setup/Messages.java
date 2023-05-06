@@ -80,16 +80,6 @@ public class Messages {
                 .encoder(PacketSetMachineInfo::toBytes)
                 .consumer(PacketSetMachineInfo::handle)
                 .add();
-        net.messageBuilder(PacketSellerTransaction.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(PacketSellerTransaction::new)
-                .encoder(PacketSellerTransaction::toBytes)
-                .consumer(PacketSellerTransaction::handle)
-                .add();
-        net.messageBuilder(PacketBuyerTransaction.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(PacketBuyerTransaction::new)
-                .encoder(PacketBuyerTransaction::toBytes)
-                .consumer(PacketBuyerTransaction::handle)
-                .add();
     }
 
     public static <MSG> void sendToServer(MSG message) {
