@@ -118,7 +118,6 @@ public class SellerBlock extends CustomDirectionalBlock implements EntityBlock {
             BlockEntity blockEntity = pLevel.getBlockEntity(pPos);
             assert (pPlacer instanceof Player && blockEntity instanceof SellerBE);
             // Set account info
-            ((SellerBE) blockEntity).setAccInfo(pPlacer.getStringUUID(), pPlacer.getStringUUID(), 1);
             Messages.sendToServer(new PacketSetMachineInfo(pPlacer.getStringUUID(), pPlacer.getStringUUID(), 1, pPos));
         }
     }

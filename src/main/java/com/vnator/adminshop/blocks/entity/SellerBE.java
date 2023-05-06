@@ -28,9 +28,6 @@ import org.jetbrains.annotations.Nullable;
 import javax.annotation.Nonnull;
 
 public class SellerBE extends BlockEntity implements AutoShopMachine {
-    private String machineOwnerUUID = "";
-    private String accOwnerUUID = "";
-    private int accID = 1;
     private int tickCounter = 0;
     private final ItemStackHandler itemHandler = new ItemStackHandler(1) {
         @Override
@@ -52,50 +49,6 @@ public class SellerBE extends BlockEntity implements AutoShopMachine {
     @Override
     public Component getDisplayName() {
         return new TextComponent("Auto-Seller");
-    }
-
-    public void setAccOwnerUUID(String accOwnerUUID) {
-        System.out.println("setAccOwnerUUID("+accOwnerUUID+")");
-        this.accOwnerUUID = accOwnerUUID;
-        setChanged();
-    }
-    public void setAccID(int accID) {
-        System.out.println("setAccID("+accID+")");
-        this.accID = accID;
-        setChanged();
-    }
-
-    public void setAccInfo(String accOwner, int accId) {
-        System.out.println("setAccInfo("+accID+", "+accId+")");
-        this.accID = accId;
-        this.accOwnerUUID = accOwner;
-        setChanged();
-    }
-
-    public void setAccInfo(String machineOwner, String accOwner, int accId) {
-        System.out.println("setAccInfo("+machineOwner+", "+accID+", "+accId+")");
-        this.machineOwnerUUID = machineOwner;
-        this.accID = accId;
-        this.accOwnerUUID = accOwner;
-        setChanged();
-    }
-
-    public void setMachineOwnerUUID(String machineOwnerUUID) {
-        System.out.println("setMachineOwnerUUID("+machineOwnerUUID+")");
-        this.machineOwnerUUID = machineOwnerUUID;
-        setChanged();
-    }
-
-    public String getMachineOwnerUUID() {
-        return machineOwnerUUID;
-    }
-
-    public String getAccOwnerUUID() {
-        return accOwnerUUID;
-    }
-
-    public int getAccID() {
-        return accID;
     }
 
     @Nullable
@@ -144,18 +97,12 @@ public class SellerBE extends BlockEntity implements AutoShopMachine {
     @Override
     protected void saveAdditional(@NotNull CompoundTag tag) {
         tag.put("inventory", this.itemHandler.serializeNBT());
-        tag.putString("machineowner", this.machineOwnerUUID);
-        tag.putString("accowner", this.accOwnerUUID);
-        tag.putInt("accid", this.accID);
         super.saveAdditional(tag);
     }
 
     @Override
     public void load(CompoundTag tag) {
         this.itemHandler.deserializeNBT(tag.getCompound("inventory"));
-        this.machineOwnerUUID = tag.getString("machineowner");
-        this.accOwnerUUID = tag.getString("accowner");
-        this.accID = tag.getInt("accid");
         super.load(tag);
     }
 

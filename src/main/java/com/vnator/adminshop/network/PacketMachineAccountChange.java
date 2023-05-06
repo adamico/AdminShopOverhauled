@@ -61,8 +61,9 @@ public class PacketMachineAccountChange {
                     AdminShop.LOGGER.error("BlockEntity at pos is not MachineWithOwnerAndAccount");
                     return;
                 }
-                // Check if player is the machine owner
-                if (!player.getStringUUID().equals(machineEntity.getMachineOwnerUUID())) {
+                // Check machine's owner is the same as player
+                MachineOwnerInfo machineOwnerInfo = MachineOwnerInfo.get(player.getLevel());
+                if (!machineOwnerInfo.getMachineOwner(this.pos).equals(player.getStringUUID())) {
                     AdminShop.LOGGER.error("Player is not the machine's owner");
                     return;
                 }
@@ -75,15 +76,8 @@ public class PacketMachineAccountChange {
                     AdminShop.LOGGER.error("Player does not have access to that account");
                     return;
                 }
-                // Check machine's owner is the same as the one sent
-                MachineOwnerInfo machineOwnerInfo = MachineOwnerInfo.get(player.getLevel());
-                if (!this.machineOwner.equals(machineOwnerInfo.getMachineOwner(this.pos))) {
-                    AdminShop.LOGGER.error("Nonmatching information received");
-                    return;
-                }
                 System.out.println("Saving machine account information.");
-                // Apply changes to blockEntity
-                (machineEntity).setAccInfo(this.accOwner, this.accID);
+
                 // Apply changes to MachineOwnerInfo
                 machineOwnerInfo.addMachineInfo(this.pos, this.machineOwner, this.accOwner, this.accID);
             }

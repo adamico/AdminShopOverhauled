@@ -3,6 +3,7 @@ package com.vnator.adminshop.network;
 import com.vnator.adminshop.AdminShop;
 import com.vnator.adminshop.blocks.IBuyerBE;
 import com.vnator.adminshop.money.BuyerTargetInfo;
+import com.vnator.adminshop.money.MachineOwnerInfo;
 import com.vnator.adminshop.shop.Shop;
 import com.vnator.adminshop.shop.ShopItem;
 import net.minecraft.core.BlockPos;
@@ -54,8 +55,9 @@ public class PacketSetBuyerTarget {
                     AdminShop.LOGGER.error("BlockEntity at pos is not BuyerBE");
                     return;
                 }
-                // Check if player is the machine owner
-                if (!player.getStringUUID().equals(buyerEntity.getMachineOwnerUUID())) {
+                // Check machine's owner is the same as player
+                MachineOwnerInfo machineOwnerInfo = MachineOwnerInfo.get(player.getLevel());
+                if (!machineOwnerInfo.getMachineOwner(this.pos).equals(player.getStringUUID())) {
                     AdminShop.LOGGER.error("Player is not the machine's owner");
                     return;
                 }
