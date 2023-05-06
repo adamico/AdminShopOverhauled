@@ -1,7 +1,7 @@
 package com.vnator.adminshop.network;
 
 import com.vnator.adminshop.AdminShop;
-import com.vnator.adminshop.blocks.IBuyerBE;
+import com.vnator.adminshop.blocks.AutoShopMachine;
 import com.vnator.adminshop.money.BuyerTargetInfo;
 import com.vnator.adminshop.money.MachineOwnerInfo;
 import com.vnator.adminshop.shop.Shop;
@@ -51,7 +51,7 @@ public class PacketSetBuyerTarget {
                 // Get IBuyerBE
                 Level level = player.level;
                 BlockEntity blockEntity = level.getBlockEntity(this.pos);
-                if (!(blockEntity instanceof IBuyerBE buyerEntity)) {
+                if (!(blockEntity instanceof AutoShopMachine)) {
                     AdminShop.LOGGER.error("BlockEntity at pos is not BuyerBE");
                     return;
                 }
@@ -70,8 +70,6 @@ public class PacketSetBuyerTarget {
                 }
                 System.out.println("Saving machine account information.");
                 ShopItem shopItem = Shop.get().getShopBuyMap().get(item);
-                // Apply changes to blockEntity
-                buyerEntity.setTargetItem(shopItem);
                 // Apply changes to BuyerTargetInfo
                 BuyerTargetInfo buyerTargetInfo = BuyerTargetInfo.get(player.getLevel());
                 buyerTargetInfo.addBuyerTarget(this.pos, shopItem);

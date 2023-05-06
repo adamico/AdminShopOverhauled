@@ -46,6 +46,7 @@ public class PacketBuyerInfoRequest {
             // Check if buyer has target
             boolean hasTarget = buyerTargetInfo.hasTarget(pos);
             if (hasTarget) {
+                System.out.println("Target found");
                 // Get target
                 ShopItem target = buyerTargetInfo.getBuyerTarget(pos);
                 // Send owner info plus target to player
@@ -53,6 +54,7 @@ public class PacketBuyerInfoRequest {
                         target.getItem().getItem().getRegistryName()), player);
             } else {
                 // Send owner info to player
+                System.out.println("No target found");
                 Messages.sendToPlayer(new PacketBuyerInfo(machineOwner, accountInfo.getKey(), accountInfo.getValue(), this.pos), player);
             }
         });

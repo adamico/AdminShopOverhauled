@@ -58,6 +58,7 @@ public class SellerBE extends BlockEntity implements AutoShopMachine {
     }
 
     public static void tick(Level pLevel, BlockPos pPos, BlockState pState, SellerBE pBlockEntity) {
+        System.out.println("Ticking at position "+pPos.toShortString());
         if(hasItem(pBlockEntity)) {
             pBlockEntity.tickCounter++;
             if (pBlockEntity.tickCounter > 20) {

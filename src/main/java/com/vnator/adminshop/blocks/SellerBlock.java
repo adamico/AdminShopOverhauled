@@ -1,8 +1,8 @@
 package com.vnator.adminshop.blocks;
 
-import com.vnator.adminshop.AdminShop;
 import com.vnator.adminshop.blocks.entity.ModBlockEntities;
 import com.vnator.adminshop.blocks.entity.SellerBE;
+import com.vnator.adminshop.money.ClientLocalData;
 import com.vnator.adminshop.money.MachineOwnerInfo;
 import com.vnator.adminshop.network.PacketMachineOwnerRequest;
 import com.vnator.adminshop.network.PacketSetMachineInfo;
@@ -54,13 +54,16 @@ public class SellerBlock extends CustomDirectionalBlock implements EntityBlock {
                 sellerEntity.drops();
                 sellerEntity.setRemoved();
                 if (pLevel.isClientSide) {
-                    AdminShop.LOGGER.error("Don't access this from client side!");
+                    System.out.println("Remove from client side");
+                    ClientLocalData.removeMachineInfo(pPos);
                 } else {
+                    System.out.println("Remove from server side");
                     MachineOwnerInfo.get(pLevel).removeMachineInfo(pPos);
+                    ClientLocalData.removeMachineInfo(pPos);
                 }
-
             }
         }
+        super.onRemove(pState, pLevel, pPos, pNewState, pIsMoving);
     }
 
     @Override
@@ -89,13 +92,6 @@ public class SellerBlock extends CustomDirectionalBlock implements EntityBlock {
     @Override
     public MenuProvider getMenuProvider(BlockState pState, Level pLevel, BlockPos pPos) {
         return new SimpleMenuProvider((id, playerInventory, player) -> {
-//            if (!pLevel.isClientSide()) {
-//                SellerBE blockEntity = (SellerBE) pLevel.getBlockEntity(pPos);
-//                if (blockEntity != null) {
-//                    Messages.sendToPlayer(new PacketMachineOwnerInfo(blockEntity.getOwnerUUID(), blockEntity.getAccID(),
-//                            pPos), ((ServerPlayer) player));
-//                }
-//            }
             return new SellerMenu(id, playerInventory, pLevel, pPos);
         }, new TranslatableComponent("screen.adminshop.seller"));
     }

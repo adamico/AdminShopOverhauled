@@ -20,6 +20,14 @@ public class ClientLocalData {
     private static final Map<BlockPos, String> machineOwnerMap = new HashMap<>();
     private static final Map<BlockPos, ShopItem> buyerTargetMap = new HashMap<>();
 
+    public static void removeMachineInfo(BlockPos pos) {
+        machineOwnerMap.remove(pos);
+        machineAccountMap.remove(pos);
+    }
+    public static void removeBuyerTarget(BlockPos pos) {
+        buyerTargetMap.remove(pos);
+    }
+
     public static void addBuyerTarget(BlockPos pos, ShopItem target) {
         System.out.println("Added target to client local data");
         buyerTargetMap.put(pos, target);

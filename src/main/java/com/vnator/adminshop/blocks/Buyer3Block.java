@@ -1,9 +1,9 @@
 package com.vnator.adminshop.blocks;
 
-import com.vnator.adminshop.AdminShop;
 import com.vnator.adminshop.blocks.entity.Buyer3BE;
 import com.vnator.adminshop.blocks.entity.ModBlockEntities;
 import com.vnator.adminshop.money.BuyerTargetInfo;
+import com.vnator.adminshop.money.ClientLocalData;
 import com.vnator.adminshop.money.MachineOwnerInfo;
 import com.vnator.adminshop.network.PacketBuyerInfoRequest;
 import com.vnator.adminshop.network.PacketSetMachineInfo;
@@ -55,13 +55,19 @@ public class Buyer3Block extends CustomDirectionalBlock implements EntityBlock {
                 buyerEntity.drops();
                 buyerEntity.setRemoved();
                 if (pLevel.isClientSide) {
-                    AdminShop.LOGGER.error("Don't access this from client side!");
+                    System.out.println("Remove from client side");
+                    ClientLocalData.removeMachineInfo(pPos);
+                    ClientLocalData.removeBuyerTarget(pPos);
                 } else {
+                    System.out.println("Remove from server side");
                     MachineOwnerInfo.get(pLevel).removeMachineInfo(pPos);
                     BuyerTargetInfo.get(pLevel).removeBuyerTarget(pPos);
+                    ClientLocalData.removeMachineInfo(pPos);
+                    ClientLocalData.removeBuyerTarget(pPos);
                 }
             }
         }
+        super.onRemove(pState, pLevel, pPos, pNewState, pIsMoving);
     }
 
     @Override
@@ -111,7 +117,6 @@ public class Buyer3Block extends CustomDirectionalBlock implements EntityBlock {
             BlockEntity blockEntity = pLevel.getBlockEntity(pPos);
             assert (pPlacer instanceof Player && blockEntity instanceof Buyer3BE);
             // Set account info
-            ((Buyer3BE) blockEntity).setAccInfo(pPlacer.getStringUUID(), pPlacer.getStringUUID(), 1);
             Messages.sendToServer(new PacketSetMachineInfo(pPlacer.getStringUUID(), pPlacer.getStringUUID(), 1, pPos));
         }
     }

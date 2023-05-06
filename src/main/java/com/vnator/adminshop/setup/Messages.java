@@ -85,6 +85,21 @@ public class Messages {
                 .encoder(PacketSellerTransaction::toBytes)
                 .consumer(PacketSellerTransaction::handle)
                 .add();
+        net.messageBuilder(PacketBuyerTransaction.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(PacketBuyerTransaction::new)
+                .encoder(PacketBuyerTransaction::toBytes)
+                .consumer(PacketBuyerTransaction::handle)
+                .add();
+        net.messageBuilder(PacketRemoveSellerInfo.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(PacketRemoveSellerInfo::new)
+                .encoder(PacketRemoveSellerInfo::toBytes)
+                .consumer(PacketRemoveSellerInfo::handle)
+                .add();
+        net.messageBuilder(PacketRemoveBuyerInfo.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(PacketRemoveBuyerInfo::new)
+                .encoder(PacketRemoveBuyerInfo::toBytes)
+                .consumer(PacketRemoveBuyerInfo::handle)
+                .add();
     }
 
     public static <MSG> void sendToServer(MSG message) {

@@ -1,31 +1,20 @@
 package com.vnator.adminshop.blocks.entity;
 
-import com.vnator.adminshop.AdminShop;
-import com.vnator.adminshop.blocks.IBuyerBE;
-import com.vnator.adminshop.money.BankAccount;
-import com.vnator.adminshop.money.BuyerTargetInfo;
-import com.vnator.adminshop.money.MachineOwnerInfo;
-import com.vnator.adminshop.money.MoneyManager;
-import com.vnator.adminshop.network.PacketSyncMoneyToClient;
+import com.vnator.adminshop.blocks.AutoShopMachine;
+import com.vnator.adminshop.money.ClientLocalData;
+import com.vnator.adminshop.network.PacketBuyerTransaction;
 import com.vnator.adminshop.screen.Buyer3Menu;
 import com.vnator.adminshop.setup.Messages;
-import com.vnator.adminshop.shop.Shop;
-import com.vnator.adminshop.shop.ShopItem;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Containers;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -33,40 +22,17 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.ItemStackHandler;
-import net.minecraftforge.registries.ForgeRegistries;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
-import java.util.List;
-import java.util.UUID;
 
-import static java.lang.Math.ceil;
-
-public class Buyer3BE extends BlockEntity implements IBuyerBE {
-    private String machineOwnerUUID = "";
-    private String accOwnerUUID = "";
-    private int accID = 1;
+public class Buyer3BE extends BlockEntity implements AutoShopMachine {
     private int tickCounter = 0;
 
     private final int buySize = 64;
     private final int slotSize = 5;
-    private boolean hasTarget = false;
-    private ShopItem targetItem;
-
-    public void setTargetItem(ShopItem targetItem) {
-//        System.out.println("setTargetItem("+targetItem.getItem().getDisplayName().getString()+")");
-        this.targetItem = targetItem;
-        this.hasTarget = true;
-//        syncBuyerTarget((ServerLevel) this.level, this.getBlockPos(), this.targetItem);
-        setChanged();
-    }
-
-    public ShopItem getTargetItem() {
-        return targetItem;
-    }
 
     private final ItemStackHandler itemHandler = new ItemStackHandler(slotSize) {
         @Override
@@ -74,6 +40,9 @@ public class Buyer3BE extends BlockEntity implements IBuyerBE {
             setChanged();
         }
     };
+    public ItemStackHandler getItemHandler() {
+        return itemHandler;
+    }
 
     private LazyOptional<IItemHandler> lazyItemHandler = LazyOptional.empty();
 
@@ -86,57 +55,6 @@ public class Buyer3BE extends BlockEntity implements IBuyerBE {
         return new TextComponent("Auto-Buyer");
     }
 
-    public void setAccOwnerUUID(String accOwnerUUID) {
-//        System.out.println("setAccOwnerUUID("+accOwnerUUID+")");
-        this.accOwnerUUID = accOwnerUUID;
-//        syncMachineOwnerInfo((ServerLevel) this.level, this.getBlockPos(), this.machineOwnerUUID, this.accOwnerUUID,
-//                this.accID);
-        setChanged();
-    }
-    public void setAccID(int accID) {
-//        System.out.println("setAccID("+accID+")");
-        this.accID = accID;
-//        syncMachineOwnerInfo((ServerLevel) this.level, this.getBlockPos(), this.machineOwnerUUID, this.accOwnerUUID, this.accID);
-        setChanged();
-    }
-
-    public void setAccInfo(String accOwner, int accId) {
-//        System.out.println("setAccInfo("+accID+", "+accId+")");
-        this.accID = accId;
-        this.accOwnerUUID = accOwner;
-//        syncMachineOwnerInfo((ServerLevel) this.level, this.getBlockPos(), this.machineOwnerUUID, accOwner, accId);
-        setChanged();
-    }
-
-    public void setAccInfo(String machineOwner, String accOwner, int accId) {
-//        System.out.println("setAccInfo("+machineOwner+", "+accID+", "+accId+")");
-        this.machineOwnerUUID = machineOwner;
-        this.accID = accId;
-        this.accOwnerUUID = accOwner;
-//        syncMachineOwnerInfo((ServerLevel) this.level, this.getBlockPos(), machineOwner, accOwner, accId);
-        setChanged();
-    }
-
-    public void setMachineOwnerUUID(String machineOwnerUUID) {
-//        System.out.println("setMachineOwnerUUID("+machineOwnerUUID+")");
-        this.machineOwnerUUID = machineOwnerUUID;
-//        syncMachineOwnerInfo((ServerLevel) this.level, this.getBlockPos(), this.machineOwnerUUID, this.accOwnerUUID,
-//                this.accID);
-        setChanged();
-    }
-
-    public String getMachineOwnerUUID() {
-        return machineOwnerUUID;
-    }
-
-    public String getAccOwnerUUID() {
-        return accOwnerUUID;
-    }
-
-    public int getAccID() {
-        return accID;
-    }
-
     @Nullable
     @Override
     public AbstractContainerMenu createMenu(int pContainerId, Inventory pInventory, Player pPlayer) {
@@ -144,82 +62,14 @@ public class Buyer3BE extends BlockEntity implements IBuyerBE {
     }
 
     public static void tick(Level pLevel, BlockPos pPos, BlockState pState, Buyer3BE pBlockEntity) {
-        if(pBlockEntity.hasTarget) {
+        if(ClientLocalData.hasTarget(pPos)) {
             pBlockEntity.tickCounter++;
             if (pBlockEntity.tickCounter > 20) {
                 pBlockEntity.tickCounter = 0;
-                buyItem(pBlockEntity);
+                // Send buy item transaction (send pos and buySize)
+                Messages.sendToServer(new PacketBuyerTransaction(pPos, pBlockEntity.buySize));
             }
         }
-    }
-
-    private static void buyItem(Buyer3BE entity) {
-        ShopItem shopItem = entity.getTargetItem();
-        buyTransaction(entity, entity.accOwnerUUID, entity.getAccID(), shopItem, entity.buySize);
-    }
-
-    private static void buyTransaction(Buyer3BE entity, String accOwner, int accID, ShopItem shopItem, int buySize) {
-        // item logic
-        // Attempt to insert the items, and only perform transaction on what can fit
-        Item item = shopItem.getItem().getItem();
-        ItemStack toInsert = new ItemStack(item);
-        toInsert.setCount(buySize);
-        IItemHandler handler = entity.itemHandler;
-        ItemStack returned = ItemHandlerHelper.insertItemStacked(handler, toInsert, true);
-        if(returned.getCount() == buySize) {
-            return;
-        }
-        int itemCost = shopItem.getPrice();
-        long price = (long) ceil((buySize - returned.getCount()) * itemCost);
-        // Get MoneyManager and attempt transaction
-        assert entity.level != null;
-        assert entity.level instanceof ServerLevel;
-        MoneyManager moneyManager = MoneyManager.get(entity.level);
-        // Check if account has enough money, if not reduce amount
-        long balance = moneyManager.getBalance(accOwner, accID);
-        if (price > balance) {
-            if (itemCost > balance) {
-                // not enough money to buy one
-                return;
-            }
-            // Find max amount he can buy
-            buySize = (int) (balance / itemCost);
-            price = (long) ceil(buySize * itemCost);
-            toInsert.setCount(buySize);
-        }
-        System.out.println("subtractBalance("+accOwner+", "+accID+", "+price+")");
-        boolean success = moneyManager.subtractBalance(accOwner, accID, price);
-        if (success) {
-            ItemHandlerHelper.insertItemStacked(handler, toInsert, false);
-//            AdminShop.LOGGER.info("Bought item.");
-        } else {
-            AdminShop.LOGGER.error("Error buying item.");
-            return;
-        }
-        syncAccountData((ServerLevel) entity.level, accOwner, accID);
-    }
-
-    private static void syncAccountData(ServerLevel level, String accOwner, int accID) {
-        // Get MoneyManager and bank account
-        MoneyManager moneyManager = MoneyManager.get(level);
-        BankAccount currentAccount = moneyManager.getBankAccount(accOwner, accID);
-        // Sync money with bank account's members
-        assert currentAccount.getMembers().contains(accOwner);
-        currentAccount.getMembers().forEach(memberUUID -> {
-            List<BankAccount> usableAccounts = moneyManager.getSharedAccounts().get(memberUUID);
-            Messages.sendToPlayer(new PacketSyncMoneyToClient(usableAccounts), (ServerPlayer) level.
-                    getPlayerByUUID(UUID.fromString(memberUUID)));
-        });
-    }
-    private static void syncMachineOwnerInfo(ServerLevel level, BlockPos pos, String machineOwner, String accOwner,
-                                             int id) {
-        AdminShop.LOGGER.info("Syncing with MachineOwnerInfo");
-        MachineOwnerInfo.get(level).addMachineInfo(pos, machineOwner, accOwner, id);
-    }
-
-    private static void syncBuyerTarget(ServerLevel level, BlockPos pos, ShopItem target) {
-        AdminShop.LOGGER.info("Syncing with BuyerTargetInfo");
-        BuyerTargetInfo.get(level).addBuyerTarget(pos, target);
     }
 
     @Nonnull
@@ -246,32 +96,12 @@ public class Buyer3BE extends BlockEntity implements IBuyerBE {
     @Override
     protected void saveAdditional(@NotNull CompoundTag tag) {
         tag.put("inventory", this.itemHandler.serializeNBT());
-        tag.putString("machineowner", this.machineOwnerUUID);
-        tag.putString("accowner", this.accOwnerUUID);
-        tag.putInt("accid", this.accID);
-        tag.putBoolean("hasTarget", this.hasTarget);
-        if (this.hasTarget) {
-            ResourceLocation registryName = this.targetItem.getItem().getItem().getRegistryName();
-            assert registryName != null;
-            tag.putString("targetLocation", registryName.toString());
-        }
         super.saveAdditional(tag);
     }
 
     @Override
     public void load(CompoundTag tag) {
         this.itemHandler.deserializeNBT(tag.getCompound("inventory"));
-        this.machineOwnerUUID = tag.getString("machineowner");
-        this.accOwnerUUID = tag.getString("accowner");
-        this.accID = tag.getInt("accid");
-        this.hasTarget = tag.getBoolean("hasTarget");
-        if (this.hasTarget) {
-            String registryString;
-            registryString = tag.getString("targetLocation");
-            ResourceLocation registryLocation = new ResourceLocation(registryString);
-            Item item = ForgeRegistries.ITEMS.getValue(registryLocation);
-            this.targetItem = Shop.get().getShopBuyMap().get(item);
-        }
         super.load(tag);
     }
 
