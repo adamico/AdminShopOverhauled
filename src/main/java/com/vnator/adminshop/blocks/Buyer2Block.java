@@ -6,6 +6,7 @@ import com.vnator.adminshop.blocks.entity.ModBlockEntities;
 import com.vnator.adminshop.money.BuyerTargetInfo;
 import com.vnator.adminshop.money.MachineOwnerInfo;
 import com.vnator.adminshop.network.PacketBuyerInfoRequest;
+import com.vnator.adminshop.network.PacketSetMachineInfo;
 import com.vnator.adminshop.screen.BuyerMenu;
 import com.vnator.adminshop.setup.Messages;
 import net.minecraft.core.BlockPos;
@@ -66,7 +67,7 @@ public class Buyer2Block extends CustomDirectionalBlock implements EntityBlock {
     @Override
     public InteractionResult use(BlockState pState, Level pLevel, BlockPos pPos,
                                  Player pPlayer, InteractionHand pHand, BlockHitResult pHit) {
-        if (!pLevel.isClientSide()) {
+        if (pLevel.isClientSide()) {
             if(pLevel.getBlockEntity(pPos) instanceof Buyer2BE) {
                 // Send the request packet
                 Messages.sendToServer(new PacketBuyerInfoRequest(pPos));
@@ -106,11 +107,12 @@ public class Buyer2Block extends CustomDirectionalBlock implements EntityBlock {
     @Override
     public void setPlacedBy(Level pLevel, BlockPos pPos, BlockState pState, @Nullable LivingEntity pPlacer, ItemStack pStack) {
         super.setPlacedBy(pLevel, pPos, pState, pPlacer, pStack);
-        if (!pLevel.isClientSide) {
+        if (pLevel.isClientSide) {
             BlockEntity blockEntity = pLevel.getBlockEntity(pPos);
             assert (pPlacer instanceof Player && blockEntity instanceof Buyer2BE);
             // Set account info
             ((Buyer2BE) blockEntity).setAccInfo(pPlacer.getStringUUID(), pPlacer.getStringUUID(), 1);
+            Messages.sendToServer(new PacketSetMachineInfo(pPlacer.getStringUUID(), pPlacer.getStringUUID(), 1, pPos));
         }
     }
 

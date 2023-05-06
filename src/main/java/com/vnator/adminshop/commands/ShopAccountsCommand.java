@@ -15,6 +15,7 @@ import com.vnator.adminshop.setup.Messages;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.TextComponent;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.util.*;
@@ -99,7 +100,8 @@ public class ShopAccountsCommand {
                             int toId = IntegerArgumentType.getInteger(command, "toId");
                             return transferMoney(command.getSource(), amount, fromOwner, fromId, toOwner, toId);
                         });
-        transferCommand.then(transferCommandAmount.then(transferCommandFrom.then(transferCommandTo)));
+        transferCommand.then(transferCommandAmount.then(transferCommandFrom.then(transferCommandFromId
+                .then(transferCommandTo.then(transferCommandToId)))));
 
         shopAccountsCommand.then(infoCommand)
                     .then(listAccountsCommand)
@@ -150,12 +152,12 @@ public class ShopAccountsCommand {
             returnMessage.append("$");
             returnMessage.append(bankAccount.getBalance());
             returnMessage.append(": ");
-            returnMessage.append(MojangAPI.getUsernameByUUID(bankAccount.getOwner()));
+            returnMessage.append(getUsernameByUUID(source.getLevel(), bankAccount.getOwner()));
             returnMessage.append(":");
             returnMessage.append(bankAccount.getId());
             returnMessage.append("\nMembers: ");
             bankAccount.getMembers().forEach(memberUUID -> {
-                returnMessage.append(MojangAPI.getUsernameByUUID(memberUUID));
+                returnMessage.append(getUsernameByUUID(source.getLevel(), memberUUID));
                 returnMessage.append(" ");
             });
             returnMessage.append("\n");
@@ -462,5 +464,12 @@ public class ShopAccountsCommand {
         AdminShop.LOGGER.info("Transfer successful");
         source.sendSuccess(new TextComponent("Transfer successful!"), true);
         return 1;
+    }
+    private static String getUsernameByUUID(ServerLevel level, String uuid) {
+        // Search in online players
+        List<ServerPlayer> players = level.players();
+        Optional<ServerPlayer> search = players.stream().filter(player ->
+                player.getStringUUID().equals(uuid)).findAny();
+        return search.map(serverPlayer -> serverPlayer.getName().getString()).orElseGet(() -> MojangAPI.getUsernameByUUID(uuid));
     }
 }

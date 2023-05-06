@@ -4,7 +4,8 @@ import com.vnator.adminshop.AdminShop;
 import com.vnator.adminshop.blocks.entity.ModBlockEntities;
 import com.vnator.adminshop.blocks.entity.SellerBE;
 import com.vnator.adminshop.money.MachineOwnerInfo;
-import com.vnator.adminshop.network.PacketSellerOwnerRequest;
+import com.vnator.adminshop.network.PacketMachineOwnerRequest;
+import com.vnator.adminshop.network.PacketSetMachineInfo;
 import com.vnator.adminshop.screen.SellerMenu;
 import com.vnator.adminshop.setup.Messages;
 import net.minecraft.core.BlockPos;
@@ -65,11 +66,11 @@ public class SellerBlock extends CustomDirectionalBlock implements EntityBlock {
     @Override
     public InteractionResult use(BlockState pState, Level pLevel, BlockPos pPos,
                                  Player pPlayer, InteractionHand pHand, BlockHitResult pHit) {
-        if (!pLevel.isClientSide()) {
+        if (pLevel.isClientSide()) {
             System.out.println("Block at position: " + pLevel.getBlockState(pPos).getBlock());
             if(pLevel.getBlockEntity(pPos) instanceof SellerBE) {
                 // Send the request packet
-                Messages.sendToServer(new PacketSellerOwnerRequest(pPos));
+                Messages.sendToServer(new PacketMachineOwnerRequest(pPos));
             } else {
                 throw new IllegalStateException("Our Container provider is missing!");
             }
@@ -113,12 +114,12 @@ public class SellerBlock extends CustomDirectionalBlock implements EntityBlock {
     @Override
     public void setPlacedBy(Level pLevel, BlockPos pPos, BlockState pState, @Nullable LivingEntity pPlacer, ItemStack pStack) {
         super.setPlacedBy(pLevel, pPos, pState, pPlacer, pStack);
-        if (!pLevel.isClientSide) {
+        if (pLevel.isClientSide) {
             BlockEntity blockEntity = pLevel.getBlockEntity(pPos);
             assert (pPlacer instanceof Player && blockEntity instanceof SellerBE);
             // Set account info
             ((SellerBE) blockEntity).setAccInfo(pPlacer.getStringUUID(), pPlacer.getStringUUID(), 1);
-//            MachineOwnerInfo.get(pLevel).addMachineInfo(pPos, pPlacer.getStringUUID(), pPlacer.getStringUUID(), 1);
+            Messages.sendToServer(new PacketSetMachineInfo(pPlacer.getStringUUID(), pPlacer.getStringUUID(), 1, pPos));
         }
     }
 

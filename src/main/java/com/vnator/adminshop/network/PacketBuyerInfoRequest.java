@@ -1,6 +1,6 @@
 package com.vnator.adminshop.network;
 
-import com.ibm.icu.impl.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import com.vnator.adminshop.AdminShop;
 import com.vnator.adminshop.money.BuyerTargetInfo;
 import com.vnator.adminshop.money.MachineOwnerInfo;
@@ -49,11 +49,11 @@ public class PacketBuyerInfoRequest {
                 // Get target
                 ShopItem target = buyerTargetInfo.getBuyerTarget(pos);
                 // Send owner info plus target to player
-                Messages.sendToPlayer(new PacketBuyerInfo(machineOwner, accountInfo.first, accountInfo.second, this.pos,
+                Messages.sendToPlayer(new PacketBuyerInfo(machineOwner, accountInfo.getKey(), accountInfo.getValue(), this.pos,
                         target.getItem().getItem().getRegistryName()), player);
             } else {
                 // Send owner info to player
-                Messages.sendToPlayer(new PacketBuyerInfo(machineOwner, accountInfo.first, accountInfo.second, this.pos), player);
+                Messages.sendToPlayer(new PacketBuyerInfo(machineOwner, accountInfo.getKey(), accountInfo.getValue(), this.pos), player);
             }
         });
         return true;

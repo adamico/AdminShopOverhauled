@@ -1,8 +1,6 @@
 package com.vnator.adminshop.network;
 
 import com.vnator.adminshop.AdminShop;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.AbstractClientPlayer;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -10,7 +8,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 public class MojangAPI {
 
@@ -19,13 +16,6 @@ public class MojangAPI {
         // Search in stored results
         if (storedResults.containsKey(uuid)) {
             return storedResults.get(uuid);
-        }
-        // Search in online players
-        assert Minecraft.getInstance().level != null;
-        Optional<AbstractClientPlayer> search = Minecraft.getInstance().level.players().stream().filter(player ->
-            player.getStringUUID().equals(uuid)).findAny();
-        if (search.isPresent()) {
-            return search.get().getName().getString();
         }
 
         // Search in mojang API
@@ -60,7 +50,7 @@ public class MojangAPI {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
+        storedResults.put(uuid, uuid);
         return uuid;
     }
 }

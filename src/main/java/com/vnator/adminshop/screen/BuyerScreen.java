@@ -1,6 +1,6 @@
 package com.vnator.adminshop.screen;
 
-import com.ibm.icu.impl.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.vnator.adminshop.AdminShop;
@@ -80,7 +80,7 @@ public class BuyerScreen extends AbstractContainerScreen<BuyerMenu> {
             // Change accounts
             changeAccounts();
             Minecraft.getInstance().player.sendMessage(new TextComponent("Changed account to "+
-                    MojangAPI.getUsernameByUUID(getBankAccount().first)+":"+getBankAccount().second),
+                    MojangAPI.getUsernameByUUID(getBankAccount().getKey())+":"+getBankAccount().getValue()),
                     Minecraft.getInstance().player.getUUID());
         });
         addRenderableWidget(changeAccountButton);
@@ -104,8 +104,8 @@ public class BuyerScreen extends AbstractContainerScreen<BuyerMenu> {
         }
         // Send change package
         System.out.println("Registering account change with server...");
-        Messages.sendToServer(new PacketMachineAccountChange(this.ownerUUID, getBankAccount().first,
-                getBankAccount().second, this.blockPos));
+        Messages.sendToServer(new PacketMachineAccountChange(this.ownerUUID, getBankAccount().getKey(),
+                getBankAccount().getValue(), this.blockPos));
     }
     @Override
     protected void init() {
@@ -157,8 +157,8 @@ public class BuyerScreen extends AbstractContainerScreen<BuyerMenu> {
     @Override
     protected void renderLabels(PoseStack pPoseStack, int pMouseX, int pMouseY) {
         super.renderLabels(pPoseStack, pMouseX, pMouseY);
-        drawString(pPoseStack, font, MojangAPI.getUsernameByUUID(getBankAccount().first)+":"+getBankAccount()
-                        .second,7,62,0xffffff);
+        drawString(pPoseStack, font, MojangAPI.getUsernameByUUID(getBankAccount().getKey())+":"+getBankAccount()
+                        .getValue(),7,62,0xffffff);
     }
 
     @Override

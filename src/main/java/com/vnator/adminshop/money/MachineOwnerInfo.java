@@ -1,6 +1,6 @@
 package com.vnator.adminshop.money;
 
-import com.ibm.icu.impl.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import com.vnator.adminshop.AdminShop;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -84,14 +84,14 @@ public class MachineOwnerInfo extends SavedData {
         ListTag ledger = new ListTag();
         machineAccountMap.forEach((pos, account) -> {
             AdminShop.LOGGER.info("SAVING MACHINE POS:"+pos.toShortString()+", MOWN:"+machineOwnerMap.get(pos)+", AOWN:"+
-                    account.first+", AID:"+account.second);
+                    account.getKey()+", AID:"+account.getValue());
             CompoundTag ownertag = new CompoundTag();
             ownertag.putInt("posx", pos.getX());
             ownertag.putInt("posy", pos.getY());
             ownertag.putInt("posz", pos.getZ());
             ownertag.putString("machineowner", machineOwnerMap.get(pos));
-            ownertag.putString("accowner", account.first);
-            ownertag.putInt("accid", account.second);
+            ownertag.putString("accowner", account.getKey());
+            ownertag.putInt("accid", account.getValue());
             ledger.add(ownertag);
         });
         tag.put(COMPOUND_TAG_NAME, ledger);

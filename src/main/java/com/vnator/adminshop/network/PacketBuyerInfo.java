@@ -1,22 +1,17 @@
 package com.vnator.adminshop.network;
 
-import com.ibm.icu.impl.Pair;
 import com.vnator.adminshop.AdminShop;
-import com.vnator.adminshop.blocks.IBuyerBE;
 import com.vnator.adminshop.money.ClientLocalData;
 import com.vnator.adminshop.setup.Messages;
 import com.vnator.adminshop.shop.Shop;
 import com.vnator.adminshop.shop.ShopItem;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.registries.ForgeRegistries;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.function.Supplier;
 
@@ -75,10 +70,8 @@ public class PacketBuyerInfo {
         ctx.enqueueWork(() -> {
             //Client side accessed here
             //Do NOT call client-only code though, since server needs to access this too
-            Player player = Minecraft.getInstance().player;
-
-            if (player != null) {
-                System.out.println("Sending buyer info for "+this.pos+" to "+player.getName().getString());
+//            Player player = Minecraft.getInstance().player;
+                System.out.println("Receiving buyer info for "+this.pos);
                 // Update ClientLocalData with received data
                 ClientLocalData.addMachineAccount(this.pos, Pair.of(this.accOwnerUUID, this.accID));
                 ClientLocalData.addMachineOwner(this.pos, this.machineOwnerUUID);
@@ -96,15 +89,14 @@ public class PacketBuyerInfo {
                     ClientLocalData.addBuyerTarget(pos, shopItem);
                 }
                 // Send open menu packet
-                Level level = player.level;
-                BlockEntity blockEntity = level.getBlockEntity(this.pos);
-                if (!(blockEntity instanceof IBuyerBE)) {
-                    AdminShop.LOGGER.error("BlockEntity is not Buyer");
-                    return;
-                }
+//                Level level = player.level;
+//                BlockEntity blockEntity = level.getBlockEntity(this.pos);
+//                if (!(blockEntity instanceof IBuyerBE)) {
+//                    AdminShop.LOGGER.error("BlockEntity is not Buyer");
+//                    return;
+//                }
                 // Request to open menu
                 Messages.sendToServer(new PacketOpenMenu(this.pos));
-            }
         });
         return true;
     }

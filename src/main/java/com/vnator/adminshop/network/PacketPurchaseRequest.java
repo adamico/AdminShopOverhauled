@@ -1,6 +1,6 @@
 package com.vnator.adminshop.network;
 
-import com.ibm.icu.impl.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import com.vnator.adminshop.AdminShop;
 import com.vnator.adminshop.money.BankAccount;
 import com.vnator.adminshop.money.MoneyManager;
@@ -42,8 +42,8 @@ public class PacketPurchaseRequest {
     }
 
     public PacketPurchaseRequest(Pair<String, Integer> bankAccount, boolean isBuy, ShopItem item, int quantity){
-        this.accOwner = bankAccount.first;
-        this.accID = bankAccount.second;
+        this.accOwner = bankAccount.getKey();
+        this.accID = bankAccount.getValue();
         this.isBuy = isBuy;
         this.item = item;
         this.quantity = quantity;

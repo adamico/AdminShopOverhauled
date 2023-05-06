@@ -1,6 +1,6 @@
 package com.vnator.adminshop.money;
 
-import com.ibm.icu.impl.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import com.vnator.adminshop.AdminShop;
 import com.vnator.adminshop.shop.ShopItem;
 import net.minecraft.client.Minecraft;
@@ -61,7 +61,7 @@ public class ClientLocalData {
         sortUsableAccounts();
     }
 
-    // Sort usableAccounts, first by pair.first == playerUUID, if not sort alphabetically, then by pair.second in
+    // Sort usableAccounts, first by pair.getKey() == playerUUID, if not sort alphabetically, then by pair.getValue() in
     // ascending order. Index is preserved to the original account it pointed to.
     public static void sortUsableAccounts() {
         ClientLocalData.usableAccounts.sort((o1, o2) -> {
@@ -94,8 +94,8 @@ public class ClientLocalData {
         BankAccount result;
         if (!accountMap.containsKey(bankAccount)) {
             AdminShop.LOGGER.warn("Could not find bankAccount in usableAccounts, adding it.");
-            AdminShop.LOGGER.warn("OwnerUUID:" + bankAccount.first + ", accID:" + bankAccount.second);
-            result = ClientLocalData.addAccount(new BankAccount(bankAccount.first, bankAccount.second));
+            AdminShop.LOGGER.warn("OwnerUUID:" + bankAccount.getKey() + ", accID:" + bankAccount.getValue());
+            result = ClientLocalData.addAccount(new BankAccount(bankAccount.getKey(), bankAccount.getValue()));
         } else {
             result = accountMap.get(bankAccount);
         }

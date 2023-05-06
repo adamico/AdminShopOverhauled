@@ -1,6 +1,6 @@
 package com.vnator.adminshop.network;
 
-import com.ibm.icu.impl.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import com.vnator.adminshop.money.MachineOwnerInfo;
 import com.vnator.adminshop.setup.Messages;
 import net.minecraft.core.BlockPos;
@@ -10,14 +10,14 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public class PacketSellerOwnerRequest {
+public class PacketMachineOwnerRequest {
     private final BlockPos pos;
 
-    public PacketSellerOwnerRequest(BlockPos pos) {
+    public PacketMachineOwnerRequest(BlockPos pos) {
         this.pos = pos;
     }
 
-    public PacketSellerOwnerRequest(FriendlyByteBuf buf) {
+    public PacketMachineOwnerRequest(FriendlyByteBuf buf) {
         this.pos = buf.readBlockPos();
     }
 
@@ -40,7 +40,8 @@ public class PacketSellerOwnerRequest {
             String machineOwner = machineOwnerInfo.getMachineOwner(pos);
             assert accountInfo != null;
             // Send owner info to player
-            Messages.sendToPlayer(new PacketSellerOwner(machineOwner, accountInfo.first, accountInfo.second, this.pos), player);
+            System.out.println("Obtained info "+accountInfo.getKey()+":"+accountInfo.getValue());
+            Messages.sendToPlayer(new PacketMachineOwner(machineOwner, accountInfo.getKey(), accountInfo.getValue(), this.pos), player);
         });
         return true;
     }

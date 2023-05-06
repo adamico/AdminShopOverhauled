@@ -1,6 +1,6 @@
 package com.vnator.adminshop.screen;
 
-import com.ibm.icu.impl.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.vnator.adminshop.AdminShop;
@@ -68,9 +68,9 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
 
         if (!this.accountMap.containsKey(personalAccount)) {
             AdminShop.LOGGER.warn("Couldn't find personal account, creating one.");
-            AdminShop.LOGGER.warn(personalAccount.first+":"+personalAccount.second);
-            BankAccount personalBankAccount = ClientLocalData.addAccount(new BankAccount(personalAccount.first,
-                    personalAccount.second));
+            AdminShop.LOGGER.warn(personalAccount.getKey()+":"+personalAccount.getValue());
+            BankAccount personalBankAccount = ClientLocalData.addAccount(new BankAccount(personalAccount.getKey(),
+                    personalAccount.getValue()));
             // Refresh account map
             this.accountMap = ClientLocalData.getAccountMap();
         }
@@ -148,8 +148,8 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
                 6, 0xffffff); //x, y, color
 
         // Bank account
-        drawString(matrixStack, font, MojangAPI.getUsernameByUUID(selectedAccountInfo.first)+":"+
-                selectedAccountInfo.second,16,108,0xffffff);
+        drawString(matrixStack, font, MojangAPI.getUsernameByUUID(selectedAccountInfo.getKey())+":"+
+                selectedAccountInfo.getValue(),16,108,0xffffff);
 
         //Tooltip for item the player is hovering over
         List<ShopButton> shopButtons = getVisibleShopButtons();

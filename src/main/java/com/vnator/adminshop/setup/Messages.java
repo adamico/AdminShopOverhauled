@@ -40,15 +40,15 @@ public class Messages {
                 .encoder(PacketSyncShopToClient::toBytes)
                 .consumer(PacketSyncShopToClient::handle)
                 .add();
-        net.messageBuilder(PacketSellerOwner.class, id(), NetworkDirection.PLAY_TO_CLIENT)
-                .decoder(PacketSellerOwner::new)
-                .encoder(PacketSellerOwner::toBytes)
-                .consumer(PacketSellerOwner::handle)
+        net.messageBuilder(PacketMachineOwner.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(PacketMachineOwner::new)
+                .encoder(PacketMachineOwner::toBytes)
+                .consumer(PacketMachineOwner::handle)
                 .add();
-        net.messageBuilder(PacketSellerOwnerRequest.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(PacketSellerOwnerRequest::new)
-                .encoder(PacketSellerOwnerRequest::toBytes)
-                .consumer(PacketSellerOwnerRequest::handle)
+        net.messageBuilder(PacketMachineOwnerRequest.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(PacketMachineOwnerRequest::new)
+                .encoder(PacketMachineOwnerRequest::toBytes)
+                .consumer(PacketMachineOwnerRequest::handle)
                 .add();
         net.messageBuilder(PacketOpenMenu.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(PacketOpenMenu::new)
@@ -74,6 +74,16 @@ public class Messages {
                 .decoder(PacketBuyerInfo::new)
                 .encoder(PacketBuyerInfo::toBytes)
                 .consumer(PacketBuyerInfo::handle)
+                .add();
+        net.messageBuilder(PacketSetMachineInfo.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(PacketSetMachineInfo::new)
+                .encoder(PacketSetMachineInfo::toBytes)
+                .consumer(PacketSetMachineInfo::handle)
+                .add();
+        net.messageBuilder(PacketSellerTransaction.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(PacketSellerTransaction::new)
+                .encoder(PacketSellerTransaction::toBytes)
+                .consumer(PacketSellerTransaction::handle)
                 .add();
     }
 

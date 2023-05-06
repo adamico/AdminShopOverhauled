@@ -46,8 +46,8 @@ import java.util.UUID;
 import static java.lang.Math.ceil;
 
 public class Buyer3BE extends BlockEntity implements IBuyerBE {
-    private String machineOwnerUUID = "UNKNOWN";
-    private String accOwnerUUID = "UNKNOWN";
+    private String machineOwnerUUID = "";
+    private String accOwnerUUID = "";
     private int accID = 1;
     private int tickCounter = 0;
 
@@ -60,7 +60,7 @@ public class Buyer3BE extends BlockEntity implements IBuyerBE {
 //        System.out.println("setTargetItem("+targetItem.getItem().getDisplayName().getString()+")");
         this.targetItem = targetItem;
         this.hasTarget = true;
-        syncBuyerTarget((ServerLevel) this.level, this.getBlockPos(), this.targetItem);
+//        syncBuyerTarget((ServerLevel) this.level, this.getBlockPos(), this.targetItem);
         setChanged();
     }
 
@@ -87,61 +87,41 @@ public class Buyer3BE extends BlockEntity implements IBuyerBE {
     }
 
     public void setAccOwnerUUID(String accOwnerUUID) {
-        if (this.level == null || this.level.isClientSide) {
-            AdminShop.LOGGER.error("Do not set accOwnerUUID from client side!");
-            return;
-        }
 //        System.out.println("setAccOwnerUUID("+accOwnerUUID+")");
         this.accOwnerUUID = accOwnerUUID;
-        syncMachineOwnerInfo((ServerLevel) this.level, this.getBlockPos(), this.machineOwnerUUID, this.accOwnerUUID,
-                this.accID);
+//        syncMachineOwnerInfo((ServerLevel) this.level, this.getBlockPos(), this.machineOwnerUUID, this.accOwnerUUID,
+//                this.accID);
         setChanged();
     }
     public void setAccID(int accID) {
-        if (this.level == null || this.level.isClientSide) {
-            AdminShop.LOGGER.error("Do not set accID from client side!");
-            return;
-        }
 //        System.out.println("setAccID("+accID+")");
         this.accID = accID;
-        syncMachineOwnerInfo((ServerLevel) this.level, this.getBlockPos(), this.machineOwnerUUID, this.accOwnerUUID, this.accID);
+//        syncMachineOwnerInfo((ServerLevel) this.level, this.getBlockPos(), this.machineOwnerUUID, this.accOwnerUUID, this.accID);
         setChanged();
     }
 
     public void setAccInfo(String accOwner, int accId) {
-        if (this.level == null || this.level.isClientSide) {
-            AdminShop.LOGGER.error("Do not set accInfo from client side!");
-            return;
-        }
 //        System.out.println("setAccInfo("+accID+", "+accId+")");
         this.accID = accId;
         this.accOwnerUUID = accOwner;
-        syncMachineOwnerInfo((ServerLevel) this.level, this.getBlockPos(), this.machineOwnerUUID, accOwner, accId);
+//        syncMachineOwnerInfo((ServerLevel) this.level, this.getBlockPos(), this.machineOwnerUUID, accOwner, accId);
         setChanged();
     }
 
     public void setAccInfo(String machineOwner, String accOwner, int accId) {
-        if (this.level == null || this.level.isClientSide) {
-            AdminShop.LOGGER.error("Do not set accInfo from client side!");
-            return;
-        }
 //        System.out.println("setAccInfo("+machineOwner+", "+accID+", "+accId+")");
         this.machineOwnerUUID = machineOwner;
         this.accID = accId;
         this.accOwnerUUID = accOwner;
-        syncMachineOwnerInfo((ServerLevel) this.level, this.getBlockPos(), machineOwner, accOwner, accId);
+//        syncMachineOwnerInfo((ServerLevel) this.level, this.getBlockPos(), machineOwner, accOwner, accId);
         setChanged();
     }
 
     public void setMachineOwnerUUID(String machineOwnerUUID) {
-        if (this.level == null || this.level.isClientSide) {
-            AdminShop.LOGGER.error("Do not set machineOwnerUUID from client side!");
-            return;
-        }
 //        System.out.println("setMachineOwnerUUID("+machineOwnerUUID+")");
         this.machineOwnerUUID = machineOwnerUUID;
-        syncMachineOwnerInfo((ServerLevel) this.level, this.getBlockPos(), this.machineOwnerUUID, this.accOwnerUUID,
-                this.accID);
+//        syncMachineOwnerInfo((ServerLevel) this.level, this.getBlockPos(), this.machineOwnerUUID, this.accOwnerUUID,
+//                this.accID);
         setChanged();
     }
 
