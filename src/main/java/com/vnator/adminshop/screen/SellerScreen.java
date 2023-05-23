@@ -45,6 +45,7 @@ public class SellerScreen extends AbstractContainerScreen<SellerMenu> {
         Optional<BankAccount> search = this.usableAccounts.stream().filter(account ->
                 bankAccount.equals(Pair.of(account.getOwner(), account.getId()))).findAny();
         if (search.isEmpty()) {
+            // This shouldn't happen!
             AdminShop.LOGGER.warn("Player does not have access to this seller!");
             this.usableAccountsIndex = -1;
         } else {
@@ -54,6 +55,11 @@ public class SellerScreen extends AbstractContainerScreen<SellerMenu> {
     }
 
     private Pair<String, Integer> getBankAccount() {
+        if (this.usableAccountsIndex == -1) {
+            AdminShop.LOGGER.error("Account isn't properly set!");
+            return Pair.of(this.usableAccounts.get(0).getOwner(),
+                    this.usableAccounts.get(0).getId());
+        }
         return Pair.of(this.usableAccounts.get(this.usableAccountsIndex).getOwner(),
                 this.usableAccounts.get(this.usableAccountsIndex).getId());
     }
@@ -87,8 +93,10 @@ public class SellerScreen extends AbstractContainerScreen<SellerMenu> {
         }
         // Refresh usable accounts
         BankAccount bankAccount = usableAccounts.get(usableAccountsIndex);
-        this.usableAccounts.clear();
-        this.usableAccounts.addAll(ClientLocalData.getUsableAccounts());
+        if (!this.usableAccounts.equals(ClientLocalData.getUsableAccounts())) {
+            this.usableAccounts.clear();
+            this.usableAccounts.addAll(ClientLocalData.getUsableAccounts());
+        }
         // Change account, either by resetting to first (personal) account or moving to next sorted account
         if (!this.usableAccounts.contains(bankAccount)) {
             this.usableAccountsIndex = 0;
@@ -122,8 +130,12 @@ public class SellerScreen extends AbstractContainerScreen<SellerMenu> {
     @Override
     protected void renderLabels(PoseStack pPoseStack, int pMouseX, int pMouseY) {
         super.renderLabels(pPoseStack, pMouseX, pMouseY);
+        Pair<String, Integer> account = getBankAccount();
+        boolean accAvailable = this.usableAccountsIndex != -1 && ClientLocalData.accountAvailable(account.getKey(),
+                account.getValue());
+        int color = accAvailable ? 0xffffff : 0xff0000;
         drawString(pPoseStack, font, MojangAPI.getUsernameByUUID(getBankAccount().getKey())+":"+getBankAccount()
-                        .getValue(),7,62,0xffffff);
+                        .getValue(),7,62,color);
     }
 
     @Override

@@ -177,7 +177,7 @@ public class ShopAccountsCommand {
         // Create account to MoneyManager, then sync money to every members' clients
         // Split members string to list
         ServerPlayer player = source.getPlayerOrException();
-        Set<String> memberNames = Set.of(members.split(" "));
+        Set<String> memberNames = new HashSet<>(Set.of(members.split(" ")));
 
         // Validate that all member names are online player names
         Set<String> onlinePlayerNames = new HashSet<>(source.getOnlinePlayerNames());
@@ -214,6 +214,7 @@ public class ShopAccountsCommand {
         if (!memberUUIDs.contains(player.getStringUUID())) {
             AdminShop.LOGGER.info("Owner is not in members list, adding.");
             memberUUIDs.add(player.getStringUUID());
+            memberNames.add(player.getName().getString());
         }
 
         // Create new account
@@ -383,6 +384,9 @@ public class ShopAccountsCommand {
             source.sendFailure(new TextComponent("Error removing member from bank account."));
             return 0;
         }
+        // Remove accounts from removed member's shared accounts
+        moneyManager.removeSharedAccount(memberUUID, player.getStringUUID(), id);
+
         // Get list of online members to sync, including removed one
         List<ServerPlayer> onlineMembers = new ArrayList<>();
         BankAccount newBankAccount = moneyManager.getBankAccount(player.getStringUUID(), id);

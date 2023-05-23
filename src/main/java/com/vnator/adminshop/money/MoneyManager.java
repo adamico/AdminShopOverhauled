@@ -32,13 +32,24 @@ public class MoneyManager extends SavedData {
     // A map with playerUUID and a List of every BankAccount player is member or owner of
     private final Map<String, List<BankAccount>> sharedAccounts = new HashMap<>();
 
-
     public Map<String, List<BankAccount>> getSharedAccounts() {
         return sharedAccounts;
     }
 
     public Set<BankAccount> getAccountSet() {
         return accountSet;
+    }
+
+    public boolean removeSharedAccount(String playerUUID, String accOwner, int accID) {
+        Optional<BankAccount> search = sharedAccounts.get(playerUUID).stream().filter(account -> (account.getOwner()
+                .equals(accOwner) && account.getId() == accID)).findAny();
+        if (search.isPresent()) {
+            BankAccount result = search.get();
+            sharedAccounts.get(playerUUID).remove(result);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -238,7 +249,7 @@ public class MoneyManager extends SavedData {
             return false;
         }
         // Check if trying to remove owner
-        if (bankAccount.getOwner().equals(owner)) {
+        if (bankAccount.getOwner().equals(memberUUID)) {
             AdminShop.LOGGER.error("Can't remove owner from account!");
             return false;
         }

@@ -99,6 +99,11 @@ public class SellerBE extends BlockEntity implements AutoShopMachine {
         MoneyManager moneyManager = MoneyManager.get(level);
         MachineOwnerInfo machineOwnerInfo = MachineOwnerInfo.get(level);
         Pair<String, Integer> machineAccount = machineOwnerInfo.getMachineAccount(pos);
+        // Check if account still exists
+        if (!moneyManager.existsBankAccount(machineAccount.getKey(), machineAccount.getValue())) {
+            AdminShop.LOGGER.error("Seller machine account does not exist");
+            return;
+        }
         String accOwner = machineAccount.getKey();
         int accID = machineAccount.getValue();
         boolean success = moneyManager.addBalance(accOwner, accID, price);

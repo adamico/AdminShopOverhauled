@@ -6,10 +6,7 @@ import com.vnator.adminshop.shop.ShopItem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ClientLocalData {
     // Only contains the list of accounts it is either an owner or member on
@@ -57,6 +54,12 @@ public class ClientLocalData {
 
     public static Map<Pair<String, Integer>, BankAccount> getAccountMap() {
         return accountMap;
+    }
+
+    public static boolean accountAvailable(String accOwner, int accID) {
+        Optional<BankAccount> search = usableAccounts.stream().filter(account -> (account.getOwner()
+                .equals(accOwner) && account.getId() == accID)).findAny();
+        return search.isPresent();
     }
 
     public static void setUsableAccounts(List<BankAccount> usableAccounts) {

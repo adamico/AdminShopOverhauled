@@ -109,6 +109,11 @@ public class BuyerBE extends BlockEntity implements AutoShopMachine {
         long price = (long) ceil((buySize - returned.getCount()) * itemCost);
         // Get MoneyManager and attempt transaction
         Pair<String, Integer> account = machineOwnerInfo.getMachineAccount(pos);
+        // Check if account still exists
+        if (!moneyManager.existsBankAccount(account.getKey(), account.getValue())) {
+            AdminShop.LOGGER.error("Buyer machine account does not exist");
+            return;
+        }
         String accOwner = account.getKey();
         int accID = account.getValue();
         // Check if account has enough money, if not reduce amount

@@ -1,13 +1,16 @@
 package com.vnator.adminshop.network;
 
 import com.vnator.adminshop.AdminShop;
+import com.vnator.adminshop.money.BankAccount;
 import com.vnator.adminshop.money.ClientLocalData;
 import com.vnator.adminshop.setup.Messages;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraftforge.network.NetworkEvent;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.Optional;
 import java.util.function.Supplier;
 
 public class PacketMachineOwner {
@@ -41,24 +44,26 @@ public class PacketMachineOwner {
     public boolean handle(Supplier<NetworkEvent.Context> supplier){
         NetworkEvent.Context ctx = supplier.get();
         ctx.enqueueWork(() -> {
-            AdminShop.LOGGER.error("Receiving seller info");
             //Client side accessed here
             //Do NOT call client-only code though, since server needs to access this too
-//            Player player = Minecraft.getInstance().player;
-
-            AdminShop.LOGGER.error("Sending seller info for " + this.pos);
+//            Player player = Minecraft.getInstance().player; <-- Not allowed
+            AdminShop.LOGGER.error("Receiving seller info for " + this.pos);
             // Update ClientLocalData with received data
             ClientLocalData.addMachineAccount(this.pos, Pair.of(this.accOwnerUUID, this.accID));
             ClientLocalData.addMachineOwner(this.pos, this.machineOwnerUUID);
             // Send open menu packet
-//            Level level = player.level;
-//            BlockEntity blockEntity = level.getBlockEntity(this.pos);
-//            if (!(blockEntity instanceof SellerBE)) {
-//                AdminShop.LOGGER.error("BlockEntity is not Seller");
-//                return;
-//            }
-            // Request to open menu
-            Messages.sendToServer(new PacketOpenMenu(this.pos));
+            // Don't open menu if player does not have access
+            Pair<String, Integer> bankAccount = ClientLocalData.getMachineAccount(this.pos);
+            Optional<BankAccount> search = ClientLocalData.getUsableAccounts().stream().filter(account ->
+                    bankAccount.equals(Pair.of(this.accOwnerUUID, this.accID))).findAny();
+            if (search.isEmpty()) {
+                AdminShop.LOGGER.warn("Player does not have access to this machine!");
+                ctx.getSender().sendMessage(new TextComponent("You do not have access to this machine!"),
+                        ctx.getSender().getUUID());
+            } else {
+                // Request to open menu
+                Messages.sendToServer(new PacketOpenMenu(this.pos));
+            }
         });
         return true;
     }
