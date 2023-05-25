@@ -1,9 +1,7 @@
-import com.vnator.adminshop.AdminShop;
-import com.vnator.adminshop.shop.CSVParser;
+import com.ammonium.adminshop.shop.CSVParser;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
