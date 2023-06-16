@@ -22,7 +22,7 @@ public class ShopItem {
     private boolean isItem;
     private boolean isTag;
     private int price;
-
+    private int permitTier;
     private ItemStack item;
     private TagKey<Item> itemTag;
     private CompoundTag nbt; //Used with nbt + tags
@@ -38,6 +38,11 @@ public class ShopItem {
     }
     public TagKey<Item> getTagItem(){return itemTag;}
     public CompoundTag getNbt(){return nbt;}
+
+    public int getPermitTier() {
+        return permitTier;
+    }
+
     public boolean isBuy(){return isBuy;}
     public boolean isItem(){return isItem;}
     public boolean isTag(){return isTag;}
@@ -66,6 +71,11 @@ public class ShopItem {
 
         public Builder setPrice(int p) {
             instance.price = p;
+            return this;
+        }
+
+        public Builder setPermitTier(int t) {
+            instance.permitTier = t;
             return this;
         }
 

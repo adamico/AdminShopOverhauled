@@ -128,8 +128,8 @@ public class Shop {
 
         //Parse each column and confirm it contains "valid" input
         boolean isError = false;
-        if(line.length < 4){
-            errors.add("Line "+lineNumber+":\tExpected shop item on this row, which requires 4 columns." +
+        if(line.length < 5){
+            errors.add("Line "+lineNumber+":\tExpected shop item on this row, which requires 5 columns." +
                     " Not enough columns");
             isError = true;
             return;
@@ -157,6 +157,21 @@ public class Shop {
         }catch (NumberFormatException e){
             price = 1;
             errors.add("Line "+lineNumber+":\tFourth column must be a whole number. Value:"+line[3]);
+            isError = true;
+        }
+
+            // Check if permit tier is a non-negative integer
+        int permitTier;
+        try {
+            permitTier = Integer.parseInt(line[4]);
+        } catch (NumberFormatException e){
+            permitTier = 0;
+            errors.add("Line "+lineNumber+":\tFifth column must be a non-negative integer. Value:"+line[3]);
+            isError = true;
+        }
+        if (permitTier < 0) {
+            permitTier = 0;
+            errors.add("Line "+lineNumber+":\tFifth column must be a non-negative integer. Value:"+line[3]);
             isError = true;
         }
 
@@ -232,6 +247,7 @@ public class Shop {
                 .setIsTag(isTag)
                 .setData(nameBuilder.toString(), nbt)
                 .setPrice(price)
+                .setPermitTier(permitTier)
                 .build();
 
             //Check if ShopItem was created correctly
