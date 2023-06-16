@@ -5,7 +5,9 @@ import com.ammonium.adminshop.money.BankAccount;
 import com.ammonium.adminshop.money.MoneyManager;
 import com.ammonium.adminshop.setup.Messages;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraftforge.network.NetworkEvent;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -82,7 +84,13 @@ public class PacketAccountAddPermit {
                     List<BankAccount> usableAccounts = moneyManager.getSharedAccounts().get(memberUUID);
                     ServerPlayer serverPlayer = (ServerPlayer) player.getLevel()
                             .getPlayerByUUID(UUID.fromString(memberUUID));
-                    Messages.sendToPlayer(new PacketSyncMoneyToClient(usableAccounts), serverPlayer);
+                    if (serverPlayer != null) {
+                        serverPlayer.playSound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
+                        serverPlayer.sendMessage(new TextComponent("Adding permit tier "+permit+" to account "+
+                                        MojangAPI.getUsernameByUUID(accOwner)+":"+accID),
+                                serverPlayer.getUUID());
+                        Messages.sendToPlayer(new PacketSyncMoneyToClient(usableAccounts), serverPlayer);
+                    }
                 });
             }
         });
