@@ -1,5 +1,6 @@
 package com.ammonium.adminshop.screen;
 
+import net.minecraft.client.player.LocalPlayer;
 import org.apache.commons.lang3.tuple.Pair;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -38,7 +39,7 @@ public class Buyer3Screen extends AbstractContainerScreen<Buyer3Menu> {
 
     private final String ownerUUID;
     private ChangeAccountButton changeAccountButton;
-    private final List<BankAccount> usableAccounts = new ArrayList<>();
+    private final List<Pair<String, Integer>> usableAccounts = new ArrayList<>();
     // -1 if bankAccount is not in usableAccounts
     private int usableAccountsIndex;
 
@@ -48,26 +49,29 @@ public class Buyer3Screen extends AbstractContainerScreen<Buyer3Menu> {
         Pair<String, Integer> bankAccount = ClientLocalData.getMachineAccount(this.blockPos);
         this.ownerUUID = ClientLocalData.getMachineOwner(this.blockPos);
         this.usableAccounts.clear();
-        this.usableAccounts.addAll(ClientLocalData.getUsableAccounts());
-        Optional<BankAccount> search = this.usableAccounts.stream().filter(account ->
-                bankAccount.equals(Pair.of(account.getOwner(), account.getId()))).findAny();
+        ClientLocalData.getUsableAccounts().forEach(account -> this.usableAccounts.add(Pair.of(account.getOwner(),
+                account.getId())));
+        Optional<Pair<String, Integer>> search = this.usableAccounts.stream().filter(account ->
+                bankAccount.equals(Pair.of(account.getKey(), account.getValue()))).findAny();
         if (search.isEmpty()) {
-            AdminShop.LOGGER.warn("Player does not have access to this buyer!");
+            AdminShop.LOGGER.error("Player does not have access to this buyer!");
             this.usableAccountsIndex = -1;
         } else {
-            BankAccount result = search.get();
+            Pair<String, Integer> result = search.get();
             this.usableAccountsIndex = this.usableAccounts.indexOf(result);
         }
     }
 
-    private Pair<String, Integer> getBankAccount() {
+    private Pair<String, Integer> getAccountDetails() {
         if (usableAccountsIndex == -1) {
             AdminShop.LOGGER.error("Account isn't properly set!");
-            return Pair.of(this.usableAccounts.get(0).getOwner(),
-                    this.usableAccounts.get(0).getId());
+            return this.usableAccounts.get(0);
         }
-        return Pair.of(this.usableAccounts.get(this.usableAccountsIndex).getOwner(),
-                this.usableAccounts.get(this.usableAccountsIndex).getId());
+        return this.usableAccounts.get(this.usableAccountsIndex);
+    }
+
+    private BankAccount getBankAccount() {
+        return ClientLocalData.getAccountMap().get(getAccountDetails());
     }
 
     private void createChangeAccountButton(int x, int y) {
@@ -85,7 +89,7 @@ public class Buyer3Screen extends AbstractContainerScreen<Buyer3Menu> {
             // Change accounts
             changeAccounts();
             Minecraft.getInstance().player.sendMessage(new TextComponent("Changed account to "+
-                    MojangAPI.getUsernameByUUID(getBankAccount().getKey())+":"+getBankAccount().getValue()),
+                    MojangAPI.getUsernameByUUID(getAccountDetails().getKey())+":"+ getAccountDetails().getValue()),
                     Minecraft.getInstance().player.getUUID());
         });
         addRenderableWidget(changeAccountButton);
@@ -98,10 +102,13 @@ public class Buyer3Screen extends AbstractContainerScreen<Buyer3Menu> {
             return;
         }
         // Refresh usable accounts
-        BankAccount bankAccount = usableAccounts.get(usableAccountsIndex);
-        if (!this.usableAccounts.equals(ClientLocalData.getUsableAccounts())) {
+        Pair<String, Integer> bankAccount = usableAccounts.get(usableAccountsIndex);
+        List<Pair<String, Integer>> localAccountData = new ArrayList<>();
+        ClientLocalData.getUsableAccounts().forEach(account -> localAccountData.add(Pair.of(account.getOwner(),
+                account.getId())));
+        if (!this.usableAccounts.equals(localAccountData)) {
             this.usableAccounts.clear();
-            this.usableAccounts.addAll(ClientLocalData.getUsableAccounts());
+            this.usableAccounts.addAll(localAccountData);
         }
         // Change account, either by resetting to first (personal) account or moving to next sorted account
         if (!this.usableAccounts.contains(bankAccount)) {
@@ -111,8 +118,8 @@ public class Buyer3Screen extends AbstractContainerScreen<Buyer3Menu> {
         }
         // Send change package
         System.out.println("Registering account change with server...");
-        Messages.sendToServer(new PacketMachineAccountChange(this.ownerUUID, getBankAccount().getKey(),
-                getBankAccount().getValue(), this.blockPos));
+        Messages.sendToServer(new PacketMachineAccountChange(this.ownerUUID, getAccountDetails().getKey(),
+                getAccountDetails().getValue(), this.blockPos));
     }
     @Override
     protected void init() {
@@ -137,10 +144,16 @@ public class Buyer3Screen extends AbstractContainerScreen<Buyer3Menu> {
                 if (Shop.get().getShopBuyMap().containsKey(item)) {
                     System.out.println("Item is in buy map");
                     ShopItem shopItem = Shop.get().getShopBuyMap().get(item);
-                    Messages.sendToServer(new PacketSetBuyerTarget(this.blockPos, shopItem.getItem().getItem()
-                            .getRegistryName()));
-                    ClientLocalData.addBuyerTarget(this.blockPos, shopItem);
-                    return false;
+                    // Check if account has permit to buy item
+                    if (getBankAccount().hasPermit(shopItem.getPermitTier())) {
+                        Messages.sendToServer(new PacketSetBuyerTarget(this.blockPos, shopItem.getItem().getItem()
+                                .getRegistryName()));
+                        ClientLocalData.addBuyerTarget(this.blockPos, shopItem);
+                        return false;
+                    } else {
+                        LocalPlayer player = Minecraft.getInstance().player;
+                        player.sendMessage(new TextComponent("You haven't unlocked that yet!"), player.getUUID());
+                    }
                 }
             }
         }
@@ -164,12 +177,12 @@ public class Buyer3Screen extends AbstractContainerScreen<Buyer3Menu> {
     @Override
     protected void renderLabels(PoseStack pPoseStack, int pMouseX, int pMouseY) {
         super.renderLabels(pPoseStack, pMouseX, pMouseY);
-        Pair<String, Integer> account = getBankAccount();
+        Pair<String, Integer> account = getAccountDetails();
         boolean accAvailable = this.usableAccountsIndex != -1 && ClientLocalData.accountAvailable(account.getKey(),
                 account.getValue());
         int color = accAvailable ? 0xffffff : 0xff0000;
-        drawString(pPoseStack, font, MojangAPI.getUsernameByUUID(getBankAccount().getKey())+":"+getBankAccount()
-                        .getValue(),7,62,color);
+        drawString(pPoseStack, font, MojangAPI.getUsernameByUUID(account.getKey())+":"+ account.getValue(),
+                7,62,color);
     }
 
     @Override

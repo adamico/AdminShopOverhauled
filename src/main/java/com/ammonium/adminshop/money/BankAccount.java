@@ -62,6 +62,14 @@ public class BankAccount {
         this.balance = bal;
     }
 
+    public BankAccount(String own, Set<String> mem, int nid, long bal, Set<Integer> permits) {
+        this.owner = own;
+        this.members = mem;
+        this.id = nid;
+        this.permits = permits;
+        this.balance = bal;
+    }
+
     public CompoundTag serializeTag() {
         CompoundTag tag = new CompoundTag();
         tag.putString("owner", owner);

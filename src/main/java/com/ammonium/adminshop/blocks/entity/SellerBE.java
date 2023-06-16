@@ -95,8 +95,9 @@ public class SellerBE extends BlockEntity implements AutoShopMachine {
         if (count == 0) {
             return;
         }
-        // Get local MoneyManager and attempt transaction
+        // Get local MoneyManager
         MoneyManager moneyManager = MoneyManager.get(level);
+        // attempt transaction
         MachineOwnerInfo machineOwnerInfo = MachineOwnerInfo.get(level);
         Pair<String, Integer> machineAccount = machineOwnerInfo.getMachineAccount(pos);
         // Check if account still exists
@@ -106,6 +107,11 @@ public class SellerBE extends BlockEntity implements AutoShopMachine {
         }
         String accOwner = machineAccount.getKey();
         int accID = machineAccount.getValue();
+        // Check if account has necessary trade permit
+        if (!moneyManager.getBankAccount(accOwner, accID).hasPermit(shopItem.getPermitTier())) {
+            AdminShop.LOGGER.warn("Seller machine account does not have necessary trade permit");
+            return;
+        }
         boolean success = moneyManager.addBalance(accOwner, accID, price);
         if (!success) {
             AdminShop.LOGGER.error("Error selling item.");

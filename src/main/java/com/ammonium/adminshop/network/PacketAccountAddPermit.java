@@ -78,9 +78,11 @@ public class PacketAccountAddPermit {
                 // Sync money with bank account's members
                 assert currentAccount.getMembers().contains(this.accOwner);
                 currentAccount.getMembers().forEach(memberUUID -> {
+
                     List<BankAccount> usableAccounts = moneyManager.getSharedAccounts().get(memberUUID);
-                    Messages.sendToPlayer(new PacketSyncMoneyToClient(usableAccounts), (ServerPlayer) player.getLevel()
-                            .getPlayerByUUID(UUID.fromString(memberUUID)));
+                    ServerPlayer serverPlayer = (ServerPlayer) player.getLevel()
+                            .getPlayerByUUID(UUID.fromString(memberUUID));
+                    Messages.sendToPlayer(new PacketSyncMoneyToClient(usableAccounts), serverPlayer);
                 });
             }
         });

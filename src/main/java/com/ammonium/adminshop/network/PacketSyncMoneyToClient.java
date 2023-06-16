@@ -38,8 +38,17 @@ public class PacketSyncMoneyToClient {
                 members.add(buf.readUtf());
             }
 
+            // Read permits
+            Set<Integer> permits = new HashSet<>();
+            // permit set size
+            int permitSize = buf.readInt();
+            // Permits
+            for (int j = 0; j < permitSize; j++) {
+                permits.add(buf.readInt());
+            }
+
             // Add to usableAccounts
-            usableAccounts.add(new BankAccount(owner, members, id, bal));
+            usableAccounts.add(new BankAccount(owner, members, id, bal, permits));
         }
     }
 
@@ -61,6 +70,12 @@ public class PacketSyncMoneyToClient {
             buf.writeInt(account.getMembers().size());
             // Member UUIDs
             account.getMembers().forEach(buf::writeUtf);
+
+            // Write Permits
+            // Member set size
+            buf.writeInt(account.getPermits().size());
+            // Permits
+            account.getPermits().forEach(buf::writeInt);
 
         });
 

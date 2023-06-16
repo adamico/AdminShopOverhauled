@@ -25,7 +25,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
@@ -192,9 +191,9 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
                         }
                         // Add permit tier to bank account
                         AdminShop.LOGGER.info("Adding permit "+key+" to account");
-                        Minecraft.getInstance().player.sendMessage(new TextComponent("Adding permit "+key+" to account"),
-                                Minecraft.getInstance().player.getUUID());
-                        Minecraft.getInstance().player.playSound(SoundEvents.PLAYER_LEVELUP, 1.0f, 1.0f);
+//                        Minecraft.getInstance().player.sendMessage(new TextComponent("Adding permit "+key+" to account"),
+//                                Minecraft.getInstance().player.getUUID());
+//                        Minecraft.getInstance().player.playSound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
                         Messages.sendToServer(new PacketAccountAddPermit(this.usableAccounts.get(this.usableAccountsIndex),
                                 key, slot.getSlotIndex()));
                     }

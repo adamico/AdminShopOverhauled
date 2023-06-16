@@ -25,7 +25,7 @@ public class ModShopInputSlot extends SlotItemHandler {
 
     @Override
     public boolean mayPickup(Player playerIn) {
-        return false;
+        return true;
     }
 
     @Override
