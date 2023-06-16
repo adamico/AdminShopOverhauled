@@ -52,7 +52,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
     private final List<ShopButton> sellButtons;
     private boolean isBuy; //Whether the Buy option is currently selected
     private Map<Pair<String, Integer>, BankAccount> accountMap;
-    private final List<BankAccount> usableAccounts = new ArrayList<>();
+    private final List<Pair<String, Integer>> usableAccounts = new ArrayList<>();
     private int usableAccountsIndex;
     private ChangeAccountButton changeAccountButton;
     private BuySellButton buySellButton;
@@ -80,7 +80,8 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
             this.accountMap = ClientLocalData.getAccountMap();
         }
         this.usableAccounts.clear();
-        this.usableAccounts.addAll(ClientLocalData.getUsableAccounts());
+        ClientLocalData.getUsableAccounts().forEach(account -> this.usableAccounts.add(Pair.of(account.getOwner(),
+                account.getId())));
         this.usableAccountsIndex = 0;
 
         this.shopContainer = container;
@@ -93,6 +94,18 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         sellButtons = new ArrayList<>();
 
         isBuy = true;
+    }
+
+    private Pair<String, Integer> getAccountDetails() {
+        if (usableAccountsIndex == -1) {
+            AdminShop.LOGGER.error("Account isn't properly set!");
+            return this.usableAccounts.get(0);
+        }
+        return this.usableAccounts.get(this.usableAccountsIndex);
+    }
+
+    private BankAccount getBankAccount() {
+        return ClientLocalData.getAccountMap().get(getAccountDetails());
     }
 
 //    @SuppressWarnings("resource")
@@ -145,7 +158,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         drawString(matrixStack, font, playerInventoryTitle, 16, getYSize()-94, 0xffffff);
 
         //Player Balance
-        BankAccount selectedAccount = this.usableAccounts.get(this.usableAccountsIndex);
+        BankAccount selectedAccount = getBankAccount();
         Pair<String, Integer> selectedAccountInfo = Pair.of(selectedAccount.getOwner(), selectedAccount.getId());
         drawString(matrixStack, Minecraft.getInstance().font,
                 I18n.get(GUI_MONEY) + ClientLocalData.getMoney(selectedAccountInfo),
@@ -202,7 +215,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
                 if (Shop.get().getShopSellMap().containsKey(item)) {
                     ShopItem shopItem = Shop.get().getShopSellMap().get(item);
                     // Attempt to sell it
-                    attemptTransaction(this.usableAccounts.get(this.usableAccountsIndex), false, shopItem, itemStack.getCount());
+                    attemptTransaction(getBankAccount(), false, shopItem, itemStack.getCount());
                     return false;
                 }
             }
@@ -253,7 +266,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
                     x+SHOP_BUTTON_X+SHOP_BUTTON_SIZE*(j%NUM_COLS),
                     y+SHOP_BUTTON_Y+SHOP_BUTTON_SIZE*((j/NUM_COLS)%NUM_ROWS), itemRenderer, (b) -> {
                 int quantity = ((ShopButton)b).getQuantity();
-                attemptTransaction(this.usableAccounts.get(this.usableAccountsIndex), isBuy, finalShopItems.get(j2), quantity);
+                attemptTransaction(getBankAccount(), isBuy, finalShopItems.get(j2), quantity);
             });
             shopButtons.add(button);
             button.visible = isBuy;
@@ -270,19 +283,28 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
             changeAccounts();
             assert Minecraft.getInstance().player != null;
             Minecraft.getInstance().player.sendMessage(new TextComponent("Changed account to "+
-                    MojangAPI.getUsernameByUUID(this.usableAccounts.get(this.usableAccountsIndex).getOwner())+":"+
-                    this.usableAccounts.get(this.usableAccountsIndex).getId()), Minecraft.getInstance().player
+                    MojangAPI.getUsernameByUUID(getAccountDetails().getKey())+":"+
+                    getAccountDetails().getValue()), Minecraft.getInstance().player
                     .getUUID());
         });
         addRenderableWidget(changeAccountButton);
     }
 
     private void changeAccounts() {
-        // Refresh account map and usable accounts
-        this.accountMap = ClientLocalData.getAccountMap();
-        BankAccount bankAccount = usableAccounts.get(usableAccountsIndex);
-        this.usableAccounts.clear();
-        this.usableAccounts.addAll(ClientLocalData.getUsableAccounts());
+        // Check if bankAccount was in usableAccountsIndex
+        if (this.usableAccountsIndex == -1) {
+            AdminShop.LOGGER.error("BankAccount is not in usableAccountsIndex");
+            return;
+        }
+        // Refresh usable accounts
+        Pair<String, Integer> bankAccount = getAccountDetails();
+        List<Pair<String, Integer>> localAccountData = new ArrayList<>();
+        ClientLocalData.getUsableAccounts().forEach(account -> localAccountData.add(Pair.of(account.getOwner(),
+                account.getId())));
+        if (!this.usableAccounts.equals(localAccountData)) {
+            this.usableAccounts.clear();
+            this.usableAccounts.addAll(localAccountData);
+        }
         // Change account, either by resetting to first (personal) account or moving to next sorted account
         if (!this.usableAccounts.contains(bankAccount)) {
             this.usableAccountsIndex = 0;
