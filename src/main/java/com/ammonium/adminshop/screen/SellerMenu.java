@@ -36,7 +36,7 @@ public class SellerMenu extends AbstractContainerMenu {
         addPlayerHotbar(inv);
 
         this.blockEntity.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY).ifPresent(handler -> {
-            this.addSlot(new ModShopInputSlot(handler, 0, 56, 32));
+            this.addSlot(new ModShopInputSlot(handler, 0, 55, 30));
         });
 
     }
