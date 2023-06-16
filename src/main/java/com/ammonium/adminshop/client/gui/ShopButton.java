@@ -78,7 +78,8 @@ public class ShopButton extends Button {
 
     public List<Component> getTooltipContent(){
         return List.of(
-                new TextComponent("$"+item.getPrice()+" "+item.toString())
+                new TextComponent("$"+item.getPrice()+" "+item.toString()),
+                new TextComponent("Requires Permit Tier: "+item.getPermitTier())
         );
     }
 

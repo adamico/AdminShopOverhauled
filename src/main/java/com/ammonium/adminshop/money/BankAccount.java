@@ -8,11 +8,13 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class BankAccount {
     public static final int MAX_MEMBERS = 8;
     private String owner;
     private Set<String> members;
+    private Set<Integer> permits;
     private int id;
     private long balance;
 
@@ -24,6 +26,9 @@ public class BankAccount {
         this.members = new HashSet<>();
         this.members.add(own);
         this.id = 1;
+        HashSet<Integer> unlocks = new HashSet<>();
+        unlocks.add(0);
+        this.permits = unlocks;
         this.balance = Config.STARTING_MONEY.get();
     }
     public BankAccount(String own, int nid) {
@@ -31,6 +36,9 @@ public class BankAccount {
         this.members = new HashSet<>();
         this.members.add(own);
         this.id = nid;
+        HashSet<Integer> unlocks = new HashSet<>();
+        unlocks.add(0);
+        this.permits = unlocks;
         this.balance = (id == 1) ? Config.STARTING_MONEY.get() : 0L;
     }
 
@@ -38,6 +46,9 @@ public class BankAccount {
         this.owner = own;
         this.members = mem;
         this.id = nid;
+        HashSet<Integer> unlocks = new HashSet<>();
+        unlocks.add(0);
+        this.permits = unlocks;
         this.balance = (nid == 1) ? Config.STARTING_MONEY.get() : 0L;
     }
 
@@ -45,6 +56,9 @@ public class BankAccount {
         this.owner = own;
         this.members = mem;
         this.id = nid;
+        HashSet<Integer> unlocks = new HashSet<>();
+        unlocks.add(0);
+        this.permits = unlocks;
         this.balance = bal;
     }
 
@@ -52,6 +66,9 @@ public class BankAccount {
         CompoundTag tag = new CompoundTag();
         tag.putString("owner", owner);
         tag.putString("members", String.join(";", members));
+        tag.putString("permits", permits.stream()
+                .map(String::valueOf)
+                .collect(Collectors.joining(";")));
         tag.putInt("id", id);
         tag.putLong("balance", balance);
         return tag;
@@ -63,6 +80,11 @@ public class BankAccount {
         String joinedMembers = tag.getString("members");
         Set<String> origMembers = new HashSet<>(Arrays.asList(joinedMembers.split(";")));
         bankAccount.setMembers(origMembers);
+        String joinedPermits = tag.getString("permits");
+        Set<Integer> origPermits = Arrays.stream(joinedPermits.split(";"))
+                .map(Integer::parseInt)
+                .collect(Collectors.toSet());
+        bankAccount.setPermits(origPermits);
         bankAccount.setId(tag.getInt("id"));
         bankAccount.setBalance(tag.getLong("balance"));
         return bankAccount;
@@ -89,10 +111,23 @@ public class BankAccount {
     public Set<String> getMembers() {
         return members;
     }
+    public Set<Integer> getPermits() {
+        return permits;
+    }
+
     public void setMembers(Set<String> members) {
         this.members = members;
     }
-
+    public void setPermits(Set<Integer> permits) {
+        this.permits = permits;
+    }
+    public void addPermit(int permit) {
+        this.permits.add(permit);
+    }
+    public boolean hasPermit(int permit) {
+        if (permit == 0) { return true; }
+        return this.permits.contains(permit);
+    }
     public boolean addMember(String newMember) {
         if (id == 1) {
             AdminShop.LOGGER.error("Can't add members to personal account!");

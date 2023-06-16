@@ -224,7 +224,28 @@ public class MoneyManager extends SavedData {
             return false;
         }
 
-        AdminShop.LOGGER.info("Succesfully removed member from bank account.");
+        AdminShop.LOGGER.info("Succesfully added member from bank account.");
+        return true;
+    }
+
+    /**
+     * Adds permit to bank account
+     * @param owner owner UUID
+     * @param id account ID
+     * @param permit new permit
+     * @return true if added, false otherwise
+     */
+    public boolean addPermit(String owner, int id, int permit) {
+        // Check if account exists
+        if (!existsBankAccount(owner, id)) {
+            AdminShop.LOGGER.error("Can't add permit to account that doesn't exist");
+            return false;
+        }
+        // Get bank account
+        BankAccount bankAccount = getBankAccount(owner, id);
+        // Add permit to account
+        bankAccount.addPermit(permit);
+        AdminShop.LOGGER.info("Succesfully added permit to bank account.");
         return true;
     }
 

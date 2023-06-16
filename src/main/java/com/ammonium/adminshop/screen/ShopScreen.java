@@ -1,8 +1,5 @@
 package com.ammonium.adminshop.screen;
 
-import org.apache.commons.lang3.tuple.Pair;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.ammonium.adminshop.AdminShop;
 import com.ammonium.adminshop.blocks.ShopBlock;
 import com.ammonium.adminshop.blocks.ShopContainer;
@@ -12,25 +9,34 @@ import com.ammonium.adminshop.client.gui.ShopButton;
 import com.ammonium.adminshop.money.BankAccount;
 import com.ammonium.adminshop.money.ClientLocalData;
 import com.ammonium.adminshop.network.MojangAPI;
+import com.ammonium.adminshop.network.PacketAccountAddPermit;
 import com.ammonium.adminshop.network.PacketPurchaseRequest;
 import com.ammonium.adminshop.setup.Messages;
 import com.ammonium.adminshop.shop.Shop;
 import com.ammonium.adminshop.shop.ShopItem;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.resources.language.I18n;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
     private final ResourceLocation GUI = new ResourceLocation(AdminShop.MODID, "textures/gui/shop_gui.png");
@@ -172,6 +178,27 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
             if (!itemStack.isEmpty()) {
                 // Get item clicked on
                 Item item = itemStack.getItem();
+                System.out.println("Item clicked on: "+item.getRegistryName().toString());
+                // Check if item is trade permit
+                if (item.getRegistryName().toString().equals("adminshop:permit")) {
+                    // Check if it has a “key” value
+                    if (itemStack.hasTag()) {
+                        CompoundTag compoundTag = itemStack.getTag();
+                        int key = compoundTag.getInt("key");
+                        System.out.println("Key: "+key);
+                        // check if key is valid
+                        if (key < 1) {
+                            AdminShop.LOGGER.error("Trade permit has invalid key!");
+                        }
+                        // Add permit tier to bank account
+                        AdminShop.LOGGER.info("Adding permit "+key+" to account");
+                        Minecraft.getInstance().player.sendMessage(new TextComponent("Adding permit "+key+" to account"),
+                                Minecraft.getInstance().player.getUUID());
+                        Minecraft.getInstance().player.playSound(SoundEvents.PLAYER_LEVELUP, 1.0f, 1.0f);
+                        Messages.sendToServer(new PacketAccountAddPermit(this.usableAccounts.get(this.usableAccountsIndex),
+                                key, slot.getSlotIndex()));
+                    }
+                }
                 // Check if item is in sell map
                 if (Shop.get().getShopSellMap().containsKey(item)) {
                     ShopItem shopItem = Shop.get().getShopSellMap().get(item);

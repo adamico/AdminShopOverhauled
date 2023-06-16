@@ -80,6 +80,11 @@ public class Messages {
                 .encoder(PacketSetMachineInfo::toBytes)
                 .consumer(PacketSetMachineInfo::handle)
                 .add();
+        net.messageBuilder(PacketAccountAddPermit.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(PacketAccountAddPermit::new)
+                .encoder(PacketAccountAddPermit::toBytes)
+                .consumer(PacketAccountAddPermit::handle)
+                .add();
     }
 
     public static <MSG> void sendToServer(MSG message) {

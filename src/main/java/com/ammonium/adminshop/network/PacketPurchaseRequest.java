@@ -85,6 +85,19 @@ public class PacketPurchaseRequest {
 
             System.out.println("Item: "+item.getItem().getDisplayName().getString());
 
+            ServerPlayer player = ctx.getSender();
+            assert player != null;
+            MoneyManager moneyManager = MoneyManager.get(player.getLevel());
+
+            // Check if account has permit requirement
+            BankAccount bankAccount = moneyManager.getBankAccount(this.accOwner, this.accID);
+            if (!bankAccount.hasPermit(item.getPermitTier())) {
+                AdminShop.LOGGER.error("Account "+accOwner+":"+accID+" does not have permit tier "+item.getPermitTier());
+                player.sendMessage(new TextComponent( MojangAPI.getUsernameByUUID(accOwner)+":"+accID+" does not " +
+                                "have permit tier "+item.getPermitTier()), player.getUUID());
+                return;
+            }
+
             if (isBuy) {
                 buyTransaction(supplier, item, quantity);
             } else {
@@ -93,11 +106,7 @@ public class PacketPurchaseRequest {
 
             // Sync money with affected clients
             AdminShop.LOGGER.info("Syncing money with clients");
-            ServerPlayer player = ctx.getSender();
-            assert player != null;
-
             // Get current bank account
-            MoneyManager moneyManager = MoneyManager.get(player.getLevel());
             BankAccount currentAccount = moneyManager.getBankAccount(this.accOwner, this.accID);
 
             // Sync money with bank account's members
@@ -133,8 +142,8 @@ public class PacketPurchaseRequest {
                 int itemCost = item.getPrice();
                 long price = (long) ceil((quantity - returned.getCount()) * itemCost);
 
-
-                boolean success = MoneyManager.get(player.getLevel()).subtractBalance(accOwner, accID, price);
+                MoneyManager moneyManager = MoneyManager.get(player.getLevel());
+                boolean success = moneyManager.subtractBalance(accOwner, accID, price);
                 if (success) {
                     ItemHandlerHelper.insertItemStacked(iItemHandler, toInsert, false);
                 } else {

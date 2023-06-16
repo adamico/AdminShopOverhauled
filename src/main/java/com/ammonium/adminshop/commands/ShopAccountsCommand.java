@@ -155,6 +155,11 @@ public class ShopAccountsCommand {
             returnMessage.append(getUsernameByUUID(source.getLevel(), bankAccount.getOwner()));
             returnMessage.append(":");
             returnMessage.append(bankAccount.getId());
+            returnMessage.append("\nPermits: ");
+            bankAccount.getPermits().forEach(permit -> {
+                returnMessage.append(permit);
+                returnMessage.append(",");
+            });
             returnMessage.append("\nMembers: ");
             bankAccount.getMembers().forEach(memberUUID -> {
                 returnMessage.append(getUsernameByUUID(source.getLevel(), memberUUID));
