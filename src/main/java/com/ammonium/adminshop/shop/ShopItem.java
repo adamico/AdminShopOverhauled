@@ -21,7 +21,7 @@ public class ShopItem {
     private boolean isBuy;
     private boolean isItem;
     private boolean isTag;
-    private int price;
+    private long price;
     private int permitTier;
     private ItemStack item;
     private TagKey<Item> itemTag;
@@ -33,7 +33,7 @@ public class ShopItem {
 
     public ItemStack getItem(){return item;}
 
-    public int getPrice() {
+    public long getPrice() {
         return price;
     }
     public TagKey<Item> getTagItem(){return itemTag;}
@@ -69,7 +69,7 @@ public class ShopItem {
             return this;
         }
 
-        public Builder setPrice(int p) {
+        public Builder setPrice(long p) {
             instance.price = p;
             return this;
         }

@@ -151,9 +151,9 @@ public class Shop {
         }
 
             //Check if price is a number
-        int price;
+        long price;
         try {
-            price = Integer.parseInt(line[3]);
+            price = Long.parseLong(line[3]);
         }catch (NumberFormatException e){
             price = 1;
             errors.add("Line "+lineNumber+":\tFourth column must be a whole number. Value:"+line[3]);

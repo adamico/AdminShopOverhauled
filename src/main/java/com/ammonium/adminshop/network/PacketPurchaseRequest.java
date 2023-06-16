@@ -139,7 +139,7 @@ public class PacketPurchaseRequest {
                 if(returned.getCount() == quantity) {
                     player.sendMessage(new TextComponent("Not enough inventory space for item!"), player.getUUID());
                 }
-                int itemCost = item.getPrice();
+                long itemCost = item.getPrice();
                 long price = (long) ceil((quantity - returned.getCount()) * itemCost);
 
                 MoneyManager moneyManager = MoneyManager.get(player.getLevel());
@@ -164,7 +164,7 @@ public class PacketPurchaseRequest {
             ItemStack toRemove = item.getItem().copy();
             toRemove.setCount(quantity);
             int numSold = removeItemsFromInventory(iItemHandler, toRemove);
-            int itemCost = item.getPrice();
+            long itemCost = item.getPrice();
             long price = (long) numSold * itemCost;
             if (numSold == 0) {
                 player.sendMessage(new TextComponent("No matching item found."), player.getUUID());

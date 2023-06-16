@@ -105,7 +105,7 @@ public class BuyerBE extends BlockEntity implements AutoShopMachine {
         if(returned.getCount() == buySize) {
             return;
         }
-        int itemCost = shopItem.getPrice();
+        long itemCost = shopItem.getPrice();
         long price = (long) ceil((buySize - returned.getCount()) * itemCost);
         // Get MoneyManager and attempt transaction
         Pair<String, Integer> account = machineOwnerInfo.getMachineAccount(pos);

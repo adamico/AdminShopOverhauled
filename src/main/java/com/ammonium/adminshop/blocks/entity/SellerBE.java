@@ -90,7 +90,7 @@ public class SellerBE extends BlockEntity implements AutoShopMachine {
         int count = itemHandler.getStackInSlot(0).getCount();
         itemHandler.extractItem(0, count, false);
         ShopItem shopItem = Shop.get().getShopSellMap().get(item);
-        int itemCost = shopItem.getPrice();
+        long itemCost = shopItem.getPrice();
         long price = (long) count * itemCost;
         if (count == 0) {
             return;
