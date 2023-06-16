@@ -16,5 +16,6 @@
   "item.adminshop.check": "Check",
   "itemGroup.adminshop": "Admin Shop",
   "screen.adminshop.seller": "Seller",
-  "screen.adminshop.buyer": "Buyer"
+  "screen.adminshop.buyer": "Buyer",
+  "item.adminshop.permit": "Trade Permit"
 }
