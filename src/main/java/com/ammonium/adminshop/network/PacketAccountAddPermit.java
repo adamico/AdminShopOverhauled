@@ -8,6 +8,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraftforge.network.NetworkEvent;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -85,7 +86,7 @@ public class PacketAccountAddPermit {
                     ServerPlayer serverPlayer = (ServerPlayer) player.getLevel()
                             .getPlayerByUUID(UUID.fromString(memberUUID));
                     if (serverPlayer != null) {
-                        serverPlayer.playSound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
+                        serverPlayer.playNotifySound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.0f, 1.0f);
                         serverPlayer.sendMessage(new TextComponent("Adding permit tier "+permit+" to account "+
                                         MojangAPI.getUsernameByUUID(accOwner)+":"+accID),
                                 serverPlayer.getUUID());
