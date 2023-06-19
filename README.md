@@ -36,31 +36,31 @@ You can create accounts, add members, and transfer money using the /shopAccounts
 
 List every account you have access to, meaning you are either the owner or someone has added you as a member. This will show additional information, such as balance, members list, and unlocked trade permits.
 
-- /shopAccounts createAccount [<members>]
+- /shopAccounts createAccount [\<members\>]
 
  Create a new account. When you create it you will be replied with the new account's ID number, which can be used to add new members to it. Optionally, you can include member usernames to add to it.
 
 Examples: /shopAccounts createAccount, /shopAccounts createAccount Ammonium_ Notch Jeb_
 
-- /shopAccounts deleteAccount <id>
+- /shopAccounts deleteAccount \<id\>
 
  Deletes an account with the given ID. Note: you can only delete accounts that you are the owner of, and you can't delete your personal (ID: 0) account.
 
 Examples: /shopAccounts deleteAccount 1, /shopAccounts deleteAccount 2
 
-- /shopAccounts addMember <id>  <member>
+- /shopAccounts addMember \<id\>  \<member\>
 
  Adds a new member with the given username to the account with the given ID. This member will be able to buy and sell from the account.
 
 Examples: /shopAccounts addMember 1 Ammonium_, /shopAccounts addMember 2 Notch
 
-- /shopAccounts removeMember <id> <member>
+- /shopAccounts removeMember \<id\> \<member\>
 
  Removes said member from the account's members. Same format as addMember.
 
-- /shopAccounts transfer <amount> <fromOwner> <fromId> <toOwner> <toId>
+- /shopAccounts transfer \<amount\> \<fromOwner\> \<fromId\> \<toOwner\> \<toId\>
 
- Transfers <amount> money from account <fromOwner>:<fromId> to account <toOwner>:<toId>. This is not the only nor easiest way to send money, just buying an expensive item and giving it to the other player for it to sell is much easier.
+ Transfers \<amount\> money from account \<fromOwner\>:\<fromId\> to account \<toOwner\>:\<toId\>. This is not the only nor easiest way to send money, just buying an expensive item and giving it to the other player for it to sell is much easier.
 
  
 
