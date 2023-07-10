@@ -143,8 +143,10 @@ public class BuyerBE extends BlockEntity implements AutoShopMachine {
         assert currentAccount.getMembers().contains(accOwner);
         currentAccount.getMembers().forEach(memberUUID -> {
             List<BankAccount> usableAccounts = moneyManager.getSharedAccounts().get(memberUUID);
-            Messages.sendToPlayer(new PacketSyncMoneyToClient(usableAccounts), (ServerPlayer) level.
-                    getPlayerByUUID(UUID.fromString(memberUUID)));
+            ServerPlayer playerByUUID = (ServerPlayer) level.getPlayerByUUID(UUID.fromString(memberUUID));
+            if (playerByUUID != null) {
+                Messages.sendToPlayer(new PacketSyncMoneyToClient(usableAccounts), playerByUUID);
+            }
         });
     }
 
