@@ -1,15 +1,11 @@
 package com.ammonium.adminshop.shop;
 
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.registries.ForgeRegistries;
-
-import java.util.Optional;
 
 /**
  * Holder class for something that is buyable or sellable in the shop.
@@ -25,7 +21,7 @@ public class ShopItem {
     private int permitTier;
     private ItemStack item;
     private TagKey<Item> itemTag;
-    private CompoundTag nbt; //Used with nbt + tags
+//    private CompoundTag nbt; //Used with nbt + tags
 
     private ShopItem(){
 
@@ -37,7 +33,7 @@ public class ShopItem {
         return price;
     }
     public TagKey<Item> getTagItem(){return itemTag;}
-    public CompoundTag getNbt(){return nbt;}
+//    public CompoundTag getNbt(){return nbt;}
 
     public int getPermitTier() {
         return permitTier;
@@ -79,21 +75,30 @@ public class ShopItem {
             return this;
         }
 
-        public Builder setData(String data, CompoundTag nbt){
-            String [] split = data.split(":");
-            ResourceLocation resource = new ResourceLocation(split[0], split[1]);
-            if(instance.isItem) {
-                if(!instance.isTag) {
-                    instance.item = new ItemStack(ForgeRegistries.ITEMS.getValue(resource), 1, nbt);
-                }else{
-                    instance.itemTag = ItemTags.create(resource);
-                    Optional<Item> item = ForgeRegistries.ITEMS.getValues().stream()
-                            .filter(i -> new ItemStack(i).is(instance.itemTag))
-                            .findFirst();
-                    instance.item = new ItemStack(item.orElse(null));
-                    instance.nbt = nbt;
-                }
+//        public Builder setData(String data, CompoundTag nbt){
+//            String [] split = data.split(":");
+//            ResourceLocation resource = new ResourceLocation(split[0], split[1]);
+//            if(instance.isItem) {
+//                if(!instance.isTag) {
+//                    instance.item = new ItemStack(ForgeRegistries.ITEMS.getValue(resource), 1, nbt);
+//                }else{
+//                    instance.itemTag = ItemTags.create(resource);
+//                    Optional<Item> item = ForgeRegistries.ITEMS.getValues().stream()
+//                            .filter(i -> new ItemStack(i).is(instance.itemTag))
+//                            .findFirst();
+//                    instance.item = new ItemStack(item.orElse(null));
+//                    instance.nbt = nbt;
+//                }
+//            }
+//            return this;
+//        }
+        public Builder setData(String data) {
+            ResourceLocation itemLocation = new ResourceLocation(data);
+            Item item = ForgeRegistries.ITEMS.getValue(itemLocation);
+            if (item == null) {
+                throw new IllegalArgumentException("No item found with registry name: " + data);
             }
+            instance.item = item.getDefaultInstance();
             return this;
         }
 

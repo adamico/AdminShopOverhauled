@@ -179,12 +179,13 @@ public class Shop {
         boolean isBuy = line[0].equalsIgnoreCase("buy") || line[0].equalsIgnoreCase("b");
 
             //Check if both tag and buying
-        boolean isTag = line[2].contains("<tag:") || line[2].contains("#");
-        if(isTag && isBuy){
-            errors.add("Line "+lineNumber+":\tTags can only be sold, not bought." +
-                    " Please specify a unique item or change the first column to sell");
-            isError = true;
-        }
+        boolean isTag = false;
+//        boolean isTag = line[2].contains("<tag:") || line[2].contains("#");
+//        if(isTag && isBuy){
+//            errors.add("Line "+lineNumber+":\tTags can only be sold, not bought." +
+//                    " Please specify a unique item or change the first column to sell");
+//            isError = true;
+//        }
 
             //Discovered at least one shop item-breaking error. Return here
         if(isError) {
@@ -193,59 +194,61 @@ public class Shop {
 
         boolean isItem = line[1].equals("item") || line[1].equals("i");
 
-            //Separate nbt from item/fluid name
-        String nbtText = null;
-        CompoundTag nbt = null;
-        if(line[2].contains(".withTag(")){
-            String nbtBase = line[2].split("\\.withTag\\(")[1];
-            nbtText = nbtBase.substring(0, nbtBase.length());
-            line[2] = line[2].split("\\.withTag\\(")[0];
-        }else if(line[2].contains("{")){
-            nbtText = line[2].substring(line[2].indexOf('{')-1).trim();
-            line[2] = line[2].substring(0, line[2].indexOf('{')-1).trim();
-        }
-            //Check if NBT can be parsed
-        if(nbtText != null){
-            try {
-                nbt = parseNbtString(nbtText);
-            }catch (CommandSyntaxException e){
-                errors.add("Line "+lineNumber+":\tImproperly formatted NBT. Make sure there aren't too many complex" +
-                        " castings if copying directly from crafttweaker. You might need to manually remove them.");
-                errors.add("\tNBT: "+nbtText);
-                isError = true;
-            }
-        }
+//            //Separate nbt from item/fluid name
+//        String nbtText = null;
+//        CompoundTag nbt = null;
+//        if(line[2].contains(".withTag(")){
+//            String nbtBase = line[2].split("\\.withTag\\(")[1];
+//            nbtText = nbtBase.substring(0, nbtBase.length());
+//            line[2] = line[2].split("\\.withTag\\(")[0];
+//        }else if(line[2].contains("{")){
+//            nbtText = line[2].substring(line[2].indexOf('{')-1).trim();
+//            line[2] = line[2].substring(0, line[2].indexOf('{')-1).trim();
+//        }
+//            //Check if NBT can be parsed
+//        if(nbtText != null){
+//            try {
+//                nbt = parseNbtString(nbtText);
+//            }catch (CommandSyntaxException e){
+//                errors.add("Line "+lineNumber+":\tImproperly formatted NBT. Make sure there aren't too many complex" +
+//                        " castings if copying directly from crafttweaker. You might need to manually remove them.");
+//                errors.add("\tNBT: "+nbtText);
+//                isError = true;
+//            }
+//        }
 
-            //Strip extraneous text from item/fluid name
-        StringBuilder nameBuilder = new StringBuilder();
-        String[] split = line[2].split(":");
-            //KubeJS style
-        if(split.length == 2){
-            if(isTag){
-                nameBuilder.append(split[0].substring(1));
-                nameBuilder.append(':');
-                nameBuilder.append(split[1]);
-            }else{
-                nameBuilder.append(line[2]);
-            }
-        }
-            //Crafttweaker style
-        else{
-            //mod name : item name, remove the > at the end
-            if(isTag){
-                nameBuilder.append(split[2]);
-                nameBuilder.append(split[3].substring(0, split[3].length()));
-            }else{
-                nameBuilder.append(split[1]);
-                nameBuilder.append(split[2].substring(0, split[2].length()));
-            }
-        }
+//            //Strip extraneous text from item/fluid name
+//        StringBuilder nameBuilder = new StringBuilder();
+//        String[] split = line[2].split(":");
+//            //KubeJS style
+//        if(split.length == 2){
+//            System.out.println("KubeJS Style");
+//            if(isTag){
+//                nameBuilder.append(split[0].substring(1));
+//                nameBuilder.append(':');
+//                nameBuilder.append(split[1]);
+//            }else{
+//                nameBuilder.append(line[2]);
+//            }
+//        }
+//            //Crafttweaker style
+//        else{
+//            System.out.println("Crafttweaker Style");
+//            //mod name : item name, remove the > at the end
+//            if(isTag){
+//                nameBuilder.append(split[2]);
+//                nameBuilder.append(split[3].substring(0, split[3].length()));
+//            }else{
+//                nameBuilder.append(split[1]);
+//                nameBuilder.append(split[2].substring(0, split[2].length()));
+//            }
+//        }
 
         ShopItem item = new ShopItem.Builder()
                 .setIsBuy(isBuy)
                 .setIsItem(isItem)
                 .setIsTag(isTag)
-                .setData(nameBuilder.toString(), nbt)
+                .setData(line[2])
                 .setPrice(price)
                 .setPermitTier(permitTier)
                 .build();
@@ -257,12 +260,12 @@ public class Shop {
             isError = true;
         }
             //Check if ShopItem found a matching item/fluid for the supplied tag
-        if(isTag && item.getItem() == null){
-            errors.add("Line "+lineNumber+":\t[WARNING] Supplied tag does not match any existing item or fluid." +
-                    " The shop item will still be created, but will be virtually useless until something is mapped to" +
-                    " the supplied tag.");
-            //Continue anyway if no other errors have occurred yet
-        }
+//        if(isTag && item.getItem() == null){
+//            errors.add("Line "+lineNumber+":\t[WARNING] Supplied tag does not match any existing item or fluid." +
+//                    " The shop item will still be created, but will be virtually useless until something is mapped to" +
+//                    " the supplied tag.");
+//            //Continue anyway if no other errors have occurred yet
+//        }
 
         List<ShopItem> shopList = isBuy ? shopStockBuy : shopStockSell;
         Map<Item, ShopItem> shopMap = isBuy ? shopBuyMap : shopSellMap;

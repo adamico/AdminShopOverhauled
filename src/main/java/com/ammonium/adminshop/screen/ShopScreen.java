@@ -215,6 +215,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
                 if (Shop.get().getShopSellMap().containsKey(item)) {
                     ShopItem shopItem = Shop.get().getShopSellMap().get(item);
                     // Attempt to sell it
+                    System.out.println("shopItem: "+shopItem.getItem().getDisplayName().getString());
                     attemptTransaction(getBankAccount(), false, shopItem, itemStack.getCount());
                     return false;
                 }
