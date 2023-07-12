@@ -89,7 +89,7 @@ public class Buyer3BE extends BlockEntity implements AutoShopMachine {
     }
 
     public static void buyerTransaction(BlockPos pos, ServerLevel level, Buyer3BE buyerEntity, int buySize) {
-        System.out.println("Processing buyer transaction for "+pos+", "+buySize);
+//        System.out.println("Processing buyer transaction for "+pos+", "+buySize);
         // item logic
         // Attempt to insert the items, and only perform transaction on what can fit
         MoneyManager moneyManager = MoneyManager.get(level);
@@ -130,7 +130,7 @@ public class Buyer3BE extends BlockEntity implements AutoShopMachine {
         boolean success = moneyManager.subtractBalance(accOwner, accID, price);
         if (success) {
             ItemHandlerHelper.insertItemStacked(handler, toInsert, false);
-            System.out.println("Bought item");
+//            System.out.println("Bought item");
         } else {
             AdminShop.LOGGER.error("Error selling item.");
             return;

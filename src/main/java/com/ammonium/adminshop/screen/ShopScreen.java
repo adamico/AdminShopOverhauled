@@ -32,6 +32,7 @@ import net.minecraft.world.item.ItemStack;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -160,9 +161,12 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         //Player Balance
         BankAccount selectedAccount = getBankAccount();
         Pair<String, Integer> selectedAccountInfo = Pair.of(selectedAccount.getOwner(), selectedAccount.getId());
+        long money = ClientLocalData.getMoney(selectedAccountInfo);
+        NumberFormat numberFormat = NumberFormat.getInstance();
+        String formatted = numberFormat.format(money);
         drawString(matrixStack, Minecraft.getInstance().font,
-                I18n.get(GUI_MONEY) + ClientLocalData.getMoney(selectedAccountInfo),
-                getXSize() - font.width(I18n.get(GUI_MONEY) + "00000000") - 4,
+                I18n.get(GUI_MONEY) + formatted,
+                getXSize() - font.width(I18n.get(GUI_MONEY) + formatted) - 6,
                 6, 0xffffff); //x, y, color
 
         // Bank account

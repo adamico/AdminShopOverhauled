@@ -84,11 +84,16 @@ public class SellerBE extends BlockEntity implements AutoShopMachine {
     }
 
     public static void sellerTransaction(BlockPos pos, SellerBE sellerEntity, ServerLevel level) {
-        System.out.println("Processing seller transaction for "+pos);
+//        System.out.println("Processing seller transaction for "+pos);
         ItemStackHandler itemHandler = sellerEntity.getItemHandler();
         Item item = itemHandler.getStackInSlot(0).getItem();
         int count = itemHandler.getStackInSlot(0).getCount();
+        // Note: invalid items (not in sell map, no trade permit) will be deleted to prevent "clogging"
         itemHandler.extractItem(0, count, false);
+        if (!Shop.get().getShopSellMap().containsKey(item)) {
+            AdminShop.LOGGER.error("Item is not in shop sell map: "+item.getRegistryName());
+            return;
+        }
         ShopItem shopItem = Shop.get().getShopSellMap().get(item);
         long itemCost = shopItem.getPrice();
         long price = (long) count * itemCost;

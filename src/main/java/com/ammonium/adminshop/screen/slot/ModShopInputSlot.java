@@ -16,9 +16,7 @@ public class ModShopInputSlot extends SlotItemHandler {
     public boolean mayPlace(ItemStack stack) {
         boolean result = Shop.get().getShopSellMap().containsKey(stack.getItem());
         if (!result) {
-            AdminShop.LOGGER.error("Cannot place this item into the seller slot");
-            System.out.println("Cannot place this item into the seller slot");
-            System.out.println(stack.getItem());
+            AdminShop.LOGGER.error("Cannot place item into seller: "+stack.getItem().getRegistryName());
         }
         return result;
     }
