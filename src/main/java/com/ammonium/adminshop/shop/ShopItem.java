@@ -1,5 +1,6 @@
 package com.ammonium.adminshop.shop;
 
+import com.ammonium.adminshop.AdminShop;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
@@ -20,6 +21,7 @@ public class ShopItem {
     private long price;
     private int permitTier;
     private ItemStack item;
+    private ResourceLocation resourceLocation;
     private TagKey<Item> itemTag;
 //    private CompoundTag nbt; //Used with nbt + tags
 
@@ -27,7 +29,17 @@ public class ShopItem {
 
     }
 
-    public ItemStack getItem(){return item;}
+    public ItemStack getItem(){
+        // Search in item registry if not found
+        if (item == null || item.isEmpty()) {
+            Item nitem = ForgeRegistries.ITEMS.getValue(resourceLocation);
+            if (nitem == null || nitem.getDefaultInstance().isEmpty()) {
+                AdminShop.LOGGER.error("No item found with resource location: " + resourceLocation);
+            }
+            item = nitem != null ? nitem.getDefaultInstance() : null;
+        }
+        return item;
+    }
 
     public long getPrice() {
         return price;
@@ -95,10 +107,12 @@ public class ShopItem {
         public Builder setData(String data) {
             ResourceLocation itemLocation = new ResourceLocation(data);
             Item item = ForgeRegistries.ITEMS.getValue(itemLocation);
-            if (item == null) {
-                throw new IllegalArgumentException("No item found with registry name: " + data);
+            if (item == null || item.getDefaultInstance().isEmpty()) {
+                AdminShop.LOGGER.error("No item found with registry name: " + data);
+            } else {
+                instance.item = item.getDefaultInstance();
             }
-            instance.item = item.getDefaultInstance();
+            instance.resourceLocation = itemLocation;
             return this;
         }
 
