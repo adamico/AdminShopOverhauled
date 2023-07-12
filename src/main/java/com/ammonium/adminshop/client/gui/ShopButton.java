@@ -11,6 +11,7 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 
+import java.text.NumberFormat;
 import java.util.List;
 
 /**
@@ -77,8 +78,11 @@ public class ShopButton extends Button {
     }
 
     public List<Component> getTooltipContent(){
+        long price = item.getPrice();
+        NumberFormat numberFormat = NumberFormat.getInstance();
+        String formatted = numberFormat.format(price);
         return List.of(
-                new TextComponent("$"+item.getPrice()+" "+item.toString()),
+                new TextComponent("$"+formatted+" "+item.toString()),
                 new TextComponent("Requires Permit Tier: "+item.getPermitTier())
         );
     }

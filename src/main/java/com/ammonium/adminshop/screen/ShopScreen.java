@@ -51,6 +51,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
     private final ShopContainer shopContainer;
     private final List<ShopButton> buyButtons;
     private final List<ShopButton> sellButtons;
+    private List<ShopItem> searchResults;
     private boolean isBuy; //Whether the Buy option is currently selected
     private Map<Pair<String, Integer>, BankAccount> accountMap;
     private final List<Pair<String, Integer>> usableAccounts = new ArrayList<>();
@@ -144,6 +145,8 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         this.search = currSearch;
         int relX = (this.width - this.imageWidth) / 2;
         int relY = (this.height - this.imageHeight) / 2;
+        // reset rows passed
+        rows_passed = 0;
         createShopButtons(this.isBuy, relX, relY);
         refreshShopButtons();
     }
@@ -174,7 +177,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
                 selectedAccountInfo.getValue(),16,108,0xffffff);
 
         //Tooltip for item the player is hovering over
-        List<ShopButton> shopButtons = getVisibleShopButtons();
+        List<ShopButton> shopButtons = isBuy ? buyButtons : sellButtons;
         Optional<ShopButton> button = shopButtons.stream().filter(b -> b.isMouseOn).findFirst();
         button.ifPresent(shopButton -> {
             renderTooltip(matrixStack, shopButton.getTooltipContent(),
@@ -254,16 +257,21 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
 
     private void createShopButtons(boolean isBuy, int x, int y){
         List<ShopItem> shopItems = isBuy ? Shop.get().getShopStockBuy() : Shop.get().getShopStockSell();
-        List<ShopButton> shopButtons = isBuy ? buyButtons : sellButtons;
         // Filter by search if it is set
         if (!this.search.equals("")) {
             shopItems = shopItems.stream().filter(shopItem -> shopItem.getItem().getDisplayName().getString()
                     .toLowerCase().strip().contains(this.search.toLowerCase().strip())).toList();
         }
+        // Save to search results even if no search is done
+        searchResults = shopItems;
+        List<ShopButton> shopButtons = isBuy ? buyButtons : sellButtons;
         //Clear shop buttons if they already exist
         shopButtons.forEach(this::removeWidget);
         shopButtons.clear();
-
+        // Skip rows scrolled past
+        int numPassed = rows_passed*NUM_COLS;
+        shopItems = shopItems.subList(numPassed, Math.min(numPassed+NUM_ROWS*NUM_COLS, shopItems.size()));
+        // Add buttons
         for(int j = 0; j < shopItems.size(); j++){
             final int j2 = j;
             List<ShopItem> finalShopItems = shopItems;
@@ -330,6 +338,11 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         buySellButton = new BuySellButton(x+15, y+4,
                 I18n.get(GUI_BUY), I18n.get(GUI_SELL), isBuy, (b) -> {
             isBuy = ((BuySellButton)b).switchBuySell();
+            int relX = (this.width - this.imageWidth) / 2;
+            int relY = (this.height - this.imageHeight) / 2;
+            // reset rows passed
+            rows_passed = 0;
+            createShopButtons(this.isBuy, relX, relY);
             refreshShopButtons();
         });
         addRenderableWidget(buySellButton);
@@ -339,14 +352,27 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         buyButtons.forEach(b -> b.visible = false);
         sellButtons.forEach(b -> b.visible = false);
         changeAccountButton.visible = false;
-        getVisibleShopButtons().forEach(b -> b.visible = true);
+        List<ShopButton> categoryButtons = isBuy ? buyButtons : sellButtons;
+        categoryButtons.forEach(b -> b.visible = true);
         changeAccountButton.visible = true;
     }
 
-    private List<ShopButton> getVisibleShopButtons(){
-        List<ShopButton> categoryButtons = isBuy ? buyButtons : sellButtons;
-        int numPassed = rows_passed*NUM_COLS;
-        return categoryButtons.subList(numPassed, Math.min(numPassed+NUM_ROWS*NUM_COLS, categoryButtons.size()));
+    @Override
+    public boolean mouseScrolled(double pMouseX, double pMouseY, double pDelta) {
+        if (pDelta > 0) {
+            // Scroll up
+            rows_passed = Math.max(0, rows_passed - 1);
+        } else if (pDelta < 0) {
+            // Scroll down
+            int shopSize = searchResults.size();
+            int max_rows_passed = (int) Math.max(Math.ceil(shopSize / (double) NUM_COLS) - 4, 0);
+            rows_passed = Math.min(max_rows_passed, rows_passed + 1);
+        }
+        int relX = (this.width - this.imageWidth) / 2;
+        int relY = (this.height - this.imageHeight) / 2;
+        createShopButtons(this.isBuy, relX, relY);
+        refreshShopButtons();
+        return super.mouseScrolled(pMouseX, pMouseY, pDelta);
     }
 
     private void attemptTransaction(BankAccount bankAccount, boolean isBuy, ShopItem item, int quantity){
