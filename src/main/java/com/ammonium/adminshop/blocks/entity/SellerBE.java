@@ -23,6 +23,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -45,6 +46,15 @@ public class SellerBE extends BlockEntity implements AutoShopMachine {
         @Override
         protected void onContentsChanged(int slot) {
             setChanged();
+        }
+
+        @Override
+        public boolean isItemValid(int slot, @NotNull ItemStack stack) {
+            boolean result = Shop.get().getShopSellMap().containsKey(stack.getItem());
+            if (!result) {
+                return false;
+            }
+            return super.isItemValid(slot, stack);
         }
     };
 
@@ -88,12 +98,11 @@ public class SellerBE extends BlockEntity implements AutoShopMachine {
         ItemStackHandler itemHandler = sellerEntity.getItemHandler();
         Item item = itemHandler.getStackInSlot(0).getItem();
         int count = itemHandler.getStackInSlot(0).getCount();
-        // Note: invalid items (not in sell map, no trade permit) will be deleted to prevent "clogging"
-        itemHandler.extractItem(0, count, false);
         if (!Shop.get().getShopSellMap().containsKey(item)) {
             AdminShop.LOGGER.error("Item is not in shop sell map: "+item.getRegistryName());
             return;
         }
+        itemHandler.extractItem(0, count, false);
         ShopItem shopItem = Shop.get().getShopSellMap().get(item);
         long itemCost = shopItem.getPrice();
         long price = (long) count * itemCost;

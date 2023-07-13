@@ -1,6 +1,5 @@
 package com.ammonium.adminshop.setup;
 
-import com.ammonium.adminshop.shop.Shop;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
@@ -17,7 +16,7 @@ public class Config {
         ForgeConfigSpec.Builder config = new ForgeConfigSpec.Builder();
         registerConfigs(config);
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, config.build());
-        Shop.get(); //Load initial shop stock
+//        Shop.get(); //Load initial shop stock
     }
 
     private static void registerConfigs(ForgeConfigSpec.Builder config){

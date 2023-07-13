@@ -97,8 +97,12 @@ public class Buyer2BE extends BlockEntity implements AutoShopMachine {
         MachineOwnerInfo machineOwnerInfo = MachineOwnerInfo.get(level);
         BuyerTargetInfo buyerTargetInfo = BuyerTargetInfo.get(level);
         ShopItem shopItem = buyerTargetInfo.getBuyerTarget(pos);
-        if (shopItem.getItem() == null) {
+        if (shopItem == null) {
             AdminShop.LOGGER.error("Buyer shopItem is null!");
+            return;
+        }
+        if (shopItem.getItem().isEmpty()) {
+            AdminShop.LOGGER.error("Buyer shopItem is empty!");
             return;
         }
         Item item = shopItem.getItem().getItem();

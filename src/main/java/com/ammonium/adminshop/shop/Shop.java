@@ -104,6 +104,25 @@ public class Shop {
         printErrors(initiator);
     }
 
+    public void loadFromFile(String csv) throws IOException {
+        //Clear out existing shop data
+        shopTextRaw = csv;
+        errors.clear();
+        shopStockBuy.clear();
+        shopStockSell.clear();
+        shopBuyMap.clear();
+        shopSellMap.clear();
+
+        //Parse file
+        List<List<String>> parsedCSV = CSVParser.parseCSV(csv);
+        int line = 0;
+        for(List<String> record : parsedCSV){
+            line++;
+            parseLine(record.toArray(new String[]{}), line, errors);
+        }
+        ;
+    }
+
     public void printErrors(CommandSource initiator){
         if(initiator != null){
             if(errors.size() == 0)

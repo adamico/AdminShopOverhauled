@@ -1,6 +1,5 @@
 package com.ammonium.adminshop;
 
-import com.mojang.logging.LogUtils;
 import com.ammonium.adminshop.blocks.ModBlocks;
 import com.ammonium.adminshop.blocks.entity.ModBlockEntities;
 import com.ammonium.adminshop.client.events.ServerEventListeners;
@@ -9,6 +8,8 @@ import com.ammonium.adminshop.screen.ModMenuTypes;
 import com.ammonium.adminshop.setup.ClientSetup;
 import com.ammonium.adminshop.setup.Config;
 import com.ammonium.adminshop.setup.ModSetup;
+import com.ammonium.adminshop.shop.Shop;
+import com.mojang.logging.LogUtils;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
@@ -71,7 +72,8 @@ public class AdminShop {
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event) {
         // Do something when the server starts
-//        LOGGER.info("HELLO from server starting");
+        LOGGER.info("Loading Shop");
+        Shop.get();
     }
 
     // You can use EventBusSubscriber to automatically subscribe events on the contained class (this is subscribing to the MOD
