@@ -2,7 +2,10 @@ package com.ammonium.adminshop.blocks.entity;
 
 import com.ammonium.adminshop.AdminShop;
 import com.ammonium.adminshop.blocks.AutoShopMachine;
-import com.ammonium.adminshop.money.*;
+import com.ammonium.adminshop.money.BankAccount;
+import com.ammonium.adminshop.money.BuyerTargetInfo;
+import com.ammonium.adminshop.money.MachineOwnerInfo;
+import com.ammonium.adminshop.money.MoneyManager;
 import com.ammonium.adminshop.network.PacketSyncMoneyToClient;
 import com.ammonium.adminshop.screen.BuyerMenu;
 import com.ammonium.adminshop.setup.Messages;
@@ -97,6 +100,10 @@ public class BuyerBE extends BlockEntity implements AutoShopMachine {
         MachineOwnerInfo machineOwnerInfo = MachineOwnerInfo.get(level);
         BuyerTargetInfo buyerTargetInfo = BuyerTargetInfo.get(level);
         ShopItem shopItem = buyerTargetInfo.getBuyerTarget(pos);
+        if (shopItem.getItem() == null) {
+            AdminShop.LOGGER.error("Buyer shopItem is null!");
+            return;
+        }
         Item item = shopItem.getItem().getItem();
         ItemStack toInsert = new ItemStack(item);
         toInsert.setCount(buySize);
