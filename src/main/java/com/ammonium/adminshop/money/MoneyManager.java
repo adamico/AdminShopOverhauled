@@ -9,6 +9,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.storage.DimensionDataStorage;
 import net.minecraftforge.server.ServerLifecycleHooks;
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -80,6 +81,7 @@ public class MoneyManager extends SavedData {
         return CreateAccount(owner, id, members);
     }
     public int CreateAccount(String owner, int id, Set<String> members) {
+        AdminShop.LOGGER.info("Creating new account "+owner+":"+id);
         // Check if members set contains owner
         if(!members.contains(owner)) {
             AdminShop.LOGGER.warn("Member set does not contain owner, adding.");
@@ -194,7 +196,19 @@ public class MoneyManager extends SavedData {
      * @return true if account exists, false otherwise
      */
     public boolean existsBankAccount(String owner, int id) {
-        return sortedAccountMap.containsKey(owner) && sortedAccountMap.get(owner).containsKey(id);
+        if (!sortedAccountMap.containsKey(owner)) {
+            AdminShop.LOGGER.info("Could not find account map for owner "+owner);
+            return false;
+        } else if (!sortedAccountMap.get(owner).containsKey(id)) {
+            AdminShop.LOGGER.info("Could not find account id "+id+" for "+owner);
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    public boolean existsBankAccount(Pair<String, Integer> account) {
+        return existsBankAccount(account.getKey(), account.getValue());
     }
 
     /**
@@ -335,6 +349,7 @@ public class MoneyManager extends SavedData {
     public MoneyManager(){}
 
     public MoneyManager(CompoundTag tag){
+        AdminShop.LOGGER.info("Reading MoneyManager...");
         if (tag.contains(COMPOUND_TAG_NAME)) {
             ListTag ledger = tag.getList(COMPOUND_TAG_NAME, 10);
             accountSet.clear();
@@ -343,6 +358,7 @@ public class MoneyManager extends SavedData {
             sharedAccounts.clear();
             ledger.forEach((accountTag) -> {
                 BankAccount bankAccount = BankAccount.deserializeTag((CompoundTag) accountTag);
+                AdminShop.LOGGER.info("Read "+bankAccount.getOwner()+":"+bankAccount.getId());
                 accountSet.add(bankAccount);
 
                 // add to sorted accounts maps
@@ -358,7 +374,7 @@ public class MoneyManager extends SavedData {
                     sortedAccountMap.get(owner).put(id, bankAccount);
                 } else {
                     HashMap<Integer, BankAccount> newPlayerMap = new HashMap<>();
-                    newPlayerMap.put(1, bankAccount);
+                    newPlayerMap.put(id, bankAccount);
                     sortedAccountMap.put(owner, newPlayerMap);
                 }
 
@@ -380,9 +396,11 @@ public class MoneyManager extends SavedData {
 
     @Override
     public @NotNull CompoundTag save(CompoundTag tag) {
+        AdminShop.LOGGER.info("Saving MoneyManager...");
         ListTag ledger = new ListTag();
 
         accountSet.forEach((account) -> {
+            AdminShop.LOGGER.info("Saving "+account.getOwner()+":"+account.getId());
             CompoundTag bankAccountTag = account.serializeTag();
             ledger.add(bankAccountTag);
         });

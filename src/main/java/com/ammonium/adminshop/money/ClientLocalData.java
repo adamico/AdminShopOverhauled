@@ -1,10 +1,8 @@
 package com.ammonium.adminshop.money;
 
-import org.apache.commons.lang3.tuple.Pair;
 import com.ammonium.adminshop.AdminShop;
-import com.ammonium.adminshop.shop.ShopItem;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.BlockPos;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
 
@@ -13,43 +11,8 @@ public class ClientLocalData {
     private static final List<BankAccount> usableAccounts = new ArrayList<>();
     private static final Map<Pair<String, Integer>, BankAccount> accountMap = new HashMap<>();
 
-    private static final Map<BlockPos, Pair<String, Integer>> machineAccountMap = new HashMap<>();
-    private static final Map<BlockPos, String> machineOwnerMap = new HashMap<>();
-    private static final Map<BlockPos, ShopItem> buyerTargetMap = new HashMap<>();
-
-    public static void removeMachineInfo(BlockPos pos) {
-        machineOwnerMap.remove(pos);
-        machineAccountMap.remove(pos);
-    }
-    public static void removeBuyerTarget(BlockPos pos) {
-        buyerTargetMap.remove(pos);
-    }
-
-    public static void addBuyerTarget(BlockPos pos, ShopItem target) {
-        System.out.println("Added target to client local data");
-        buyerTargetMap.put(pos, target);
-    }
-    public static boolean hasTarget(BlockPos pos) {
-        return buyerTargetMap.containsKey(pos);
-    }
-    public static ShopItem getBuyerTarget(BlockPos pos) {
-        return buyerTargetMap.get(pos);
-    }
     public static List<BankAccount> getUsableAccounts() {
         return usableAccounts;
-    }
-
-    public static void addMachineOwner(BlockPos pos, String owner) {
-        machineOwnerMap.put(pos, owner);
-    }
-    public static String getMachineOwner(BlockPos pos) {
-        return machineOwnerMap.get(pos);
-    }
-    public static void addMachineAccount(BlockPos pos, Pair<String, Integer> owner) {
-        machineAccountMap.put(pos, owner);
-    }
-    public static Pair<String, Integer> getMachineAccount(BlockPos pos) {
-        return machineAccountMap.get(pos);
     }
 
     public static Map<Pair<String, Integer>, BankAccount> getAccountMap() {

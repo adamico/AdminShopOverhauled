@@ -1,21 +1,22 @@
 package com.ammonium.adminshop.screen;
 
-import net.minecraft.client.player.LocalPlayer;
-import org.apache.commons.lang3.tuple.Pair;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.ammonium.adminshop.AdminShop;
+import com.ammonium.adminshop.blocks.entity.Buyer2BE;
 import com.ammonium.adminshop.client.gui.ChangeAccountButton;
 import com.ammonium.adminshop.money.BankAccount;
 import com.ammonium.adminshop.money.ClientLocalData;
 import com.ammonium.adminshop.network.MojangAPI;
 import com.ammonium.adminshop.network.PacketMachineAccountChange;
 import com.ammonium.adminshop.network.PacketSetBuyerTarget;
+import com.ammonium.adminshop.network.PacketUpdateRequest;
 import com.ammonium.adminshop.setup.Messages;
 import com.ammonium.adminshop.shop.Shop;
 import com.ammonium.adminshop.shop.ShopItem;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.core.BlockPos;
@@ -27,6 +28,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,8 +38,10 @@ public class Buyer2Screen extends AbstractContainerScreen<Buyer2Menu> {
     private static final ResourceLocation TEXTURE =
             new ResourceLocation(AdminShop.MODID, "textures/gui/buyer_2.png");
     private final BlockPos blockPos;
-
-    private final String ownerUUID;
+    private Buyer2BE buyerEntity;
+    private String ownerUUID;
+    private Pair<String, Integer> account;
+    private int shopBuyIndex;
     private ChangeAccountButton changeAccountButton;
     private final List<Pair<String, Integer>> usableAccounts = new ArrayList<>();
     // -1 if bankAccount is not in usableAccounts
@@ -46,24 +50,10 @@ public class Buyer2Screen extends AbstractContainerScreen<Buyer2Menu> {
     public Buyer2Screen(Buyer2Menu pMenu, Inventory pPlayerInventory, Component pTitle, BlockPos blockPos) {
         super(pMenu, pPlayerInventory, pTitle);
         this.blockPos = blockPos;
-        Pair<String, Integer> bankAccount = ClientLocalData.getMachineAccount(this.blockPos);
-        this.ownerUUID = ClientLocalData.getMachineOwner(this.blockPos);
-        this.usableAccounts.clear();
-        ClientLocalData.getUsableAccounts().forEach(account -> this.usableAccounts.add(Pair.of(account.getOwner(),
-                account.getId())));
-        Optional<Pair<String, Integer>> search = this.usableAccounts.stream().filter(account ->
-                bankAccount.equals(Pair.of(account.getKey(), account.getValue()))).findAny();
-        if (search.isEmpty()) {
-            AdminShop.LOGGER.error("Player does not have access to this buyer!");
-            this.usableAccountsIndex = -1;
-        } else {
-            Pair<String, Integer> result = search.get();
-            this.usableAccountsIndex = this.usableAccounts.indexOf(result);
-        }
     }
 
     private Pair<String, Integer> getAccountDetails() {
-        if (usableAccountsIndex == -1) {
+        if (usableAccountsIndex == -1 || usableAccountsIndex >= this.usableAccounts.size()) {
             AdminShop.LOGGER.error("Account isn't properly set!");
             return this.usableAccounts.get(0);
         }
@@ -117,7 +107,7 @@ public class Buyer2Screen extends AbstractContainerScreen<Buyer2Menu> {
             this.usableAccountsIndex = (this.usableAccounts.indexOf(bankAccount) + 1) % this.usableAccounts.size();
         }
         // Send change package
-        System.out.println("Registering account change with server...");
+//        System.out.println("Registering account change with server...");
         Messages.sendToServer(new PacketMachineAccountChange(this.ownerUUID, getAccountDetails().getKey(),
                 getAccountDetails().getValue(), this.blockPos));
     }
@@ -127,6 +117,29 @@ public class Buyer2Screen extends AbstractContainerScreen<Buyer2Menu> {
         int relX = (this.width - this.imageWidth) / 2;
         int relY = (this.height - this.imageHeight) / 2;
         createChangeAccountButton(relX, relY);
+
+        // Request update from server
+//        System.out.println("Requesting update from server");
+        Messages.sendToServer(new PacketUpdateRequest(this.blockPos));
+    }
+
+    private void updateInformation() {
+        this.ownerUUID = this.buyerEntity.getOwnerUUID();
+        this.account = this.buyerEntity.getAccount();
+        this.shopBuyIndex = this.buyerEntity.getShopBuyIndex();
+
+        this.usableAccounts.clear();
+        ClientLocalData.getUsableAccounts().forEach(account -> this.usableAccounts.add(Pair.of(account.getOwner(),
+                account.getId())));
+        Optional<Pair<String, Integer>> search = this.usableAccounts.stream().filter(baccount ->
+                this.account.equals(Pair.of(baccount.getKey(), baccount.getValue()))).findAny();
+        if (search.isEmpty()) {
+            AdminShop.LOGGER.error("Player does not have access to this seller!");
+            this.usableAccountsIndex = -1;
+        } else {
+            Pair<String, Integer> result = search.get();
+            this.usableAccountsIndex = this.usableAccounts.indexOf(result);
+        }
     }
 
     @Override
@@ -139,19 +152,20 @@ public class Buyer2Screen extends AbstractContainerScreen<Buyer2Menu> {
             if (!itemStack.isEmpty() && !isMachineSlot) {
                 // Get item clicked on
                 Item item = itemStack.getItem();
-                System.out.println("Clicked on item "+item.getRegistryName());
+//                System.out.println("Clicked on item "+item.getRegistryName());
                 // Check if item is in buy map
                 if (Shop.get().getShopBuyMap().containsKey(item)) {
-                    System.out.println("Item is in buy map");
+//                    System.out.println("Item is in buy map");
                     ShopItem shopItem = Shop.get().getShopBuyMap().get(item);
                     // Check if account has permit to buy item
                     if (getBankAccount().hasPermit(shopItem.getPermitTier())) {
-                        Messages.sendToServer(new PacketSetBuyerTarget(this.blockPos, shopItem.getItem().getItem()
-                                .getRegistryName()));
-                        ClientLocalData.addBuyerTarget(this.blockPos, shopItem);
+                        this.shopBuyIndex = Shop.get().getShopStockBuy().indexOf(shopItem);
+                        this.buyerEntity.setShopBuyIndex(this.shopBuyIndex);
+                        Messages.sendToServer(new PacketSetBuyerTarget(this.blockPos, this.shopBuyIndex));
                         return false;
                     } else {
                         LocalPlayer player = Minecraft.getInstance().player;
+                        assert player != null;
                         player.sendMessage(new TextComponent("You haven't unlocked that yet!"), player.getUUID());
                     }
                 }
@@ -169,14 +183,19 @@ public class Buyer2Screen extends AbstractContainerScreen<Buyer2Menu> {
         int y = (height - imageHeight) / 2;
 
         this.blit(pPoseStack, x, y, 0, 0, imageWidth, imageHeight);
-        if (ClientLocalData.hasTarget(this.blockPos)) {
-            renderItem(pPoseStack, ClientLocalData.getBuyerTarget(this.blockPos).getItem().getItem(), x+104, y+14);
+        if (this.shopBuyIndex != -1 && this.shopBuyIndex < Shop.get().getShopStockBuy().size()) {
+            renderItem(pPoseStack, Shop.get().getShopStockBuy().get(this.shopBuyIndex).getItem().getItem(), x+104,
+                    y+14);
         }
     }
 
     @Override
     protected void renderLabels(PoseStack pPoseStack, int pMouseX, int pMouseY) {
         super.renderLabels(pPoseStack, pMouseX, pMouseY);
+        if (this.usableAccounts == null || this.usableAccountsIndex == -1 || this.usableAccountsIndex >=
+                this.usableAccounts.size()) {
+            return;
+        }
         Pair<String, Integer> account = getAccountDetails();
         boolean accAvailable = this.usableAccountsIndex != -1 && ClientLocalData.accountAvailable(account.getKey(),
                 account.getValue());
@@ -190,6 +209,21 @@ public class Buyer2Screen extends AbstractContainerScreen<Buyer2Menu> {
         renderBackground(pPoseStack);
         super.render(pPoseStack, mouseX, mouseY, delta);
         renderTooltip(pPoseStack, mouseX, mouseY);
+
+        // Get data from BlockEntity
+        this.buyerEntity = this.getMenu().getBlockEntity();
+
+        if (this.ownerUUID == null || this.account == null || this.shopBuyIndex == -1) {
+            if (this.buyerEntity.getOwnerUUID() != null || this.buyerEntity.getAccount() != null ||
+                    this.buyerEntity.getShopBuyIndex() != -1) {
+                updateInformation();
+            }
+        }
+        if (this.ownerUUID != null && this.account != null && (!this.ownerUUID.equals(this.buyerEntity.getOwnerUUID())
+                || !this.account.equals(this.buyerEntity.getAccount())) || this.shopBuyIndex !=
+                this.buyerEntity.getShopBuyIndex()) {
+            updateInformation();
+        }
     }
 
     private void renderItem(PoseStack matrixStack, Item item, int x, int y) {

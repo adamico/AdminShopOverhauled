@@ -2,14 +2,11 @@ package com.ammonium.adminshop.blocks;
 
 import com.ammonium.adminshop.blocks.entity.ModBlockEntities;
 import com.ammonium.adminshop.blocks.entity.SellerBE;
-import com.ammonium.adminshop.money.ClientLocalData;
-import com.ammonium.adminshop.money.MachineOwnerInfo;
-import com.ammonium.adminshop.network.PacketMachineOwnerRequest;
-import com.ammonium.adminshop.network.PacketSetMachineInfo;
 import com.ammonium.adminshop.screen.SellerMenu;
-import com.ammonium.adminshop.setup.Messages;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.MenuProvider;
@@ -31,7 +28,11 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraftforge.network.NetworkHooks;
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Objects;
 
 public class SellerBlock extends CustomDirectionalBlock implements EntityBlock {
     public SellerBlock() {
@@ -53,14 +54,6 @@ public class SellerBlock extends CustomDirectionalBlock implements EntityBlock {
             if (blockEntity instanceof SellerBE sellerEntity) {
                 sellerEntity.drops();
                 sellerEntity.setRemoved();
-                if (pLevel.isClientSide) {
-                    System.out.println("Remove from client side");
-                    ClientLocalData.removeMachineInfo(pPos);
-                } else {
-                    System.out.println("Remove from server side");
-                    MachineOwnerInfo.get(pLevel).removeMachineInfo(pPos);
-                    ClientLocalData.removeMachineInfo(pPos);
-                }
             }
         }
         super.onRemove(pState, pLevel, pPos, pNewState, pIsMoving);
@@ -69,11 +62,17 @@ public class SellerBlock extends CustomDirectionalBlock implements EntityBlock {
     @Override
     public InteractionResult use(BlockState pState, Level pLevel, BlockPos pPos,
                                  Player pPlayer, InteractionHand pHand, BlockHitResult pHit) {
-        if (pLevel.isClientSide()) {
-            System.out.println("Block at position: " + pLevel.getBlockState(pPos).getBlock());
-            if(pLevel.getBlockEntity(pPos) instanceof SellerBE) {
-                // Send the request packet
-                Messages.sendToServer(new PacketMachineOwnerRequest(pPos));
+        if (!pLevel.isClientSide()) {
+            if(pLevel.getBlockEntity(pPos) instanceof SellerBE sellerEntity) {
+
+                if (Objects.equals(sellerEntity.getOwnerUUID(), pPlayer.getStringUUID())) {
+                    // Open menu
+                    NetworkHooks.openGui((ServerPlayer) pPlayer, sellerEntity, pPos);
+                } else {
+                    // Wrong user
+                    pPlayer.sendMessage(new TextComponent("You are not this machine's owner!"), pPlayer.getUUID());
+                }
+
             } else {
                 throw new IllegalStateException("Our Container provider is missing!");
             }
@@ -110,11 +109,15 @@ public class SellerBlock extends CustomDirectionalBlock implements EntityBlock {
     @Override
     public void setPlacedBy(Level pLevel, BlockPos pPos, BlockState pState, @Nullable LivingEntity pPlacer, ItemStack pStack) {
         super.setPlacedBy(pLevel, pPos, pState, pPlacer, pStack);
-        if (pLevel.isClientSide) {
+        if (!pLevel.isClientSide) {
+            // Server side code
             BlockEntity blockEntity = pLevel.getBlockEntity(pPos);
-            assert (pPlacer instanceof Player && blockEntity instanceof SellerBE);
-            // Set account info
-            Messages.sendToServer(new PacketSetMachineInfo(pPlacer.getStringUUID(), pPlacer.getStringUUID(), 1, pPos));
+            if (pPlacer instanceof ServerPlayer serverPlayer && blockEntity instanceof SellerBE sellerEntity) {
+                sellerEntity.setOwnerUUID(serverPlayer.getStringUUID());
+                sellerEntity.setAccount(Pair.of(serverPlayer.getStringUUID(), 1));
+                sellerEntity.setChanged();
+                sellerEntity.sendUpdates();
+            }
         }
     }
 

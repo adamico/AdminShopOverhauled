@@ -18,5 +18,6 @@ public class ModSetup {
 
     public static void init(FMLCommonSetupEvent event){
         Messages.register();
+
     }
 }

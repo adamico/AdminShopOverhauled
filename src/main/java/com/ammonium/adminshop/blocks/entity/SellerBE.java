@@ -3,7 +3,6 @@ package com.ammonium.adminshop.blocks.entity;
 import com.ammonium.adminshop.AdminShop;
 import com.ammonium.adminshop.blocks.AutoShopMachine;
 import com.ammonium.adminshop.money.BankAccount;
-import com.ammonium.adminshop.money.MachineOwnerInfo;
 import com.ammonium.adminshop.money.MoneyManager;
 import com.ammonium.adminshop.network.PacketSyncMoneyToClient;
 import com.ammonium.adminshop.screen.SellerMenu;
@@ -13,8 +12,12 @@ import com.ammonium.adminshop.shop.ShopItem;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Containers;
@@ -38,9 +41,13 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 public class SellerBE extends BlockEntity implements AutoShopMachine {
+    private String ownerUUID;
+    private Pair<String, Integer> account;
+
     private int tickCounter = 0;
     private final ItemStackHandler itemHandler = new ItemStackHandler(1) {
         @Override
@@ -58,6 +65,26 @@ public class SellerBE extends BlockEntity implements AutoShopMachine {
         }
     };
 
+    public void setOwnerUUID(String ownerUUID) {
+        System.out.println("Saving seller ownerUUID");
+        this.setChanged();
+        this.ownerUUID = ownerUUID;
+    }
+
+    public String getOwnerUUID() {
+        return ownerUUID;
+    }
+
+    public void setAccount(Pair<String, Integer> account) {
+        System.out.println("Saving seller account");
+        this.setChanged();
+        this.account = account;
+    }
+
+    public Pair<String, Integer> getAccount() {
+        return account;
+    }
+
     public final ItemStackHandler getItemHandler() {
         return itemHandler;
     }
@@ -71,6 +98,11 @@ public class SellerBE extends BlockEntity implements AutoShopMachine {
     @Override
     public Component getDisplayName() {
         return new TextComponent("Auto-Seller");
+    }
+
+    @Override
+    public void setChanged() {
+        super.setChanged();
     }
 
     @Nullable
@@ -94,7 +126,6 @@ public class SellerBE extends BlockEntity implements AutoShopMachine {
     }
 
     public static void sellerTransaction(BlockPos pos, SellerBE sellerEntity, ServerLevel level) {
-//        System.out.println("Processing seller transaction for "+pos);
         ItemStackHandler itemHandler = sellerEntity.getItemHandler();
         Item item = itemHandler.getStackInSlot(0).getItem();
         int count = itemHandler.getStackInSlot(0).getCount();
@@ -112,15 +143,20 @@ public class SellerBE extends BlockEntity implements AutoShopMachine {
         // Get local MoneyManager
         MoneyManager moneyManager = MoneyManager.get(level);
         // attempt transaction
-        MachineOwnerInfo machineOwnerInfo = MachineOwnerInfo.get(level);
-        Pair<String, Integer> machineAccount = machineOwnerInfo.getMachineAccount(pos);
-        // Check if account still exists
-        if (!moneyManager.existsBankAccount(machineAccount.getKey(), machineAccount.getValue())) {
-            AdminShop.LOGGER.error("Seller machine account does not exist");
+
+        // Check if account is set
+        if (sellerEntity.account == null) {
+            AdminShop.LOGGER.error("Seller bankAccount is null");
             return;
         }
-        String accOwner = machineAccount.getKey();
-        int accID = machineAccount.getValue();
+        // Check if account still exists
+        if (!moneyManager.existsBankAccount(sellerEntity.account)) {
+            AdminShop.LOGGER.error("Seller machine account "+sellerEntity.account.getKey()+":"+sellerEntity.account
+                    .getValue()+" does not exist");
+            return;
+        }
+        String accOwner = sellerEntity.account.getKey();
+        int accID = sellerEntity.account.getValue();
         // Check if account has necessary trade permit
         if (!moneyManager.getBankAccount(accOwner, accID).hasPermit(shopItem.getPermitTier())) {
             AdminShop.LOGGER.warn("Seller machine account does not have necessary trade permit");
@@ -170,17 +206,76 @@ public class SellerBE extends BlockEntity implements AutoShopMachine {
         super.invalidateCaps();
         lazyItemHandler.invalidate();
     }
-
     @Override
-    protected void saveAdditional(@NotNull CompoundTag tag) {
+    public @NotNull CompoundTag getUpdateTag() {
+        CompoundTag tag = super.getUpdateTag();
         tag.put("inventory", this.itemHandler.serializeNBT());
-        super.saveAdditional(tag);
+        if (this.ownerUUID != null) {
+            tag.putString("ownerUUID", this.ownerUUID);
+        }
+        if (this.account != null) {
+            tag.putString("accountUUID", this.account.getKey());
+            tag.putInt("accountID", this.account.getValue());
+        }
+        return tag;
+    }
+    @Nullable
+    @Override
+    public Packet<ClientGamePacketListener> getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
     }
 
     @Override
-    public void load(CompoundTag tag) {
+    public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt) {
+        super.onDataPacket(net, pkt);
+        this.load(Objects.requireNonNull(pkt.getTag()));
+    }
+
+    public void sendUpdates() {
+        if (this.level != null) {
+            this.level.sendBlockUpdated(this.worldPosition, this.getBlockState(), this.getBlockState(), 3);
+        }
+    }
+
+    @Override
+    public void handleUpdateTag(CompoundTag tag) {
+        super.handleUpdateTag(tag);
         this.itemHandler.deserializeNBT(tag.getCompound("inventory"));
+        if (tag.contains("ownerUUID")) {
+            this.ownerUUID = tag.getString("ownerUUID");
+        }
+        if (tag.contains("accountUUID") && tag.contains("accountID")) {
+            String accountUUID = tag.getString("accountUUID");
+            int accountID = tag.getInt("accountID");
+            this.account = Pair.of(accountUUID, accountID);
+        }
+    }
+
+    @Override
+    protected void saveAdditional(@NotNull CompoundTag tag) {
+        super.saveAdditional(tag);
+        tag.put("inventory", this.itemHandler.serializeNBT());
+        if (this.ownerUUID != null) {
+            tag.putString("ownerUUID", this.ownerUUID);
+        }
+        if (this.account != null) {
+            tag.putString("accountUUID", this.account.getKey());
+            tag.putInt("accountID", this.account.getValue());
+        }
+    }
+
+    @Override
+    public void load(@NotNull CompoundTag tag) {
         super.load(tag);
+        this.itemHandler.deserializeNBT(tag.getCompound("inventory"));
+        if (tag.contains("ownerUUID")) {
+            this.ownerUUID = tag.getString("ownerUUID");
+        }
+        if (tag.contains("accountUUID") && tag.contains("accountID")) {
+            String accountUUID = tag.getString("accountUUID");
+            int accountID = tag.getInt("accountID");
+            this.account = Pair.of(accountUUID, accountID);
+        }
     }
 
     public void drops() {

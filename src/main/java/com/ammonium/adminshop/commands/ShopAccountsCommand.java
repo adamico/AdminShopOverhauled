@@ -233,7 +233,6 @@ public class ShopAccountsCommand {
 
         // If successful, sync client data to each member and return new ID to command
         MoneyManager moneyManager = MoneyManager.get(source.getLevel());
-        Set<BankAccount> accountSet = moneyManager.getAccountSet();
 
         // Sync client data with all members
         memberPlayers.forEach(member -> Messages.sendToPlayer(new PacketSyncMoneyToClient(

@@ -40,21 +40,6 @@ public class Messages {
                 .encoder(PacketSyncShopToClient::toBytes)
                 .consumer(PacketSyncShopToClient::handle)
                 .add();
-        net.messageBuilder(PacketMachineOwner.class, id(), NetworkDirection.PLAY_TO_CLIENT)
-                .decoder(PacketMachineOwner::new)
-                .encoder(PacketMachineOwner::toBytes)
-                .consumer(PacketMachineOwner::handle)
-                .add();
-        net.messageBuilder(PacketMachineOwnerRequest.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(PacketMachineOwnerRequest::new)
-                .encoder(PacketMachineOwnerRequest::toBytes)
-                .consumer(PacketMachineOwnerRequest::handle)
-                .add();
-        net.messageBuilder(PacketOpenMenu.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(PacketOpenMenu::new)
-                .encoder(PacketOpenMenu::toBytes)
-                .consumer(PacketOpenMenu::handle)
-                .add();
         net.messageBuilder(PacketMachineAccountChange.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(PacketMachineAccountChange::new)
                 .encoder(PacketMachineAccountChange::toBytes)
@@ -65,25 +50,15 @@ public class Messages {
                 .encoder(PacketSetBuyerTarget::toBytes)
                 .consumer(PacketSetBuyerTarget::handle)
                 .add();
-        net.messageBuilder(PacketBuyerInfoRequest.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(PacketBuyerInfoRequest::new)
-                .encoder(PacketBuyerInfoRequest::toBytes)
-                .consumer(PacketBuyerInfoRequest::handle)
-                .add();
-        net.messageBuilder(PacketBuyerInfo.class, id(), NetworkDirection.PLAY_TO_CLIENT)
-                .decoder(PacketBuyerInfo::new)
-                .encoder(PacketBuyerInfo::toBytes)
-                .consumer(PacketBuyerInfo::handle)
-                .add();
-        net.messageBuilder(PacketSetMachineInfo.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(PacketSetMachineInfo::new)
-                .encoder(PacketSetMachineInfo::toBytes)
-                .consumer(PacketSetMachineInfo::handle)
-                .add();
         net.messageBuilder(PacketAccountAddPermit.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(PacketAccountAddPermit::new)
                 .encoder(PacketAccountAddPermit::toBytes)
                 .consumer(PacketAccountAddPermit::handle)
+                .add();
+        net.messageBuilder(PacketUpdateRequest.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(PacketUpdateRequest::new)
+                .encoder(PacketUpdateRequest::toBytes)
+                .consumer(PacketUpdateRequest::handle)
                 .add();
     }
 

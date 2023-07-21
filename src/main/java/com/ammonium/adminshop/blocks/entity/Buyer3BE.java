@@ -1,17 +1,23 @@
 package com.ammonium.adminshop.blocks.entity;
 
 import com.ammonium.adminshop.AdminShop;
-import com.ammonium.adminshop.blocks.AutoShopMachine;
-import com.ammonium.adminshop.money.*;
+import com.ammonium.adminshop.blocks.BuyerMachine;
+import com.ammonium.adminshop.money.BankAccount;
+import com.ammonium.adminshop.money.MoneyManager;
 import com.ammonium.adminshop.network.PacketSyncMoneyToClient;
 import com.ammonium.adminshop.screen.Buyer3Menu;
 import com.ammonium.adminshop.setup.Messages;
+import com.ammonium.adminshop.shop.Shop;
 import com.ammonium.adminshop.shop.ShopItem;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Containers;
@@ -36,11 +42,15 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import static java.lang.Math.ceil;
 
-public class Buyer3BE extends BlockEntity implements AutoShopMachine {
+public class Buyer3BE extends BlockEntity implements BuyerMachine {
+    private String ownerUUID;
+    private Pair<String, Integer> account;
+    private int shopBuyIndex = -1; // -1 = Not Set
     private int tickCounter = 0;
 
     private final int buySize = 64;
@@ -62,9 +72,36 @@ public class Buyer3BE extends BlockEntity implements AutoShopMachine {
         super(ModBlockEntities.BUYER_3.get(), pWorldPosition, pBlockState);
     }
 
+    public void setOwnerUUID(String ownerUUID) {
+        this.ownerUUID = ownerUUID;
+    }
+
+    public String getOwnerUUID() {
+        return ownerUUID;
+    }
+
+    public void setAccount(Pair<String, Integer> account) {
+        this.account = account;
+    }
+
+    public Pair<String, Integer> getAccount() {
+        return account;
+    }
+    public void setShopBuyIndex(int shopBuyIndex) {
+        this.shopBuyIndex = shopBuyIndex;
+    }
+    public int getShopBuyIndex() {
+        return shopBuyIndex;
+    }
+
     @Override
     public Component getDisplayName() {
         return new TextComponent("Auto-Buyer");
+    }
+
+    @Override
+    public void setChanged() {
+        super.setChanged();
     }
 
     @Nullable
@@ -80,8 +117,7 @@ public class Buyer3BE extends BlockEntity implements AutoShopMachine {
                 pBlockEntity.tickCounter = 0;
                 // Send buy item transaction (send pos and buySize)
                 assert pLevel instanceof ServerLevel;
-                BuyerTargetInfo buyerTargetInfo = BuyerTargetInfo.get(pLevel);
-                if (buyerTargetInfo.hasTarget(pPos)) {
+                if (pBlockEntity.shopBuyIndex != -1 && pBlockEntity.shopBuyIndex < Shop.get().getShopStockBuy().size()) {
                     buyerTransaction(pPos, (ServerLevel) pLevel, pBlockEntity, pBlockEntity.buySize);
                 }
             }
@@ -93,9 +129,12 @@ public class Buyer3BE extends BlockEntity implements AutoShopMachine {
         // item logic
         // Attempt to insert the items, and only perform transaction on what can fit
         MoneyManager moneyManager = MoneyManager.get(level);
-        MachineOwnerInfo machineOwnerInfo = MachineOwnerInfo.get(level);
-        BuyerTargetInfo buyerTargetInfo = BuyerTargetInfo.get(level);
-        ShopItem shopItem = buyerTargetInfo.getBuyerTarget(pos);
+        // Check shopBuyIndex
+        if (buyerEntity.shopBuyIndex == -1 || buyerEntity.shopBuyIndex >= Shop.get().getShopStockBuy().size()) {
+            AdminShop.LOGGER.error("Buyer shopBuyIndex is unset");
+            return;
+        }
+        ShopItem shopItem = Shop.get().getShopStockBuy().get(buyerEntity.shopBuyIndex);
         if (shopItem == null) {
             AdminShop.LOGGER.error("Buyer shopItem is null!");
             return;
@@ -115,14 +154,21 @@ public class Buyer3BE extends BlockEntity implements AutoShopMachine {
         long itemCost = shopItem.getPrice();
         long price = (long) ceil((buySize - returned.getCount()) * itemCost);
         // Get MoneyManager and attempt transaction
-        Pair<String, Integer> account = machineOwnerInfo.getMachineAccount(pos);
-        // Check if account still exists
-        if (!moneyManager.existsBankAccount(account.getKey(), account.getValue())) {
-            AdminShop.LOGGER.error("Buyer machine account does not exist");
+
+        // Check if account is set
+        if (buyerEntity.account == null) {
+            AdminShop.LOGGER.error("Buyer bankAccount is null");
             return;
         }
-        String accOwner = account.getKey();
-        int accID = account.getValue();
+
+        // Check if account still exists
+        if (!moneyManager.existsBankAccount(buyerEntity.account)) {
+            AdminShop.LOGGER.error("Buyer machine account "+buyerEntity.account.getKey()+":"+buyerEntity.account
+                    .getValue()+" does not exist");
+            return;
+        }
+        String accOwner = buyerEntity.account.getKey();
+        int accID = buyerEntity.account.getValue();
         // Check if account has enough money, if not reduce amount
         long balance = moneyManager.getBalance(accOwner, accID);
         if (price > balance) {
@@ -179,15 +225,86 @@ public class Buyer3BE extends BlockEntity implements AutoShopMachine {
     }
 
     @Override
-    protected void saveAdditional(@NotNull CompoundTag tag) {
+    public @NotNull CompoundTag getUpdateTag() {
+        CompoundTag tag = super.getUpdateTag();
         tag.put("inventory", this.itemHandler.serializeNBT());
-        super.saveAdditional(tag);
+        if (this.ownerUUID != null) {
+            tag.putString("ownerUUID", this.ownerUUID);
+        }
+        if (this.account != null) {
+            tag.putString("accountUUID", this.account.getKey());
+            tag.putInt("accountID", this.account.getValue());
+        }
+        if (this.shopBuyIndex != -1) {
+            tag.putInt("shopBuyIndex", this.shopBuyIndex);
+        }
+        return tag;
+    }
+    @Nullable
+    @Override
+    public Packet<ClientGamePacketListener> getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
+    }
+    @Override
+    public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt) {
+        super.onDataPacket(net, pkt);
+        this.load(Objects.requireNonNull(pkt.getTag()));
+    }
+    public void sendUpdates() {
+        if (this.level != null) {
+            this.level.sendBlockUpdated(this.worldPosition, this.getBlockState(), this.getBlockState(), 3);
+        }
+    }
+
+
+    @Override
+    public void handleUpdateTag(CompoundTag tag) {
+        super.handleUpdateTag(tag);
+        this.itemHandler.deserializeNBT(tag.getCompound("inventory"));
+        if (tag.contains("ownerUUID")) {
+            this.ownerUUID = tag.getString("ownerUUID");
+        }
+        if (tag.contains("accountUUID") && tag.contains("accountID")) {
+            String accountUUID = tag.getString("accountUUID");
+            int accountID = tag.getInt("accountID");
+            this.account = Pair.of(accountUUID, accountID);
+        }
+        if (tag.contains("shopBuyIndex")) {
+            this.shopBuyIndex = tag.getInt("shopBuyIndex");
+        }
     }
 
     @Override
-    public void load(CompoundTag tag) {
-        this.itemHandler.deserializeNBT(tag.getCompound("inventory"));
+    protected void saveAdditional(@NotNull CompoundTag tag) {
+        super.saveAdditional(tag);
+        tag.put("inventory", this.itemHandler.serializeNBT());
+        if (this.ownerUUID != null) {
+            tag.putString("ownerUUID", this.ownerUUID);
+        }
+        if (this.account != null) {
+            tag.putString("accountUUID", this.account.getKey());
+            tag.putInt("accountID", this.account.getValue());
+        }
+        if (this.shopBuyIndex != -1) {
+            tag.putInt("shopBuyIndex", this.shopBuyIndex);
+        }
+    }
+
+    @Override
+    public void load(@NotNull CompoundTag tag) {
         super.load(tag);
+        this.itemHandler.deserializeNBT(tag.getCompound("inventory"));
+        if (tag.contains("ownerUUID")) {
+            this.ownerUUID = tag.getString("ownerUUID");
+        }
+        if (tag.contains("accountUUID") && tag.contains("accountID")) {
+            String accountUUID = tag.getString("accountUUID");
+            int accountID = tag.getInt("accountID");
+            this.account = Pair.of(accountUUID, accountID);
+        }
+        if (tag.contains("shopBuyIndex")) {
+            this.shopBuyIndex = tag.getInt("shopBuyIndex");
+        }
     }
 
     public void drops() {

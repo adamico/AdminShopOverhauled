@@ -3,15 +3,14 @@ package com.ammonium.adminshop.network;
 import com.ammonium.adminshop.AdminShop;
 import com.ammonium.adminshop.blocks.AutoShopMachine;
 import com.ammonium.adminshop.money.BankAccount;
-import com.ammonium.adminshop.money.MachineOwnerInfo;
 import com.ammonium.adminshop.money.MoneyManager;
-import org.apache.commons.lang3.tuple.Pair;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.network.NetworkEvent;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
 import java.util.Optional;
@@ -62,8 +61,7 @@ public class PacketMachineAccountChange {
                     return;
                 }
                 // Check machine's owner is the same as player
-                MachineOwnerInfo machineOwnerInfo = MachineOwnerInfo.get(player.getLevel());
-                if (!machineOwnerInfo.getMachineOwner(this.pos).equals(player.getStringUUID())) {
+                if (!machineEntity.getOwnerUUID().equals(player.getStringUUID())) {
                     AdminShop.LOGGER.error("Player is not the machine's owner");
                     return;
                 }
@@ -78,8 +76,10 @@ public class PacketMachineAccountChange {
                 }
                 System.out.println("Saving machine account information.");
 
-                // Apply changes to MachineOwnerInfo
-                machineOwnerInfo.addMachineInfo(this.pos, this.machineOwner, this.accOwner, this.accID);
+                // Apply changes to machineEntity
+                machineEntity.setAccount(Pair.of(this.accOwner, this.accID));
+                blockEntity.setChanged();
+                machineEntity.sendUpdates();
             }
         });
         return true;

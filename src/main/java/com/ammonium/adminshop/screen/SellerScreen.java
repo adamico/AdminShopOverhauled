@@ -1,15 +1,15 @@
 package com.ammonium.adminshop.screen;
 
-import org.apache.commons.lang3.tuple.Pair;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.ammonium.adminshop.AdminShop;
+import com.ammonium.adminshop.blocks.entity.SellerBE;
 import com.ammonium.adminshop.client.gui.ChangeAccountButton;
-import com.ammonium.adminshop.money.BankAccount;
 import com.ammonium.adminshop.money.ClientLocalData;
 import com.ammonium.adminshop.network.MojangAPI;
 import com.ammonium.adminshop.network.PacketMachineAccountChange;
+import com.ammonium.adminshop.network.PacketUpdateRequest;
 import com.ammonium.adminshop.setup.Messages;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.GameRenderer;
@@ -19,6 +19,7 @@ import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,8 +29,9 @@ public class SellerScreen extends AbstractContainerScreen<SellerMenu> {
     private static final ResourceLocation TEXTURE =
             new ResourceLocation(AdminShop.MODID, "textures/gui/seller.png");
     private final BlockPos blockPos;
-
-    private final String ownerUUID;
+    private SellerBE sellerEntity;
+    private String ownerUUID;
+    private Pair<String, Integer> account;
     private ChangeAccountButton changeAccountButton;
     private final List<Pair<String, Integer>> usableAccounts = new ArrayList<>();
     // -1 if bankAccount is not in usableAccounts
@@ -38,32 +40,14 @@ public class SellerScreen extends AbstractContainerScreen<SellerMenu> {
     public SellerScreen(SellerMenu pMenu, Inventory pPlayerInventory, Component pTitle, BlockPos blockPos) {
         super(pMenu, pPlayerInventory, pTitle);
         this.blockPos = blockPos;
-        Pair<String, Integer> bankAccount = ClientLocalData.getMachineAccount(this.blockPos);
-        this.ownerUUID = ClientLocalData.getMachineOwner(this.blockPos);
-        this.usableAccounts.clear();
-        ClientLocalData.getUsableAccounts().forEach(account -> this.usableAccounts.add(Pair.of(account.getOwner(),
-                account.getId())));
-        Optional<Pair<String, Integer>> search = this.usableAccounts.stream().filter(account ->
-                bankAccount.equals(Pair.of(account.getKey(), account.getValue()))).findAny();
-        if (search.isEmpty()) {
-            AdminShop.LOGGER.error("Player does not have access to this seller!");
-            this.usableAccountsIndex = -1;
-        } else {
-            Pair<String, Integer> result = search.get();
-            this.usableAccountsIndex = this.usableAccounts.indexOf(result);
-        }
     }
 
     private Pair<String, Integer> getAccountDetails() {
-        if (usableAccountsIndex == -1) {
+        if (usableAccountsIndex == -1 || usableAccountsIndex >= this.usableAccounts.size()) {
             AdminShop.LOGGER.error("Account isn't properly set!");
             return this.usableAccounts.get(0);
         }
         return this.usableAccounts.get(this.usableAccountsIndex);
-    }
-
-    private BankAccount getBankAccount() {
-        return ClientLocalData.getAccountMap().get(getAccountDetails());
     }
 
     private void createChangeAccountButton(int x, int y) {
@@ -109,7 +93,7 @@ public class SellerScreen extends AbstractContainerScreen<SellerMenu> {
             this.usableAccountsIndex = (this.usableAccounts.indexOf(bankAccount) + 1) % this.usableAccounts.size();
         }
         // Send change package
-        System.out.println("Registering account change with server...");
+//        System.out.println("Registering account change with server...");
         Messages.sendToServer(new PacketMachineAccountChange(this.ownerUUID, getAccountDetails().getKey(),
                 getAccountDetails().getValue(), this.blockPos));
     }
@@ -119,6 +103,27 @@ public class SellerScreen extends AbstractContainerScreen<SellerMenu> {
         int relX = (this.width - this.imageWidth) / 2;
         int relY = (this.height - this.imageHeight) / 2;
         createChangeAccountButton(relX, relY);
+
+        // Request update from server
+//        System.out.println("Requesting update from server");
+        Messages.sendToServer(new PacketUpdateRequest(this.blockPos));
+    }
+    private void updateInformation() {
+        this.ownerUUID = this.sellerEntity.getOwnerUUID();
+        this.account = this.sellerEntity.getAccount();
+
+        this.usableAccounts.clear();
+        ClientLocalData.getUsableAccounts().forEach(account -> this.usableAccounts.add(Pair.of(account.getOwner(),
+                account.getId())));
+        Optional<Pair<String, Integer>> search = this.usableAccounts.stream().filter(baccount ->
+                this.account.equals(Pair.of(baccount.getKey(), baccount.getValue()))).findAny();
+        if (search.isEmpty()) {
+            AdminShop.LOGGER.error("Player does not have access to this seller!");
+            this.usableAccountsIndex = -1;
+        } else {
+            Pair<String, Integer> result = search.get();
+            this.usableAccountsIndex = this.usableAccounts.indexOf(result);
+        }
     }
 
     @Override
@@ -135,6 +140,10 @@ public class SellerScreen extends AbstractContainerScreen<SellerMenu> {
     @Override
     protected void renderLabels(PoseStack pPoseStack, int pMouseX, int pMouseY) {
         super.renderLabels(pPoseStack, pMouseX, pMouseY);
+        if (this.usableAccounts == null || this.usableAccountsIndex == -1 || this.usableAccountsIndex >=
+                this.usableAccounts.size()) {
+            return;
+        }
         Pair<String, Integer> account = getAccountDetails();
         boolean accAvailable = this.usableAccountsIndex != -1 && ClientLocalData.accountAvailable(account.getKey(),
                 account.getValue());
@@ -148,5 +157,18 @@ public class SellerScreen extends AbstractContainerScreen<SellerMenu> {
         renderBackground(pPoseStack);
         super.render(pPoseStack, mouseX, mouseY, delta);
         renderTooltip(pPoseStack, mouseX, mouseY);
+
+        // Get data from BlockEntity
+        this.sellerEntity = this.getMenu().getBlockEntity();
+
+        if (this.ownerUUID == null || this.account == null) {
+            if (this.sellerEntity.getOwnerUUID() != null || this.sellerEntity.getAccount() != null) {
+                updateInformation();
+            }
+        }
+        if (this.ownerUUID != null && this.account != null && (!this.ownerUUID.equals(this.sellerEntity.getOwnerUUID())
+                || !this.account.equals(this.sellerEntity.getAccount()))) {
+            updateInformation();
+        }
     }
 }
