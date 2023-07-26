@@ -14,7 +14,7 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 
 public class Buyer2Menu extends AbstractContainerMenu {
 
@@ -34,12 +34,11 @@ public class Buyer2Menu extends AbstractContainerMenu {
         addPlayerInventory(inv);
         addPlayerHotbar(inv);
 
-        this.blockEntity.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY).ifPresent(handler -> {
+        this.blockEntity.getCapability(ForgeCapabilities.ITEM_HANDLER).ifPresent(handler -> {
             this.addSlot(new ModResultSlot(handler, 0, 62, 42));
             this.addSlot(new ModResultSlot(handler, 1, 80, 42));
             this.addSlot(new ModResultSlot(handler, 2, 98, 42));
         });
-
     }
 
     public Buyer2BE getBlockEntity() {

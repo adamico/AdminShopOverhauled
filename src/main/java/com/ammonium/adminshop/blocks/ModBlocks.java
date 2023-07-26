@@ -3,9 +3,7 @@ package com.ammonium.adminshop.blocks;
 import com.ammonium.adminshop.AdminShop;
 import com.ammonium.adminshop.item.LoreBlockItem;
 import com.ammonium.adminshop.item.ModItems;
-import com.ammonium.adminshop.setup.ModSetup;
 import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.material.Material;
@@ -25,41 +23,40 @@ public class ModBlocks {
             DeferredRegister.create(ForgeRegistries.BLOCKS, AdminShop.MODID);
 
     public static final RegistryObject<Block> SHOP = registerLoreBlock("shop",
-            ShopBlock::new, ModSetup.ITEM_GROUP, "Buy and Sell Items!");
+            ShopBlock::new, "Buy and Sell Items!");
     public static final RegistryObject<Block> BUYER_1 = registerLoreBlock("buyer_1",
-            BuyerBlock::new, ModSetup.ITEM_GROUP, "Max Buy Speed: 4 items/second");
+            BuyerBlock::new, "Max Buy Speed: 4 items/second");
 
     public static final RegistryObject<Block> BUYER_2 = registerLoreBlock("buyer_2",
-            Buyer2Block::new, ModSetup.ITEM_GROUP, "Max Buy Speed: 16 items/second");
+            Buyer2Block::new, "Max Buy Speed: 16 items/second");
     public static final RegistryObject<Block> BUYER_3 = registerLoreBlock("buyer_3",
-            Buyer3Block::new, ModSetup.ITEM_GROUP, "Max Buy Speed: 64 items/second");
+            Buyer3Block::new, "Max Buy Speed: 64 items/second");
 
     public static final RegistryObject<Block> SELLER = registerLoreBlock("seller",
-            SellerBlock::new, ModSetup.ITEM_GROUP, "Max Sell Speed: 64 items/second");
+            SellerBlock::new, "Max Sell Speed: 64 items/second");
 
-    private static <T extends Block> RegistryObject<T> registerBlock(String name, Supplier<T> block, CreativeModeTab tab) {
+    private static <T extends Block> RegistryObject<T> registerBlock(String name, Supplier<T> block) {
         RegistryObject<T> toReturn = BLOCKS.register(name, block);
-        registerBlockItem(name, toReturn, tab);
+        registerBlockItem(name, toReturn);
         return toReturn;
     }
 
-    private static <T extends Block> RegistryObject<Item> registerBlockItem(String name, RegistryObject<T> block,
-                                                                            CreativeModeTab tab) {
+    private static <T extends Block> RegistryObject<Item> registerBlockItem(String name, RegistryObject<T> block) {
         return ModItems.ITEMS.register(name, () -> new BlockItem(block.get(),
-                new Item.Properties().tab(tab)));
+                new Item.Properties()));
     }
 
-    private static <T extends Block> RegistryObject<T> registerLoreBlock(String name, Supplier<T> block, CreativeModeTab tab,
+    private static <T extends Block> RegistryObject<T> registerLoreBlock(String name, Supplier<T> block,
                                                                          String lore) {
         RegistryObject<T> toReturn = BLOCKS.register(name, block);
-        registerLoreBlockItem(name, toReturn, tab, lore);
+        registerLoreBlockItem(name, toReturn, lore);
         return toReturn;
     }
 
     private static <T extends Block> RegistryObject<Item> registerLoreBlockItem(String name, RegistryObject<T> block,
-                                                                            CreativeModeTab tab, String lore) {
+                                                                                String lore) {
         return ModItems.ITEMS.register(name, () -> new LoreBlockItem(block.get(),
-                new Item.Properties().tab(tab), lore));
+                new Item.Properties(), lore));
     }
 
     public static void register(IEventBus eventBus) {

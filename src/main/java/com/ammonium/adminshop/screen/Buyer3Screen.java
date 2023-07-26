@@ -21,7 +21,6 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -73,14 +72,13 @@ public class Buyer3Screen extends AbstractContainerScreen<Buyer3Menu> {
             assert player != null;
             // Check if player is the owner
             if (!player.getStringUUID().equals(ownerUUID)) {
-                player.sendMessage(new TextComponent("You are not the owner of this machine!"), player.getUUID());
+                player.sendSystemMessage(Component.literal("You are not the owner of this machine!"));
                 return;
             }
             // Change accounts
             changeAccounts();
-            Minecraft.getInstance().player.sendMessage(new TextComponent("Changed account to "+
-                    MojangAPI.getUsernameByUUID(getAccountDetails().getKey())+":"+ getAccountDetails().getValue()),
-                    Minecraft.getInstance().player.getUUID());
+            Minecraft.getInstance().player.sendSystemMessage(Component.literal("Changed account to "+
+                    MojangAPI.getUsernameByUUID(getAccountDetails().getKey())+":"+ getAccountDetails().getValue()));
         });
         addRenderableWidget(changeAccountButton);
     }
@@ -165,7 +163,7 @@ public class Buyer3Screen extends AbstractContainerScreen<Buyer3Menu> {
                         return false;
                     } else {
                         LocalPlayer player = Minecraft.getInstance().player;
-                        player.sendMessage(new TextComponent("You haven't unlocked that yet!"), player.getUUID());
+                        player.sendSystemMessage(Component.literal("You haven't unlocked that yet!"));
                     }
                 }
             }
@@ -228,6 +226,6 @@ public class Buyer3Screen extends AbstractContainerScreen<Buyer3Menu> {
     private void renderItem(PoseStack matrixStack, Item item, int x, int y) {
         ItemRenderer itemRenderer = this.minecraft.getItemRenderer();
         ItemStack itemStack = new ItemStack(item);
-        itemRenderer.renderAndDecorateFakeItem(itemStack, x, y);
+        itemRenderer.renderAndDecorateFakeItem(matrixStack, itemStack, x, y);
     }
 }

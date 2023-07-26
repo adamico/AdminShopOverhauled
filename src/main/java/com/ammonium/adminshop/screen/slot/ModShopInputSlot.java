@@ -6,6 +6,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.SlotItemHandler;
+import net.minecraftforge.registries.ForgeRegistries;
 
 public class ModShopInputSlot extends SlotItemHandler {
     public ModShopInputSlot(IItemHandler itemHandler, int index, int x, int y) {
@@ -16,7 +17,7 @@ public class ModShopInputSlot extends SlotItemHandler {
     public boolean mayPlace(ItemStack stack) {
         boolean result = Shop.get().getShopSellMap().containsKey(stack.getItem());
         if (!result) {
-            AdminShop.LOGGER.error("Cannot place item into seller: "+stack.getItem().getRegistryName());
+            AdminShop.LOGGER.error("Cannot place item into seller: "+ForgeRegistries.ITEMS.getKey(stack.getItem()));
         }
         return result;
     }

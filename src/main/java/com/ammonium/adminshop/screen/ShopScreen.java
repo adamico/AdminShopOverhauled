@@ -23,12 +23,12 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
@@ -197,9 +197,9 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
             if (!itemStack.isEmpty()) {
                 // Get item clicked on
                 Item item = itemStack.getItem();
-                System.out.println("Item clicked on: "+item.getRegistryName().toString());
+//                System.out.println("Item clicked on: "+ ForgeRegistries.ITEMS.getKey(item));
                 // Check if item is trade permit
-                if (item.getRegistryName().toString().equals("adminshop:permit")) {
+                if (ForgeRegistries.ITEMS.getKey(item).toString().equals("adminshop:permit")) {
                     // Check if it has a “key” value
                     if (itemStack.hasTag()) {
                         CompoundTag compoundTag = itemStack.getTag();
@@ -211,7 +211,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
                         }
                         // Add permit tier to bank account
                         AdminShop.LOGGER.info("Adding permit "+key+" to account");
-//                        Minecraft.getInstance().player.sendMessage(new TextComponent("Adding permit "+key+" to account"),
+//                        Minecraft.getInstance().player.sendSystemMessage(Component.literal("Adding permit "+key+" to account"),
 //                                Minecraft.getInstance().player.getUUID());
 //                        Minecraft.getInstance().player.playSound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
                         Messages.sendToServer(new PacketAccountAddPermit(this.usableAccounts.get(this.usableAccountsIndex),
@@ -295,10 +295,9 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         changeAccountButton = new ChangeAccountButton(x+127, y+108, (b) -> {
             changeAccounts();
             assert Minecraft.getInstance().player != null;
-            Minecraft.getInstance().player.sendMessage(new TextComponent("Changed account to "+
+            Minecraft.getInstance().player.sendSystemMessage(Component.literal("Changed account to "+
                     MojangAPI.getUsernameByUUID(getAccountDetails().getKey())+":"+
-                    getAccountDetails().getValue()), Minecraft.getInstance().player
-                    .getUUID());
+                    getAccountDetails().getValue()));
         });
         addRenderableWidget(changeAccountButton);
     }
@@ -328,7 +327,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
     private void createSearchBar(int x, int y) {
         int searchBarWidth = 70;
         int searchBarHeight = 12;
-        searchBar = new EditBox(font, x+16, y+18, searchBarWidth, searchBarHeight, new TextComponent(""));
+        searchBar = new EditBox(font, x+16, y+18, searchBarWidth, searchBarHeight, Component.literal(""));
         addWidget(searchBar);
     }
     private void createBuySellButton(int x, int y){

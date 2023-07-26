@@ -3,7 +3,6 @@ package com.ammonium.adminshop.blocks;
 import com.ammonium.adminshop.blocks.entity.ShopBE;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -97,7 +96,7 @@ public class ShopBlock extends CustomDirectionalBlock implements EntityBlock {
                 MenuProvider containerProvider = new MenuProvider() {
                     @Override
                     public Component getDisplayName() {
-                        return new TranslatableComponent(SCREEN_ADMINSHOP_SHOP);
+                        return Component.translatable(SCREEN_ADMINSHOP_SHOP);
                     }
 
                     @Override
@@ -105,7 +104,7 @@ public class ShopBlock extends CustomDirectionalBlock implements EntityBlock {
                         return new ShopContainer(windowId, playerInventory, playerEntity);
                     }
                 };
-                NetworkHooks.openGui((ServerPlayer) player, containerProvider);
+                NetworkHooks.openScreen((ServerPlayer) player, containerProvider);
             } else {
                 throw new IllegalStateException("Our named container provider is missing!");
             }

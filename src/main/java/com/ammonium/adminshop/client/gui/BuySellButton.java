@@ -1,12 +1,12 @@
 package com.ammonium.adminshop.client.gui;
 
+import com.ammonium.adminshop.AdminShop;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.ammonium.adminshop.AdminShop;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
@@ -25,7 +25,9 @@ public class BuySellButton extends Button {
     private boolean isBuy;
 
     public BuySellButton(int x, int y, String buyText, String sellText, boolean isBuy, OnPress listener) {
-        super(x, y, 50, 12, new TextComponent((isBuy ? buyText : sellText)), listener);
+        super(Button.builder(Component.literal(isBuy ? buyText : sellText), listener)
+                .pos(x, y)
+                .size(50, 12));
         this.isBuy = isBuy;
     }
 
@@ -39,16 +41,18 @@ public class BuySellButton extends Button {
     }
 
     @Override
-    public void renderButton(@NotNull PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+    public void render(@NotNull PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
         if(!visible) {
             return;
         }
+        int x = getX();
+        int y = getY();
 
         RenderSystem.setShaderTexture(0, GUI);
         if(isBuy){
-            this.blit(matrix, x, y,195, 68, 50, 12);
+            blit(matrix, x, y,195, 68, 50, 12);
         }else{
-            this.blit(matrix, x, y, 195, 56, 50, 12);
+            blit(matrix, x, y, 195, 56, 50, 12);
         }
         drawCenteredString(matrix, Minecraft.getInstance().font, I18n.get(GUI_BUY), x+12,
                 y+6-Minecraft.getInstance().font.lineHeight/2, 0xFFFFFF);

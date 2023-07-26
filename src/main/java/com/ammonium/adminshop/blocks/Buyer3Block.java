@@ -4,8 +4,7 @@ import com.ammonium.adminshop.blocks.entity.Buyer3BE;
 import com.ammonium.adminshop.blocks.entity.ModBlockEntities;
 import com.ammonium.adminshop.screen.BuyerMenu;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -66,10 +65,10 @@ public class Buyer3Block extends CustomDirectionalBlock implements EntityBlock {
 
                 if (Objects.equals(buyerEntity.getOwnerUUID(), pPlayer.getStringUUID())) {
                     // Open menu
-                    NetworkHooks.openGui((ServerPlayer) pPlayer, buyerEntity, pPos);
+                    NetworkHooks.openScreen((ServerPlayer) pPlayer, buyerEntity, pPos);
                 } else {
                     // Wrong user
-                    pPlayer.sendMessage(new TextComponent("You are not this machine's owner!"), pPlayer.getUUID());
+                    pPlayer.sendSystemMessage(Component.literal("You are not this machine's owner!"));
                 }
 
             } else {
@@ -89,9 +88,7 @@ public class Buyer3Block extends CustomDirectionalBlock implements EntityBlock {
     @Nullable
     @Override
     public MenuProvider getMenuProvider(BlockState pState, Level pLevel, BlockPos pPos) {
-        return new SimpleMenuProvider((id, playerInventory, player) -> {
-            return new BuyerMenu(id, playerInventory, pLevel, pPos);
-        }, new TranslatableComponent("screen.adminshop.buyer"));
+        return new SimpleMenuProvider((id, playerInventory, player) -> new BuyerMenu(id, playerInventory, pLevel, pPos), Component.translatable("screen.adminshop.buyer"));
     }
 
     @Nullable

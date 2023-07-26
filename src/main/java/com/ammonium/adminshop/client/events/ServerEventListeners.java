@@ -26,20 +26,20 @@ public class ServerEventListeners {
     @SubscribeEvent
     public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event){
         if(Shop.get().errors.size() > 0)
-            Shop.get().printErrors(event.getPlayer());
-        ServerPlayer player = (ServerPlayer) event.getPlayer();
+            Shop.get().printErrors(event.getEntity());
+        ServerPlayer player = (ServerPlayer) event.getEntity();
         Messages.sendToPlayer(new PacketSyncShopToClient(Shop.get().shopTextRaw), player);
-        MoneyManager moneyManager = MoneyManager.get(event.getPlayer().getLevel());
+        MoneyManager moneyManager = MoneyManager.get(event.getEntity().getLevel());
         Map<String, List<BankAccount>> sharedAccounts = moneyManager.getSharedAccounts();
         List<BankAccount> usableAccounts;
-        if (!sharedAccounts.containsKey(event.getPlayer().getStringUUID())) {
+        if (!sharedAccounts.containsKey(event.getEntity().getStringUUID())) {
             // Create personal account if first login
-            int success = moneyManager.CreateAccount(event.getPlayer().getStringUUID(), 1);
+            int success = moneyManager.CreateAccount(event.getEntity().getStringUUID(), 1);
             if (success == -1) {
                 AdminShop.LOGGER.error("Could not create personal account on first login!");
             }
         }
-        usableAccounts = moneyManager.getSharedAccounts().get(event.getPlayer().getStringUUID());
+        usableAccounts = moneyManager.getSharedAccounts().get(event.getEntity().getStringUUID());
         if (usableAccounts == null) {
             AdminShop.LOGGER.error("Could not get usableAccounts for player on login.");
             usableAccounts = new ArrayList<>();

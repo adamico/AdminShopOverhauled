@@ -1,30 +1,35 @@
 package com.ammonium.adminshop.client.gui;
 
+import com.ammonium.adminshop.AdminShop;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.ammonium.adminshop.AdminShop;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.NotNull;
 
 public class ChangeAccountButton extends Button {
     private final ResourceLocation GUI = new ResourceLocation(AdminShop.MODID, "textures/gui/shop_gui.png");
     private static final String name = "Change Account";
 
     public ChangeAccountButton(int x, int y, Button.OnPress listener) {
-        super(x, y, 50, 16, new TextComponent(name), listener);
+        super(Button.builder(Component.literal(name), listener)
+                .pos(x, y)
+                .size(50, 16));
     }
 
     @Override
-    public void renderButton(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+    public void render(@NotNull PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
         if(!visible) {
             return;
         }
+        int x = getX();
+        int y = getY();
 
         RenderSystem.setShaderTexture(0, GUI);
-        this.blit(matrix, x, y, 195, 113, 50, 16);
+        blit(matrix, x, y, 195, 113, 50, 16);
 
         drawSmallerCenteredString(matrix, Minecraft.getInstance().font, name, x+25,
                 y+10-Minecraft.getInstance().font.lineHeight/2, 0xFFFFFF);

@@ -1,11 +1,12 @@
 package com.ammonium.adminshop.client.gui;
 
+import com.ammonium.adminshop.AdminShop;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.ammonium.adminshop.AdminShop;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.NotNull;
 
 
 public class ScrollButton extends Button {
@@ -14,11 +15,14 @@ public class ScrollButton extends Button {
     private boolean isUp;
 
     public ScrollButton(int x, int y, boolean isUp, OnPress listener){
-        super(x, y, 16, 16, new TextComponent(""), listener);
+        super(Button.builder(Component.literal(" "), listener)
+                .pos(x, y)
+                .size(16, 16));
+//        super(x, y, 16, 16, new TextComponent(""), listener);
     }
 
     @Override
-    public void renderButton(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+    public void render(@NotNull PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
         //super.renderButton(matrix, mouseX, mouseY, partialTicks);
         if(!visible) {
             return;

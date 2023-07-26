@@ -11,7 +11,7 @@ import net.minecraftforge.registries.RegistryObject;
 
 public class ModMenuTypes {
     public static final DeferredRegister<MenuType<?>> MENUS =
-            DeferredRegister.create(ForgeRegistries.CONTAINERS, AdminShop.MODID);
+            DeferredRegister.create(ForgeRegistries.MENU_TYPES, AdminShop.MODID);
 
     public static final RegistryObject<MenuType<ShopContainer>> SHOP_MENU = MENUS.register("shop_menu",
             () -> IForgeMenuType.create(((windowId, inv, data) -> new ShopContainer(windowId, inv, inv.player))));

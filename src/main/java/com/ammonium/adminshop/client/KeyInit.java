@@ -2,7 +2,6 @@ package com.ammonium.adminshop.client;
 
 import com.ammonium.adminshop.AdminShop;
 import net.minecraft.client.KeyMapping;
-import net.minecraftforge.client.ClientRegistry;
 
 public final class KeyInit {
     private KeyInit(){}
@@ -18,7 +17,7 @@ public final class KeyInit {
 
     private static KeyMapping registerKey(String name, String category, int keycode){
         final KeyMapping key = new KeyMapping("key."+ AdminShop.MODID+"."+name, keycode, category);
-        ClientRegistry.registerKeyBinding(key);
+//        ClientRegistry.registerKeyBinding(key);
         return key;
     }
 }

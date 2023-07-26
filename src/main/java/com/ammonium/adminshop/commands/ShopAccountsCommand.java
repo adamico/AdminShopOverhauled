@@ -1,20 +1,20 @@
 package com.ammonium.adminshop.commands;
 
-import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.arguments.IntegerArgumentType;
-import com.mojang.brigadier.arguments.StringArgumentType;
-import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import com.mojang.brigadier.builder.RequiredArgumentBuilder;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.ammonium.adminshop.AdminShop;
 import com.ammonium.adminshop.money.BankAccount;
 import com.ammonium.adminshop.money.MoneyManager;
 import com.ammonium.adminshop.network.MojangAPI;
 import com.ammonium.adminshop.network.PacketSyncMoneyToClient;
 import com.ammonium.adminshop.setup.Messages;
+import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.builder.RequiredArgumentBuilder;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 
@@ -114,7 +114,7 @@ public class ShopAccountsCommand {
     }
 
     private static int info(CommandSourceStack source) {
-        source.sendSuccess(new TextComponent("AdminShop, a mod originally by Vnator and forked by Ammonium_"),
+        source.sendSuccess(Component.literal("AdminShop, a mod originally by Vnator and forked by Ammonium_"),
                 true);
         return 1;
     }
@@ -127,7 +127,7 @@ public class ShopAccountsCommand {
 
         if (source.getLevel().isClientSide) {
             AdminShop.LOGGER.error("Can't access this from client side!");
-            source.sendFailure(new TextComponent("Can't access this from client side!"));
+            source.sendFailure(Component.literal("Can't access this from client side!"));
             return 0;
         }
 
@@ -169,7 +169,7 @@ public class ShopAccountsCommand {
             });
         }
 
-        source.sendSuccess(new TextComponent(returnMessage.toString()), true);
+        source.sendSuccess(Component.literal(returnMessage.toString()), true);
         return 1;
     }
 
@@ -190,7 +190,7 @@ public class ShopAccountsCommand {
         if(!valid) {
             AdminShop.LOGGER.error("Member list invalid. Member list:");
             AdminShop.LOGGER.error(members);
-            source.sendFailure(new TextComponent("Member list invalid, all members must be online!"));
+            source.sendFailure(Component.literal("Member list invalid, all members must be online!"));
             return 0;
         }
 
@@ -210,7 +210,7 @@ public class ShopAccountsCommand {
         });
         if (memberNames.size() != memberUUIDs.size()) {
             AdminShop.LOGGER.error("Couldn't find all members in online players");
-            source.sendFailure(new TextComponent("Couldn't find all members in onlinePlayers. Member list: "
+            source.sendFailure(Component.literal("Couldn't find all members in onlinePlayers. Member list: "
                     +members));
             return 0;
         }
@@ -227,7 +227,7 @@ public class ShopAccountsCommand {
 
         if (newId == -1) {
             AdminShop.LOGGER.error("Error creating new account!");
-            source.sendFailure(new TextComponent("Error creating new account!"));
+            source.sendFailure(Component.literal("Error creating new account!"));
             return 0;
         }
 
@@ -237,7 +237,7 @@ public class ShopAccountsCommand {
         // Sync client data with all members
         memberPlayers.forEach(member -> Messages.sendToPlayer(new PacketSyncMoneyToClient(
                 moneyManager.getSharedAccounts().get(member.getStringUUID())), member));
-        source.sendSuccess(new TextComponent("Created new account with ID "+newId), true);
+        source.sendSuccess(Component.literal("Created new account with ID "+newId), true);
         return 1;
     }
 
@@ -245,7 +245,7 @@ public class ShopAccountsCommand {
         // Check if trying to delete personal account
         if (id == 1) {
             AdminShop.LOGGER.error("Can't delete personal account!");
-            source.sendFailure(new TextComponent("Can't delete personal (id 1) account!"));
+            source.sendFailure(Component.literal("Can't delete personal (id 1) account!"));
             return 0;
         }
         // Get player and moneyManager
@@ -253,7 +253,7 @@ public class ShopAccountsCommand {
         MoneyManager moneyManager = MoneyManager.get(source.getLevel());
         // Check if player has account with said ID
         if (!moneyManager.existsBankAccount(player.getStringUUID(), id)) {
-            source.sendFailure(new TextComponent("There are no accounts you own with said ID!"));
+            source.sendFailure(Component.literal("There are no accounts you own with said ID!"));
             return 0;
         }
         // Get list of to-be-deleted account's memberUUIDs
@@ -262,7 +262,7 @@ public class ShopAccountsCommand {
         boolean success = moneyManager.deleteBankAccount(player.getStringUUID(), id);
         if(!success) {
             AdminShop.LOGGER.error("Error deleting bank account!");
-            source.sendFailure(new TextComponent("Error deleting bank account!"));
+            source.sendFailure(Component.literal("Error deleting bank account!"));
         }
 
         // Get list of online deleted account members
@@ -280,7 +280,7 @@ public class ShopAccountsCommand {
                 new PacketSyncMoneyToClient(moneyManager.getSharedAccounts().get(memberPlayer.getStringUUID())),
                 memberPlayer));
 
-        source.sendSuccess(new TextComponent("Successfully deleted account "+id), true);
+        source.sendSuccess(Component.literal("Successfully deleted account "+id), true);
         return 1;
     }
 
@@ -288,7 +288,7 @@ public class ShopAccountsCommand {
         // Check if trying to add member to personal account
         if (id == 1) {
             AdminShop.LOGGER.error("Can't add member to personal account.");
-            source.sendFailure(new TextComponent("Can't add member to personal account (id 1)! Make a shared " +
+            source.sendFailure(Component.literal("Can't add member to personal account (id 1)! Make a shared " +
                     "account with /shopAccounts createAccount [<members>]"));
             return 0;
         }
@@ -298,7 +298,7 @@ public class ShopAccountsCommand {
         // Check if bank account exists
         if (!moneyManager.existsBankAccount(player.getStringUUID(), id)) {
             AdminShop.LOGGER.error("Can't add member to bank account that doesn't exist.");
-            source.sendFailure(new TextComponent("That account ID doesn't exist! Use an existing " +
+            source.sendFailure(Component.literal("That account ID doesn't exist! Use an existing " +
                     "ID from /shopAccounts listAccounts"));
             return 0;
         }
@@ -308,21 +308,21 @@ public class ShopAccountsCommand {
                 .getString().equals(member)).findAny();
         if(searchPlayer.isEmpty()) {
             AdminShop.LOGGER.error("Couldn't find member in onlinePlayers.");
-            source.sendFailure(new TextComponent("Couldn't find member "+member+"! Member must be online"));
+            source.sendFailure(Component.literal("Couldn't find member "+member+"! Member must be online"));
             return 0;
         }
         String memberUUID = searchPlayer.get().getStringUUID();
         // Check if bank account already has member
         if (moneyManager.getBankAccount(player.getStringUUID(), id).getMembers().contains(memberUUID)) {
             AdminShop.LOGGER.error("BankAccount already has member.");
-            source.sendFailure(new TextComponent("Account already has member "+member));
+            source.sendFailure(Component.literal("Account already has member "+member));
             return 0;
         }
         // Add member, return if failed
         boolean success = moneyManager.addMember(player.getStringUUID(), id, memberUUID);
         if (!success) {
             AdminShop.LOGGER.error("Error adding member to bank account.");
-            source.sendFailure(new TextComponent("Error adding member to bank account."));
+            source.sendFailure(Component.literal("Error adding member to bank account."));
             return 0;
         }
         // Get list of online members
@@ -339,14 +339,14 @@ public class ShopAccountsCommand {
                 new PacketSyncMoneyToClient(moneyManager.getSharedAccounts().get(memberPlayer.getStringUUID())),
                 memberPlayer));
 
-        source.sendSuccess(new TextComponent("Successfully added "+member+" to account."), true);
+        source.sendSuccess(Component.literal("Successfully added "+member+" to account."), true);
         return 1;
     }
     private static int removeMember(CommandSourceStack source, int id, String member) throws CommandSyntaxException {
         // Check if trying to add member to personal account
         if (id == 1) {
             AdminShop.LOGGER.error("Can't remove member from personal account.");
-            source.sendFailure(new TextComponent("Can't add remove member from personal account (id 1)!"));
+            source.sendFailure(Component.literal("Can't add remove member from personal account (id 1)!"));
             return 0;
         }
         // Get player and moneyManager
@@ -355,7 +355,7 @@ public class ShopAccountsCommand {
         // Check if bank account exists
         if (!moneyManager.existsBankAccount(player.getStringUUID(), id)) {
             AdminShop.LOGGER.error("Can't remove member from bank account that doesn't exist.");
-            source.sendFailure(new TextComponent("That account ID doesn't exist! Use an existing " +
+            source.sendFailure(Component.literal("That account ID doesn't exist! Use an existing " +
                     "ID from /shopAccounts listAccounts"));
             return 0;
         }
@@ -365,27 +365,27 @@ public class ShopAccountsCommand {
                 .getString().equals(member)).findAny();
         if(searchPlayer.isEmpty()) {
             AdminShop.LOGGER.error("Couldn't find member in onlinePlayers.");
-            source.sendFailure(new TextComponent("Couldn't find member "+member+"! Member must be online"));
+            source.sendFailure(Component.literal("Couldn't find member "+member+"! Member must be online"));
             return 0;
         }
         String memberUUID = searchPlayer.get().getStringUUID();
         // Check if bank account doesn't have member
         if (!moneyManager.getBankAccount(player.getStringUUID(), id).getMembers().contains(memberUUID)) {
             AdminShop.LOGGER.error("BankAccount doesn't have member.");
-            source.sendFailure(new TextComponent("Account doesn't have member "+member));
+            source.sendFailure(Component.literal("Account doesn't have member "+member));
             return 0;
         }
         /// Check if trying to remove owner (self)
         if (player.getStringUUID().equals(memberUUID)) {
             AdminShop.LOGGER.error("Account owner cant remove itself from own account");
-            source.sendFailure(new TextComponent("You can't remove yourself from an account you own."));
+            source.sendFailure(Component.literal("You can't remove yourself from an account you own."));
             return 0;
         }
         // Remove member, return if failed
         boolean success = moneyManager.removeMember(player.getStringUUID(), id, memberUUID);
         if (!success) {
             AdminShop.LOGGER.error("Error removing member from bank account.");
-            source.sendFailure(new TextComponent("Error removing member from bank account."));
+            source.sendFailure(Component.literal("Error removing member from bank account."));
             return 0;
         }
         // Remove accounts from removed member's shared accounts
@@ -407,7 +407,7 @@ public class ShopAccountsCommand {
                 new PacketSyncMoneyToClient(moneyManager.getSharedAccounts().get(memberPlayer.getStringUUID())),
                 memberPlayer));
 
-        source.sendSuccess(new TextComponent("Successfully removed "+member+" from account."), true);
+        source.sendSuccess(Component.literal("Successfully removed "+member+" from account."), true);
         return 1;
     }
 
@@ -424,7 +424,7 @@ public class ShopAccountsCommand {
                 .getString().equals(fromName)).findAny();
         if(searchPlayer.isEmpty()) {
             AdminShop.LOGGER.error("Couldn't find player "+fromName+"! Both account owners must be online");
-            source.sendFailure(new TextComponent("Couldn't find player "+fromName+"! Both account owners must be online"));
+            source.sendFailure(Component.literal("Couldn't find player "+fromName+"! Both account owners must be online"));
             return 0;
         }
         fromUUID = searchPlayer.get().getStringUUID();
@@ -432,7 +432,7 @@ public class ShopAccountsCommand {
                 .getString().equals(toName)).findAny();
         if(searchPlayer.isEmpty()) {
             AdminShop.LOGGER.error("Couldn't find player "+toName+"! Both account owners must be online");
-            source.sendFailure(new TextComponent("Couldn't find player "+toName+"! Both account owners must be online"));
+            source.sendFailure(Component.literal("Couldn't find player "+toName+"! Both account owners must be online"));
             return 0;
         }
         toUUID = searchPlayer.get().getStringUUID();
@@ -441,36 +441,36 @@ public class ShopAccountsCommand {
         // Check if both accounts exist
         if (!moneyManager.existsBankAccount(fromUUID, fromId)) {
             AdminShop.LOGGER.error("Source account doesn't exist.");
-            source.sendFailure(new TextComponent("Source account doesn't exist! Use an existing " +
+            source.sendFailure(Component.literal("Source account doesn't exist! Use an existing " +
                     "ID from /shopAccounts listAccounts"));
             return 0;
         }
         if (!moneyManager.existsBankAccount(toUUID, toId)) {
             AdminShop.LOGGER.error("Destination account doesn't exist.");
-            source.sendFailure(new TextComponent("Destination account doesn't exist! Use an existing " +
+            source.sendFailure(Component.literal("Destination account doesn't exist! Use an existing " +
                     "ID from /shopAccounts listAccounts"));
             return 0;
         }
         // Check if source account has enough balance
         if (moneyManager.getBalance(fromUUID, fromId) < amount) {
             AdminShop.LOGGER.error("Source account doesn't have enough funds");
-            source.sendFailure(new TextComponent("Source account doesn't have enough funds"));
+            source.sendFailure(Component.literal("Source account doesn't have enough funds"));
             return 0;
         }
         // Perform transfer
         boolean subtractSuccess = moneyManager.subtractBalance(fromUUID, fromId, amount);
         if (!subtractSuccess) {
             AdminShop.LOGGER.error("Error subtracting from source account");
-            source.sendFailure(new TextComponent("Error subtracting from source account"));
+            source.sendFailure(Component.literal("Error subtracting from source account"));
             return 0;
         }
         boolean addSuccess = moneyManager.addBalance(toUUID, toId, amount);
         if (!addSuccess) {
             AdminShop.LOGGER.error("Error adding to destination account");
-            source.sendFailure(new TextComponent("Error adding to destination account"));
+            source.sendFailure(Component.literal("Error adding to destination account"));
         }
         AdminShop.LOGGER.info("Transfer successful");
-        source.sendSuccess(new TextComponent("Transfer successful!"), true);
+        source.sendSuccess(Component.literal("Transfer successful!"), true);
         return 1;
     }
     private static String getUsernameByUUID(ServerLevel level, String uuid) {

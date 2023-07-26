@@ -2,9 +2,9 @@
 	"credit": "Made with Blockbench",
 	"parent": "block/cube_all",
 	"textures": {
-		"1": "adminshop:blocks/machines_generic",
-		"1_1_0": "adminshop:blocks/ender",
-		"particle": "adminshop:blocks/ender"
+		"1": "adminshop:block/machines_generic",
+		"1_1_0": "adminshop:block/ender",
+		"particle": "adminshop:block/ender"
 	},
 	"elements": [
 		{

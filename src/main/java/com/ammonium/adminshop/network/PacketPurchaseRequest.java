@@ -1,6 +1,5 @@
 package com.ammonium.adminshop.network;
 
-import org.apache.commons.lang3.tuple.Pair;
 import com.ammonium.adminshop.AdminShop;
 import com.ammonium.adminshop.money.BankAccount;
 import com.ammonium.adminshop.money.MoneyManager;
@@ -9,7 +8,7 @@ import com.ammonium.adminshop.shop.Shop;
 import com.ammonium.adminshop.shop.ShopItem;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
@@ -18,6 +17,7 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.wrapper.PlayerMainInvWrapper;
 import net.minecraftforge.network.NetworkEvent;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
 import java.util.UUID;
@@ -93,8 +93,8 @@ public class PacketPurchaseRequest {
             BankAccount bankAccount = moneyManager.getBankAccount(this.accOwner, this.accID);
             if (!bankAccount.hasPermit(item.getPermitTier())) {
                 AdminShop.LOGGER.error("Account "+accOwner+":"+accID+" does not have permit tier "+item.getPermitTier());
-                player.sendMessage(new TextComponent( MojangAPI.getUsernameByUUID(accOwner)+":"+accID+" does not " +
-                                "have permit tier "+item.getPermitTier()), player.getUUID());
+                player.sendSystemMessage(Component.literal( MojangAPI.getUsernameByUUID(accOwner)+":"+accID+" does not " +
+                                "have permit tier "+item.getPermitTier()));
                 return;
             }
 
@@ -137,7 +137,7 @@ public class PacketPurchaseRequest {
                 toInsert.setCount(quantity);
                 ItemStack returned = ItemHandlerHelper.insertItemStacked(iItemHandler, toInsert, true);
                 if(returned.getCount() == quantity) {
-                    player.sendMessage(new TextComponent("Not enough inventory space for item!"), player.getUUID());
+                    player.sendSystemMessage(Component.literal("Not enough inventory space for item!"));
                 }
                 long itemCost = item.getPrice();
                 long price = (long) ceil((quantity - returned.getCount()) * itemCost);
@@ -147,7 +147,7 @@ public class PacketPurchaseRequest {
                 if (success) {
                     ItemHandlerHelper.insertItemStacked(iItemHandler, toInsert, false);
                 } else {
-                    player.sendMessage(new TextComponent("Not enough money in account!"), player.getUUID());
+                    player.sendSystemMessage(Component.literal("Not enough money in account!"));
                     AdminShop.LOGGER.error("Not enough money in account to perform transaction.");
                 }
             }
@@ -167,7 +167,7 @@ public class PacketPurchaseRequest {
             long itemCost = item.getPrice();
             long price = (long) numSold * itemCost;
             if (numSold == 0) {
-                player.sendMessage(new TextComponent("No matching item found."), player.getUUID());
+                player.sendSystemMessage(Component.literal("No matching item found."));
                 AdminShop.LOGGER.error("No matching item found.");
                 return;
             }

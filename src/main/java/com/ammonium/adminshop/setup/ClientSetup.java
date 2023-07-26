@@ -1,12 +1,9 @@
 package com.ammonium.adminshop.setup;
 
 import com.ammonium.adminshop.AdminShop;
-import com.ammonium.adminshop.blocks.ModBlocks;
 import com.ammonium.adminshop.client.KeyInit;
 import com.ammonium.adminshop.screen.*;
 import net.minecraft.client.gui.screens.MenuScreens;
-import net.minecraft.client.renderer.ItemBlockRenderTypes;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraftforge.api.distmarker.Dist;
@@ -30,7 +27,7 @@ public class ClientSetup {
             MenuScreens.<Buyer3Menu, Buyer3Screen>register(ModMenuTypes.BUYER_3_MENU.get(), (Buyer3Menu menu,
             Inventory playerInventory, Component title) -> new Buyer3Screen(menu, playerInventory, title,
                     menu.getBlockEntity().getBlockPos()));
-            ItemBlockRenderTypes.setRenderLayer(ModBlocks.SHOP.get(), RenderType.translucent());
+//            ItemBlockRenderTypes.setRenderLayer(ModBlocks.SHOP.get(), RenderType.translucent());
             KeyInit.init();
         });
     }

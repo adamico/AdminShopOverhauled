@@ -1,7 +1,6 @@
 package com.ammonium.adminshop.item;
 
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -16,7 +15,7 @@ public class LoreBlockItem extends BlockItem {
 
     public LoreBlockItem(Block block, Properties properties, String loreText) {
         super(block, properties);
-        this.loreText = new TextComponent(loreText);
+        this.loreText = Component.literal(loreText);
     }
 
     @Override

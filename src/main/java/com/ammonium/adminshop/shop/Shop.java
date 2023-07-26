@@ -1,12 +1,11 @@
 package com.ammonium.adminshop.shop;
 
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.ammonium.adminshop.AdminShop;
-import net.minecraft.Util;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.commands.CommandSource;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.TagParser;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 
 import java.io.*;
@@ -126,8 +125,8 @@ public class Shop {
     public void printErrors(CommandSource initiator){
         if(initiator != null){
             if(errors.size() == 0)
-                initiator.sendMessage(new TextComponent("Shop reloaded, syntax is correct!"), Util.NIL_UUID);
-            errors.forEach(e -> initiator.sendMessage(new TextComponent(e), Util.NIL_UUID));
+                initiator.sendSystemMessage(Component.literal("Shop reloaded, syntax is correct!"));
+            errors.forEach(e -> initiator.sendSystemMessage(Component.literal(e)));
             errors.clear();
         }
     }

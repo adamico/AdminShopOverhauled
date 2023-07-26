@@ -5,7 +5,7 @@ import com.ammonium.adminshop.money.BankAccount;
 import com.ammonium.adminshop.money.MoneyManager;
 import com.ammonium.adminshop.setup.Messages;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -87,9 +87,8 @@ public class PacketAccountAddPermit {
                             .getPlayerByUUID(UUID.fromString(memberUUID));
                     if (serverPlayer != null) {
                         serverPlayer.playNotifySound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.0f, 1.0f);
-                        serverPlayer.sendMessage(new TextComponent("Adding permit tier "+permit+" to account "+
-                                        MojangAPI.getUsernameByUUID(accOwner)+":"+accID),
-                                serverPlayer.getUUID());
+                        serverPlayer.sendSystemMessage(Component.literal("Adding permit tier " + permit + " to account " +
+                                        MojangAPI.getUsernameByUUID(accOwner) + ":" + accID));
                         Messages.sendToPlayer(new PacketSyncMoneyToClient(usableAccounts), serverPlayer);
                     }
                 });

@@ -17,5 +17,6 @@
   "itemGroup.adminshop": "Admin Shop",
   "screen.adminshop.seller": "Seller",
   "screen.adminshop.buyer": "Buyer",
+  "item_group.adminshop.creativetab": "AdminShop",
   "item.adminshop.permit": "Trade Permit"
 }
