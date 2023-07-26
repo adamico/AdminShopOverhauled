@@ -34,7 +34,7 @@ public class ShopButton extends Button {
     }
 
     @Override
-    public void render(@NotNull PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+    public void renderWidget(@NotNull PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
         //super.renderButton(matrix, x, y, partialTicks);
         if(!visible)
             return;
@@ -49,9 +49,7 @@ public class ShopButton extends Button {
         }
 
         //Highlight background and write item name if hovered or focused
-        // TODO why is this only triggered upon click
         if(isHoveredOrFocused()){
-            System.out.println("Is hovered or focused");
             isMouseOn = true;
             fill(matrix, x, y, x+width, y+height, 0xFFFFFFDF);
         }else{
