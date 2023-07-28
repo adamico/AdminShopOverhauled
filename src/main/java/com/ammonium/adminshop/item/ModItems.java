@@ -1,6 +1,7 @@
 package com.ammonium.adminshop.item;
 
 import com.ammonium.adminshop.AdminShop;
+import com.ammonium.adminshop.setup.ModSetup;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
@@ -12,7 +13,7 @@ public class ModItems {
             DeferredRegister.create(ForgeRegistries.ITEMS, AdminShop.MODID);
 
     public static final RegistryObject<Item> PERMIT = ITEMS.register("permit",
-            () -> new LoreItem(new Item.Properties(), "Shift-click inside a shop to unlock new trades"));
+            () -> new LoreItem(new Item.Properties().tab(ModSetup.ITEM_GROUP), "Shift-click inside a shop to unlock new trades"));
 
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);

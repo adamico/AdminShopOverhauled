@@ -15,10 +15,6 @@ public class ShopContainer extends AbstractContainerMenu {
     private final Player playerEntity;
     private final IItemHandler playerInventory;
 
-//    public ShopContainer(int windowId, Inventory inv, FriendlyByteBuf extraData) {
-//        this(windowId, inv, inv.player);
-//    }
-
     public ShopContainer(int windowId, Inventory playerInventory, Player player){
         super(ModMenuTypes.SHOP_MENU.get(), windowId);
         this.playerEntity = player;

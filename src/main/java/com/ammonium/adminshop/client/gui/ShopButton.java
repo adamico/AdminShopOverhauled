@@ -26,26 +26,21 @@ public class ShopButton extends Button {
     public boolean isMouseOn = false;
 
     public ShopButton(ShopItem item, int x, int y, ItemRenderer renderer, OnPress listener) {
-        super(Button.builder(Component.literal(" "), listener)
-                .pos(x, y)
-                .size(16, 16));
+        super(x, y, 16, 16, Component.literal(" "), listener);
         this.itemRenderer = renderer;
         this.item = item;
     }
 
     @Override
-    public void renderWidget(@NotNull PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+    public void renderButton(@NotNull PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
         //super.renderButton(matrix, x, y, partialTicks);
         if(!visible)
             return;
-
-        int x = getX();
-        int y = getY();
         matrix.pushPose();
 
         //Draw item
         if(item.isItem()) {
-            itemRenderer.renderGuiItem(matrix, item.getItem(), x, y);
+            itemRenderer.renderGuiItem(item.getItem(), x, y);
         }
 
         //Highlight background and write item name if hovered or focused

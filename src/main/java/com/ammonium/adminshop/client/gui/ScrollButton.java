@@ -15,10 +15,7 @@ public class ScrollButton extends Button {
     private boolean isUp;
 
     public ScrollButton(int x, int y, boolean isUp, OnPress listener){
-        super(Button.builder(Component.literal(" "), listener)
-                .pos(x, y)
-                .size(16, 16));
-//        super(x, y, 16, 16, new TextComponent(""), listener);
+        super(x, y, 16, 16, Component.literal(""), listener);
     }
 
     @Override

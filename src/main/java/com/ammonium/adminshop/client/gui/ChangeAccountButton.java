@@ -15,9 +15,7 @@ public class ChangeAccountButton extends Button {
     private static final String name = "Change Account";
 
     public ChangeAccountButton(int x, int y, Button.OnPress listener) {
-        super(Button.builder(Component.literal(name), listener)
-                .pos(x, y)
-                .size(50, 16));
+        super(x, y, 50, 16, Component.literal(name), listener);
     }
 
     @Override
@@ -25,8 +23,6 @@ public class ChangeAccountButton extends Button {
         if(!visible) {
             return;
         }
-        int x = getX();
-        int y = getY();
 
         RenderSystem.setShaderTexture(0, GUI);
         blit(matrix, x, y, 195, 113, 50, 16);

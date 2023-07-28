@@ -7,7 +7,6 @@ import com.ammonium.adminshop.item.ModItems;
 import com.ammonium.adminshop.screen.ModMenuTypes;
 import com.ammonium.adminshop.setup.ClientSetup;
 import com.ammonium.adminshop.setup.Config;
-import com.ammonium.adminshop.setup.ModCreativeTabs;
 import com.ammonium.adminshop.setup.ModSetup;
 import com.ammonium.adminshop.shop.Shop;
 import com.mojang.logging.LogUtils;
@@ -37,7 +36,6 @@ public class AdminShop {
         eventBus.addListener(ModSetup::init);
         DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> eventBus.addListener(ClientSetup::init));
         MinecraftForge.EVENT_BUS.register(ServerEventListeners.class);
-        eventBus.addListener(ModCreativeTabs::buildContents);
 
         ModItems.register(eventBus);
         ModBlocks.register(eventBus);

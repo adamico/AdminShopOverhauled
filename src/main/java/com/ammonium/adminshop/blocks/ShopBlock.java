@@ -63,11 +63,6 @@ public class ShopBlock extends CustomDirectionalBlock implements EntityBlock {
         return RENDER_SHAPE;
     }
 
-//    @Override
-//    public VoxelShape getOcclusionShape(BlockState state, BlockGetter reader, BlockPos pos) {
-//        return RENDER_SHAPE;
-//    }
-
     @Nullable
     @Override
     public BlockEntity newBlockEntity(BlockPos blockPos, BlockState blockState) {

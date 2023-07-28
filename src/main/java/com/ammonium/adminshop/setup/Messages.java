@@ -28,37 +28,37 @@ public class Messages {
         net.messageBuilder(PacketSyncMoneyToClient.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(PacketSyncMoneyToClient::new)
                 .encoder(PacketSyncMoneyToClient::toBytes)
-                .consumer(PacketSyncMoneyToClient::handle)
+                .consumerMainThread(PacketSyncMoneyToClient::handle)
                 .add();
         net.messageBuilder(PacketPurchaseRequest.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(PacketPurchaseRequest::new)
                 .encoder(PacketPurchaseRequest::toBytes)
-                .consumer(PacketPurchaseRequest::handle)
+                .consumerMainThread(PacketPurchaseRequest::handle)
                 .add();
         net.messageBuilder(PacketSyncShopToClient.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(PacketSyncShopToClient::new)
                 .encoder(PacketSyncShopToClient::toBytes)
-                .consumer(PacketSyncShopToClient::handle)
+                .consumerMainThread(PacketSyncShopToClient::handle)
                 .add();
         net.messageBuilder(PacketMachineAccountChange.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(PacketMachineAccountChange::new)
                 .encoder(PacketMachineAccountChange::toBytes)
-                .consumer(PacketMachineAccountChange::handle)
+                .consumerMainThread(PacketMachineAccountChange::handle)
                 .add();
         net.messageBuilder(PacketSetBuyerTarget.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(PacketSetBuyerTarget::new)
                 .encoder(PacketSetBuyerTarget::toBytes)
-                .consumer(PacketSetBuyerTarget::handle)
+                .consumerMainThread(PacketSetBuyerTarget::handle)
                 .add();
         net.messageBuilder(PacketAccountAddPermit.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(PacketAccountAddPermit::new)
                 .encoder(PacketAccountAddPermit::toBytes)
-                .consumer(PacketAccountAddPermit::handle)
+                .consumerMainThread(PacketAccountAddPermit::handle)
                 .add();
         net.messageBuilder(PacketUpdateRequest.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(PacketUpdateRequest::new)
                 .encoder(PacketUpdateRequest::toBytes)
-                .consumer(PacketUpdateRequest::handle)
+                .consumerMainThread(PacketUpdateRequest::handle)
                 .add();
     }
 
