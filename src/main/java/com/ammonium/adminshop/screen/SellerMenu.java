@@ -70,7 +70,7 @@ public class SellerMenu extends AbstractContainerMenu {
     @Override
     protected boolean moveItemStackTo(ItemStack pStack, int pStartIndex, int pEndIndex, boolean pReverseDirection) {
         if (pStartIndex >= TE_INVENTORY_FIRST_SLOT_INDEX && pEndIndex < TE_INVENTORY_FIRST_SLOT_INDEX
-                + TE_INVENTORY_SLOT_COUNT && !Shop.get().getShopSellMap().containsKey(pStack.getItem())) {
+                + TE_INVENTORY_SLOT_COUNT && !Shop.get().getShopSellItemMap().containsKey(pStack.getItem())) {
             AdminShop.LOGGER.error("Cannot move item stack here");
             System.out.println("Cannot move item stack here");
             return false;
@@ -89,7 +89,7 @@ public class SellerMenu extends AbstractContainerMenu {
         if (index < VANILLA_FIRST_SLOT_INDEX + VANILLA_SLOT_COUNT) {
             // This is a vanilla container slot so merge the stack into the tile inventory
             // Fail if is not a valid sellable item
-            if (!Shop.get().getShopSellMap().containsKey(sourceStack.getItem()) ||
+            if (!Shop.get().getShopSellItemMap().containsKey(sourceStack.getItem()) ||
                     !moveItemStackTo(sourceStack, TE_INVENTORY_FIRST_SLOT_INDEX, TE_INVENTORY_FIRST_SLOT_INDEX
                     + TE_INVENTORY_SLOT_COUNT, false)) {
                 return ItemStack.EMPTY;  // EMPTY_ITEM

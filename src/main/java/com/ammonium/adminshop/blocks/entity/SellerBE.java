@@ -57,7 +57,7 @@ public class SellerBE extends BlockEntity implements AutoShopMachine {
 
         @Override
         public boolean isItemValid(int slot, @NotNull ItemStack stack) {
-            boolean result = Shop.get().getShopSellMap().containsKey(stack.getItem());
+            boolean result = Shop.get().getShopSellItemMap().containsKey(stack.getItem());
             if (!result) {
                 return false;
             }
@@ -129,12 +129,12 @@ public class SellerBE extends BlockEntity implements AutoShopMachine {
         ItemStackHandler itemHandler = sellerEntity.getItemHandler();
         Item item = itemHandler.getStackInSlot(0).getItem();
         int count = itemHandler.getStackInSlot(0).getCount();
-        if (!Shop.get().getShopSellMap().containsKey(item)) {
+        if (!Shop.get().getShopSellItemMap().containsKey(item)) {
             AdminShop.LOGGER.error("Item is not in shop sell map: "+ForgeRegistries.ITEMS.getKey(item));
             return;
         }
         itemHandler.extractItem(0, count, false);
-        ShopItem shopItem = Shop.get().getShopSellMap().get(item);
+        ShopItem shopItem = Shop.get().getShopSellItemMap().get(item);
         long itemCost = shopItem.getPrice();
         long price = (long) count * itemCost;
         if (count == 0) {

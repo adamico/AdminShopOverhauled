@@ -17,6 +17,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Containers;
@@ -49,7 +50,7 @@ import static java.lang.Math.ceil;
 public class Buyer2BE extends BlockEntity implements BuyerMachine {
     private String ownerUUID;
     private Pair<String, Integer> account;
-    private int shopBuyIndex = -1; // -1 = Not Set
+    private ResourceLocation shopTarget = null;
     private int tickCounter = 0;
 
     private final int buySize = 16;
@@ -87,11 +88,14 @@ public class Buyer2BE extends BlockEntity implements BuyerMachine {
     public Pair<String, Integer> getAccount() {
         return account;
     }
-    public void setShopBuyIndex(int shopBuyIndex) {
-        this.shopBuyIndex = shopBuyIndex;
+
+    @Override
+    public void setShopTarget(ResourceLocation shopTarget) {
+        this.shopTarget = shopTarget;
     }
-    public int getShopBuyIndex() {
-        return shopBuyIndex;
+
+    public ResourceLocation getShopTarget() {
+        return shopTarget;
     }
 
     @Override
@@ -117,9 +121,7 @@ public class Buyer2BE extends BlockEntity implements BuyerMachine {
                 pBlockEntity.tickCounter = 0;
                 // Send buy item transaction (send pos and buySize)
                 assert pLevel instanceof ServerLevel;
-                if (pBlockEntity.shopBuyIndex != -1 && pBlockEntity.shopBuyIndex < Shop.get().getShopStockBuy().size()) {
-                    buyerTransaction(pPos, (ServerLevel) pLevel, pBlockEntity, pBlockEntity.buySize);
-                }
+                buyerTransaction(pPos, (ServerLevel) pLevel, pBlockEntity, pBlockEntity.buySize);
             }
         }
     }
@@ -129,12 +131,11 @@ public class Buyer2BE extends BlockEntity implements BuyerMachine {
         // item logic
         // Attempt to insert the items, and only perform transaction on what can fit
         MoneyManager moneyManager = MoneyManager.get(level);
-        // Check shopBuyIndex
-        if (buyerEntity.shopBuyIndex == -1 || buyerEntity.shopBuyIndex >= Shop.get().getShopStockBuy().size()) {
-            AdminShop.LOGGER.error("Buyer shopBuyIndex is unset");
+        // Check shopTarget
+        if (buyerEntity.shopTarget == null || !Shop.get().hasBuyShopItem(buyerEntity.shopTarget)) {
             return;
         }
-        ShopItem shopItem = Shop.get().getShopStockBuy().get(buyerEntity.shopBuyIndex);
+        ShopItem shopItem = Shop.get().getBuyShopItem(buyerEntity.shopTarget);
         if (shopItem == null) {
             AdminShop.LOGGER.error("Buyer shopItem is null!");
             return;
@@ -235,8 +236,8 @@ public class Buyer2BE extends BlockEntity implements BuyerMachine {
             tag.putString("accountUUID", this.account.getKey());
             tag.putInt("accountID", this.account.getValue());
         }
-        if (this.shopBuyIndex != -1) {
-            tag.putInt("shopBuyIndex", this.shopBuyIndex);
+        if (this.shopTarget != null) {
+            tag.putString("shopTarget", this.shopTarget.toString());
         }
         return tag;
     }
@@ -269,8 +270,8 @@ public class Buyer2BE extends BlockEntity implements BuyerMachine {
             int accountID = tag.getInt("accountID");
             this.account = Pair.of(accountUUID, accountID);
         }
-        if (tag.contains("shopBuyIndex")) {
-            this.shopBuyIndex = tag.getInt("shopBuyIndex");
+        if (tag.contains("shopTarget")) {
+            this.shopTarget = new ResourceLocation(tag.getString("shopTarget"));
         }
     }
 
@@ -285,8 +286,8 @@ public class Buyer2BE extends BlockEntity implements BuyerMachine {
             tag.putString("accountUUID", this.account.getKey());
             tag.putInt("accountID", this.account.getValue());
         }
-        if (this.shopBuyIndex != -1) {
-            tag.putInt("shopBuyIndex", this.shopBuyIndex);
+        if (this.shopTarget != null) {
+            tag.putString("shopTarget", this.shopTarget.toString());
         }
     }
 
@@ -302,8 +303,8 @@ public class Buyer2BE extends BlockEntity implements BuyerMachine {
             int accountID = tag.getInt("accountID");
             this.account = Pair.of(accountUUID, accountID);
         }
-        if (tag.contains("shopBuyIndex")) {
-            this.shopBuyIndex = tag.getInt("shopBuyIndex");
+        if (tag.contains("shopTarget")) {
+            this.shopTarget = new ResourceLocation(tag.getString("shopTarget"));
         }
     }
 

@@ -15,7 +15,7 @@ public class ModShopInputSlot extends SlotItemHandler {
 
     @Override
     public boolean mayPlace(ItemStack stack) {
-        boolean result = Shop.get().getShopSellMap().containsKey(stack.getItem());
+        boolean result = Shop.get().getShopSellItemMap().containsKey(stack.getItem());
         if (!result) {
             AdminShop.LOGGER.error("Cannot place item into seller: "+ForgeRegistries.ITEMS.getKey(stack.getItem()));
         }

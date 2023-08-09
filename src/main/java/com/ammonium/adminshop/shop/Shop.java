@@ -6,7 +6,9 @@ import net.minecraft.commands.CommandSource;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -34,9 +36,11 @@ public class Shop {
     public String shopTextRaw;
 
     private final List<ShopItem> shopStockBuy;
-    private final Map<Item, ShopItem> shopBuyMap;
+    private final Map<Item, ShopItem> shopBuyItemMap;
+    private final Map<ResourceLocation, ShopItem> shopBuyResourceLocationMap;
     private final List<ShopItem> shopStockSell;
-    private final Map<Item, ShopItem> shopSellMap;
+    private final Map<Item, ShopItem> shopSellItemMap;
+    private final Map<ResourceLocation, ShopItem> shopSellResourceLocationMap;
     public List<String> errors;
 
     public static Shop get(){
@@ -48,8 +52,10 @@ public class Shop {
     public Shop(){
         shopStockBuy = new ArrayList<>();
         shopStockSell = new ArrayList<>();
-        shopBuyMap = new HashMap<>();
-        shopSellMap = new HashMap<>();
+        shopBuyItemMap = new HashMap<>();
+        shopBuyResourceLocationMap = new HashMap<>();
+        shopSellItemMap = new HashMap<>();
+        shopSellResourceLocationMap = new HashMap<>();
         errors = new ArrayList<>();
 
         loadFromFile((CommandSource) null);
@@ -63,12 +69,32 @@ public class Shop {
         return shopStockSell;
     }
 
-    public Map<Item, ShopItem> getShopBuyMap() {
-        return shopBuyMap;
+    public Map<Item, ShopItem> getShopBuyItemMap() {
+        return shopBuyItemMap;
     }
 
-    public Map<Item, ShopItem> getShopSellMap() {
-        return shopSellMap;
+    public Map<ResourceLocation, ShopItem> getShopBuyResourceLocationMap() {
+        return shopBuyResourceLocationMap;
+    }
+    public boolean hasBuyShopItem(ResourceLocation resourceLocation) {
+        return shopBuyResourceLocationMap.containsKey(resourceLocation);
+    }
+    public ShopItem getBuyShopItem(ResourceLocation resourceLocation) {
+        return shopBuyResourceLocationMap.get(resourceLocation);
+    }
+
+    public Map<ResourceLocation, ShopItem> getShopSellResourceLocationMap() {
+        return shopSellResourceLocationMap;
+    }
+    public boolean hasSellShopItem(ResourceLocation resourceLocation) {
+        return shopSellResourceLocationMap.containsKey(resourceLocation);
+    }
+    public ShopItem getSellShopItem(ResourceLocation resourceLocation) {
+        return shopSellResourceLocationMap.get(resourceLocation);
+    }
+
+    public Map<Item, ShopItem> getShopSellItemMap() {
+        return shopSellItemMap;
     }
 
     public void loadFromFile(CommandSource initiator){
@@ -89,8 +115,10 @@ public class Shop {
         errors.clear();
         shopStockBuy.clear();
         shopStockSell.clear();
-        shopBuyMap.clear();
-        shopSellMap.clear();
+        shopBuyItemMap.clear();
+        shopBuyResourceLocationMap.clear();
+        shopSellItemMap.clear();
+        shopSellResourceLocationMap.clear();
 
         //Parse file
         List<List<String>> parsedCSV = CSVParser.parseCSV(csv);
@@ -109,8 +137,10 @@ public class Shop {
         errors.clear();
         shopStockBuy.clear();
         shopStockSell.clear();
-        shopBuyMap.clear();
-        shopSellMap.clear();
+        shopBuyItemMap.clear();
+        shopBuyResourceLocationMap.clear();
+        shopSellItemMap.clear();
+        shopSellResourceLocationMap.clear();
 
         //Parse file
         List<List<String>> parsedCSV = CSVParser.parseCSV(csv);
@@ -159,7 +189,6 @@ public class Shop {
                     "Value: "+line[0]);
             isError = true;
         }
-
             //Check if item or fluid is correctly specified
         if(!(line[1].equalsIgnoreCase("item") || line[1].equalsIgnoreCase("i")
                 || line[1].equals("fluid") || line[1].equalsIgnoreCase("f"))) {
@@ -167,7 +196,12 @@ public class Shop {
                     "Value: "+line[1]);
             isError = true;
         }
-
+            // Check if item is a valid ResourceLocation
+        ResourceLocation resourceLocation = new ResourceLocation(line[2]);
+        if (!ForgeRegistries.ITEMS.containsKey(resourceLocation)) {
+            errors.add("Line "+lineNumber+":\tItem \""+line[2]+"\"is not a recognized item");
+            isError = true;
+        }
             //Check if price is a number
         long price;
         try {
@@ -177,7 +211,6 @@ public class Shop {
             errors.add("Line "+lineNumber+":\tFourth column must be a whole number. Value:"+line[3]);
             isError = true;
         }
-
             // Check if permit tier is a non-negative integer
         int permitTier;
         try {
@@ -209,7 +242,6 @@ public class Shop {
         if(isError) {
             return;
         }
-
         boolean isItem = line[1].equals("item") || line[1].equals("i");
 
 //            //Separate nbt from item/fluid name
@@ -262,17 +294,17 @@ public class Shop {
 //            }
 //        }
 
-        ShopItem item = new ShopItem.Builder()
+        ShopItem shopItem = new ShopItem.Builder()
                 .setIsBuy(isBuy)
                 .setIsItem(isItem)
                 .setIsTag(isTag)
-                .setData(line[2])
+                .setResourceLocation(resourceLocation)
                 .setPrice(price)
                 .setPermitTier(permitTier)
                 .build();
 
             //Check if ShopItem was created correctly
-        if(!isTag && item.getItem() == null){
+        if(!isTag && shopItem.getItem() == null){
             errors.add("Line "+lineNumber+":\tShop Item could not be created. The item or fluid name does not map to" +
                     " an existing item or fluid.");
             isError = true;
@@ -286,9 +318,12 @@ public class Shop {
 //        }
 
         List<ShopItem> shopList = isBuy ? shopStockBuy : shopStockSell;
-        Map<Item, ShopItem> shopMap = isBuy ? shopBuyMap : shopSellMap;
-        shopList.add(item);
-        shopMap.put(item.getItem().getItem(), item);
+        Map<Item, ShopItem> shopItemMap = isBuy ? shopBuyItemMap : shopSellItemMap;
+        Map<ResourceLocation, ShopItem> shopResourceLocationMap = isBuy ? shopBuyResourceLocationMap :
+                shopSellResourceLocationMap;
+        shopList.add(shopItem);
+        shopItemMap.put(shopItem.getItem().getItem(), shopItem);
+        shopResourceLocationMap.put(resourceLocation, shopItem);
     }
 
     /**

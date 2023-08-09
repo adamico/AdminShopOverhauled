@@ -4,6 +4,7 @@ import com.ammonium.adminshop.AdminShop;
 import com.ammonium.adminshop.blocks.BuyerMachine;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -13,21 +14,21 @@ import java.util.function.Supplier;
 
 public class PacketSetBuyerTarget {
     private final BlockPos pos;
-    private final int buyIndex;
+    private final ResourceLocation resourceLocation;
 
-    public PacketSetBuyerTarget(BlockPos pos, int buyIndex) {
+    public PacketSetBuyerTarget(BlockPos pos, ResourceLocation resourceLocation) {
         this.pos = pos;
-        this.buyIndex = buyIndex;
+        this.resourceLocation = resourceLocation;
     }
 
     public PacketSetBuyerTarget(FriendlyByteBuf buf) {
         this.pos = buf.readBlockPos();
-        this.buyIndex = buf.readInt();
+        this.resourceLocation = buf.readResourceLocation();
     }
 
     public void toBytes(FriendlyByteBuf buf) {
         buf.writeBlockPos(this.pos);
-        buf.writeInt(this.buyIndex);
+        buf.writeResourceLocation(this.resourceLocation);
     }
 
     public boolean handle(Supplier<NetworkEvent.Context> supplier){
@@ -40,7 +41,7 @@ public class PacketSetBuyerTarget {
             ServerPlayer player = ctx.getSender();
 
             if (player != null) {
-                System.out.println("Setting buyer target for "+this.pos+" to "+this.buyIndex);
+                System.out.println("Setting buyer target for "+this.pos+" to "+this.resourceLocation.toString());
                 // Get IBuyerBE
                 Level level = player.level;
                 BlockEntity blockEntity = level.getBlockEntity(this.pos);
@@ -55,7 +56,7 @@ public class PacketSetBuyerTarget {
                 }
                 System.out.println("Saving machine account information.");
                 // Apply changes to buyerEntity
-                buyerEntity.setShopBuyIndex(this.buyIndex);
+                buyerEntity.setShopTarget(this.resourceLocation);
                 blockEntity.setChanged();
                 buyerEntity.sendUpdates();
             }

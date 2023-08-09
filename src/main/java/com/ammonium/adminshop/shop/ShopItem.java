@@ -8,6 +8,8 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.registries.ForgeRegistries;
 
+import java.util.Objects;
+
 /**
  * Holder class for something that is buyable or sellable in the shop.
  * Can be an Item or Fluid, or an item or fluid Tag.
@@ -41,11 +43,14 @@ public class ShopItem {
         return item;
     }
 
+    public ResourceLocation getResourceLocation() {
+        return resourceLocation;
+    }
+
     public long getPrice() {
         return price;
     }
     public TagKey<Item> getTagItem(){return itemTag;}
-//    public CompoundTag getNbt(){return nbt;}
 
     public int getPermitTier() {
         return permitTier;
@@ -104,15 +109,16 @@ public class ShopItem {
 //            }
 //            return this;
 //        }
-        public Builder setData(String data) {
-            ResourceLocation itemLocation = new ResourceLocation(data);
-            Item item = ForgeRegistries.ITEMS.getValue(itemLocation);
-            if (item == null || item.getDefaultInstance().isEmpty()) {
-                AdminShop.LOGGER.error("No item found with registry name: " + data);
-            } else {
-                instance.item = item.getDefaultInstance();
-            }
-            instance.resourceLocation = itemLocation;
+        public Builder setResourceLocation(ResourceLocation resourceLocation) {
+//            Item item = ForgeRegistries.ITEMS.getValue(resourceLocation);
+//            if (item == null || item.getDefaultInstance().isEmpty()) {
+//                AdminShop.LOGGER.error("No item found with registry name: " + resourceLocation.toString());
+//            } else {
+//                instance.item = item.getDefaultInstance();
+//            }
+            instance.item = Objects.requireNonNull(
+                    ForgeRegistries.ITEMS.getValue(resourceLocation)).getDefaultInstance();
+            instance.resourceLocation = resourceLocation;
             return this;
         }
 

@@ -27,6 +27,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
@@ -40,7 +41,7 @@ public class BuyerScreen extends AbstractContainerScreen<BuyerMenu> {
     private BuyerBE buyerEntity;
     private String ownerUUID;
     private Pair<String, Integer> account;
-    private int shopBuyIndex = -1;
+    private ResourceLocation shopTarget;
     private ChangeAccountButton changeAccountButton;
     private final List<Pair<String, Integer>> usableAccounts = new ArrayList<>();
     // -1 if bankAccount is not in usableAccounts
@@ -123,7 +124,7 @@ public class BuyerScreen extends AbstractContainerScreen<BuyerMenu> {
     private void updateInformation() {
         this.ownerUUID = this.buyerEntity.getOwnerUUID();
         this.account = this.buyerEntity.getAccount();
-        this.shopBuyIndex = this.buyerEntity.getShopBuyIndex();
+        this.shopTarget = this.buyerEntity.getShopTarget();
 
         this.usableAccounts.clear();
         ClientLocalData.getUsableAccounts().forEach(account -> this.usableAccounts.add(Pair.of(account.getOwner(),
@@ -151,14 +152,14 @@ public class BuyerScreen extends AbstractContainerScreen<BuyerMenu> {
                 Item item = itemStack.getItem();
 //                System.out.println("Clicked on item "+item.getRegistryName());
                 // Check if item is in buy map
-                if (Shop.get().getShopBuyMap().containsKey(item)) {
+                if (Shop.get().getShopBuyItemMap().containsKey(item)) {
 //                    System.out.println("Item is in buy map");
-                    ShopItem shopItem = Shop.get().getShopBuyMap().get(item);
+                    ShopItem shopItem = Shop.get().getShopBuyItemMap().get(item);
                     // Check if account has permit to buy item
                     if (getBankAccount().hasPermit(shopItem.getPermitTier())) {
-                        this.shopBuyIndex = Shop.get().getShopStockBuy().indexOf(shopItem);
-                        this.buyerEntity.setShopBuyIndex(this.shopBuyIndex);
-                        Messages.sendToServer(new PacketSetBuyerTarget(this.blockPos, this.shopBuyIndex));
+                        this.shopTarget = ForgeRegistries.ITEMS.getKey(item);
+                        this.buyerEntity.setShopTarget(this.shopTarget);
+                        Messages.sendToServer(new PacketSetBuyerTarget(this.blockPos, this.shopTarget));
                         return false;
                     } else {
                         LocalPlayer player = Minecraft.getInstance().player;
@@ -180,8 +181,8 @@ public class BuyerScreen extends AbstractContainerScreen<BuyerMenu> {
         int y = (height - imageHeight) / 2;
 
         this.blit(pPoseStack, x, y, 0, 0, imageWidth, imageHeight);
-        if (this.shopBuyIndex != -1 && this.shopBuyIndex < Shop.get().getShopStockBuy().size()) {
-            renderItem(pPoseStack, Shop.get().getShopStockBuy().get(this.shopBuyIndex).getItem().getItem(), x+104,
+        if (this.shopTarget != null && Shop.get().hasBuyShopItem(this.shopTarget)) {
+            renderItem(pPoseStack, Shop.get().getBuyShopItem(this.shopTarget).getItem().getItem(), x+104,
                     y+14);
         }
     }
@@ -210,15 +211,19 @@ public class BuyerScreen extends AbstractContainerScreen<BuyerMenu> {
         // Get data from BlockEntity
         this.buyerEntity = this.getMenu().getBlockEntity();
 
-        if (this.ownerUUID == null || this.account == null || this.shopBuyIndex == -1) {
-            if (this.buyerEntity.getOwnerUUID() != null || this.buyerEntity.getAccount() != null ||
-                    this.buyerEntity.getShopBuyIndex() != -1) {
-                updateInformation();
-            }
-        }
-        if (this.ownerUUID != null && this.account != null && (!this.ownerUUID.equals(this.buyerEntity.getOwnerUUID())
-                || !this.account.equals(this.buyerEntity.getAccount())) || this.shopBuyIndex !=
-                this.buyerEntity.getShopBuyIndex()) {
+        String buyerOwnerUUID = this.buyerEntity.getOwnerUUID();
+        Pair<String, Integer> buyerAccount = this.buyerEntity.getAccount();
+        ResourceLocation buyerShopTarget = this.buyerEntity.getShopTarget();
+
+        boolean shouldUpdateDueToNulls = (this.ownerUUID == null && buyerOwnerUUID != null) ||
+                (this.account == null && buyerAccount != null) ||
+                (this.shopTarget == null && buyerShopTarget != null);
+
+        boolean shouldUpdateDueToDifferences = (this.ownerUUID != null && !this.ownerUUID.equals(buyerOwnerUUID)) ||
+                (this.account != null && !this.account.equals(buyerAccount)) ||
+                (this.shopTarget != buyerShopTarget);
+
+        if (shouldUpdateDueToNulls || shouldUpdateDueToDifferences) {
             updateInformation();
         }
     }

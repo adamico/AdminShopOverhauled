@@ -219,8 +219,8 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
                     }
                 }
                 // Check if item is in sell map
-                if (Shop.get().getShopSellMap().containsKey(item)) {
-                    ShopItem shopItem = Shop.get().getShopSellMap().get(item);
+                if (Shop.get().getShopSellItemMap().containsKey(item)) {
+                    ShopItem shopItem = Shop.get().getShopSellItemMap().get(item);
                     // Attempt to sell it
                     System.out.println("shopItem: "+shopItem.getItem().getDisplayName().getString());
                     attemptTransaction(getBankAccount(), false, shopItem, itemStack.getCount());
