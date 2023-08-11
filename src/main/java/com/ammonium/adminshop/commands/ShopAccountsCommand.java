@@ -334,7 +334,6 @@ public class ShopAccountsCommand {
             searchMember.ifPresent(onlineMembers::add);
         });
         // Sync client data with all onlineMembers
-        Set<BankAccount> accountSet = moneyManager.getAccountSet();
         onlineMembers.forEach(memberPlayer -> Messages.sendToPlayer(
                 new PacketSyncMoneyToClient(moneyManager.getSharedAccounts().get(memberPlayer.getStringUUID())),
                 memberPlayer));

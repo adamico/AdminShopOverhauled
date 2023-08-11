@@ -225,19 +225,23 @@ public class MoneyManager extends SavedData {
             return false;
         }
         // Get bank account
-        BankAccount oldBankAccount = getBankAccount(owner, id);
+        BankAccount bankAccount = getBankAccount(owner, id);
         // Check if account already has member
-        if (oldBankAccount.getMembers().contains(memberUUID)) {
+        if (bankAccount.getMembers().contains(memberUUID)) {
             AdminShop.LOGGER.error("Bank account already has member!");
             return false;
         }
         // Add member to account
-        boolean success = oldBankAccount.addMember(memberUUID);
+        boolean success = bankAccount.addMember(memberUUID);
         if (!success) {
             AdminShop.LOGGER.error("Error adding member.");
             return false;
         }
-
+        // Add to shared accounts list
+        if (!sharedAccounts.containsKey(owner)) {
+            sharedAccounts.put(owner, new ArrayList<>());
+        }
+        sharedAccounts.get(memberUUID).add(bankAccount);
         AdminShop.LOGGER.info("Succesfully added member from bank account.");
         return true;
     }
