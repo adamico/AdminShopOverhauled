@@ -19,7 +19,7 @@ apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'org.parchmentmc.librarian.forgegradle'
 
 
-version = '1.19.2-1.9'
+version = '1.19.2-1.10'
 group = 'com.ammonium.adminshop' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'adminshop'
 
@@ -64,10 +64,14 @@ minecraft {
             property 'forge.logging.console.level', 'debug'
 
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
-            property 'forge.enabledGameTestNamespaces', 'examplemod'
+            property 'forge.enabledGameTestNamespaces', 'adminshop'
+
+            // patchouli fix
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
 
             mods {
-                examplemod {
+                adminshop {
                     source sourceSets.main
                 }
             }
@@ -81,10 +85,10 @@ minecraft {
             property 'forge.logging.console.level', 'debug'
 
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
-            property 'forge.enabledGameTestNamespaces', 'examplemod'
+            property 'forge.enabledGameTestNamespaces', 'adminshop'
 
             mods {
-                examplemod {
+                adminshop {
                     source sourceSets.main
                 }
             }
@@ -109,10 +113,10 @@ minecraft {
             property 'forge.logging.console.level', 'debug'
 
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
-            property 'forge.enabledGameTestNamespaces', 'examplemod'
+            property 'forge.enabledGameTestNamespaces', 'adminshop'
 
             mods {
-                examplemod {
+                adminshop {
                     source sourceSets.main
                 }
             }
@@ -129,7 +133,7 @@ minecraft {
             args '--mod', 'adminshop', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
 
             mods {
-                examplemod {
+                adminshop {
                     source sourceSets.main
                 }
             }
@@ -171,11 +175,13 @@ dependencies {
     minecraft 'net.minecraftforge:forge:1.19.2-43.2.0'
 
     // compile against the JEI API but do not include it at runtime
-//     compileOnly fg.deobf("mezz.jei:jei-${mc_version}:${jei_version}:api")
      compileOnly fg.deobf("mezz.jei:jei-${mc_version}-forge-api:${jei_version}")
-//     at runtime, use the full JEI jar
-//     runtimeOnly fg.deobf("mezz.jei:jei-${mc_version}:${jei_version}")
+    // at runtime, use the full JEI jar
      runtimeOnly fg.deobf("mezz.jei:jei-${mc_version}-forge:${jei_version}")
+
+    // add patchouli as an optional dependency
+    compileOnly fg.deobf("vazkii.patchouli:Patchouli:${patchouli_version}:api")
+    runtimeOnly fg.deobf("vazkii.patchouli:Patchouli:${patchouli_version}")
 
     //JUnit Testing
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
@@ -200,7 +206,7 @@ jar {
                 "Specification-Vendor"    : "ammonium",
                 "Specification-Version"   : "1", // We are version 1 of ourselves
                 "Implementation-Title"    : project.name,
-                "Implementation-Version"  : project.jar.archiveVersion,
+                "Implementation-Version"  : project.version,
                 "Implementation-Vendor"   : "ammonium",
                 "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])

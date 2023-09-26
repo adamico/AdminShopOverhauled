@@ -1,0 +1,7 @@
+{
+  "model": "adminshop:econ_handbook",
+  "name": "item.adminshop.manual",
+  "landing_text": "LANDING TEXT",
+  "creative_tab": "adminshop",
+  "version": 1
+}

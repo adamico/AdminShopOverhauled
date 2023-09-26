@@ -31,7 +31,7 @@ logoFile="examplemod.png" #optional
 # A text field displayed in the mod UI
 credits="Thanks everyone who helped me make this and continues to use this mod!" #optional
 # A text field displayed in the mod UI
-authors="Vnator" #optional
+authors="Vnator, Ammonium" #optional
 # The description text for the mod (multi line!) (#mandatory)
 description='''
 Player-accessible shop configurable by modpack developers and server owners!
@@ -55,5 +55,11 @@ Can buy and sell Items, Fluids, and Forge Energy (can only *sell* energy)
     mandatory=true
 # This version range declares a minimum of the current minecraft version up to but not including the next major version
     versionRange="[1.19.2,1.19.3)"
+    ordering="NONE"
+    side="BOTH"
+[[dependencies.adminshop]]
+    modId="patchouli"
+    mandatory=true
+    versionRange="[1.19.2,)"
     ordering="NONE"
     side="BOTH"

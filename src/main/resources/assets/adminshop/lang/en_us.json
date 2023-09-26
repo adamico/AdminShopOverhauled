@@ -18,5 +18,6 @@
   "screen.adminshop.seller": "Seller",
   "screen.adminshop.buyer": "Buyer",
   "item_group.adminshop.creativetab": "AdminShop",
-  "item.adminshop.permit": "Trade Permit"
+  "item.adminshop.permit": "Trade Permit",
+  "item.adminshop.manual": "Economy 101"
 }
