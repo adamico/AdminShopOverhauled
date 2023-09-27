@@ -1,0 +1,16 @@
+{
+  "name": "What is AdminShop?",
+  "icon": "minecraft:writable_book",
+  "category": "adminshop:introduction",
+  "sortnum": -2,
+  "pages": [
+    {
+      "type": "patchouli:text",
+      "text": "AdminShop is a mod that lets you buy and sell items from a fictional \"market\" at a fixed price. It has support for co-op through shared accounts. The shop's items and prices are set by either the server owner or the modpack maker.$(br)It is $(l)not$() a mod for buying and selling stuff between players."
+    },
+    {
+      "type": "patchouli:text",
+      "text": "There are two ways to buy and sell items, you can use the $(item)Shop$() to manually buy and sell items, while if you want to make an automated setup you may want to look into the $(item)Buyer$() and $(item)Seller$()."
+    }
+  ]
+}

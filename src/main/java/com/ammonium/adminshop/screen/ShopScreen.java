@@ -174,7 +174,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
 
         // Bank account
         drawString(matrixStack, font, MojangAPI.getUsernameByUUID(selectedAccountInfo.getKey())+":"+
-                selectedAccountInfo.getValue(),16,108,0xffffff);
+                selectedAccountInfo.getValue(),16,112,0xffffff);
 
         //Tooltip for item the player is hovering over
         List<ShopButton> shopButtons = isBuy ? buyButtons : sellButtons;

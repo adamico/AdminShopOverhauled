@@ -300,7 +300,7 @@ public class BuyerBE extends BlockEntity implements BuyerMachine {
             int accountID = tag.getInt("accountID");
             this.account = Pair.of(accountUUID, accountID);
         }
-        if (tag.contains("shopBuyIndex")) {
+        if (tag.contains("shopTarget")) {
             this.shopTarget = new ResourceLocation(tag.getString("shopTarget"));
         }
     }
