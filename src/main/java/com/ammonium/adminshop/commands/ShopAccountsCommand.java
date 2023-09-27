@@ -216,10 +216,11 @@ public class ShopAccountsCommand {
         }
 
         // Verify that ownerUUID is in memberUUIDs
-        if (!memberUUIDs.contains(player.getStringUUID())) {
+        if (!memberUUIDs.contains(player.getStringUUID()) || !memberPlayers.contains(player)) {
             AdminShop.LOGGER.info("Owner is not in members list, adding.");
             memberUUIDs.add(player.getStringUUID());
             memberNames.add(player.getName().getString());
+            memberPlayers.add(player);
         }
 
         // Create new account
