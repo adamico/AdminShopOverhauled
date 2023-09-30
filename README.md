@@ -1,6 +1,6 @@
-# AdminShop-1.18
-Admin Shop Minecraft Mod for 1.18
-Adminshop is a powerful mod that allows both server administrator and modpack developers to add their own "shop" into Minecraft, where players can buy and sell items at fixed prices. It uses a custom "bank account" system, in which you can create shared accounts with other players, allowing Co-Op play in servers or modpacks that rely on this mod. The mod was originally for 1.12 by Vnator, but it has been forked to 1.18 and overhauled by Ammonium.
+# AdminShop
+Admin Shop Minecraft Mod
+Adminshop is a powerful mod that allows both server administrator and modpack developers to add their own "shop" into Minecraft, where players can buy and sell items at fixed prices. It uses a custom "bank account" system, in which you can create shared accounts with other players, allowing Co-Op play in servers or modpacks that rely on this mod. The mod was originally for 1.12 by Vnator, but it has been forked to newer versions and overhauled by Ammonium.
 
  
 
