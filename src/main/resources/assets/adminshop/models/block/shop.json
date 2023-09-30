@@ -3,8 +3,8 @@
 	"parent": "block/cube_all",
 	"textures": {
 		"1": "adminshop:block/machines_generic",
-		"1_1_0": "adminshop:block/ender",
-		"particle": "adminshop:block/ender"
+		"particle": "adminshop:block/ender",
+		"1_1_0": "adminshop:block/ender"
 	},
 	"elements": [
 		{
@@ -40,7 +40,7 @@
 				"east": {"uv": [4, 2, 6, 4], "texture": "#1"},
 				"south": {"uv": [4, 2, 6, 4], "texture": "#1"},
 				"west": {"uv": [4, 2, 6, 4], "texture": "#1"},
-				"up": {"uv": [0, 0, 0, 0], "texture": "#1"},
+				"up": {"uv": [4, 2, 6, 4], "texture": "#1"},
 				"down": {"uv": [0, 0, 0, 0], "texture": "#1"}
 			}
 		},
@@ -128,7 +128,7 @@
 			"to": [5.4, 10.8, 8.35],
 			"faces": {
 				"north": {"uv": [4, 0, 6, 2], "texture": "#1"},
-				"east": {"uv": [0, 0, 0, 0], "texture": "#1"},
+				"east": {"uv": [4, 0, 6, 2], "texture": "#1"},
 				"south": {"uv": [4, 0, 6, 2], "texture": "#1"},
 				"west": {"uv": [4, 0, 6, 2], "texture": "#1"},
 				"up": {"uv": [0, 0, 0, 0], "texture": "#1"},
@@ -261,23 +261,46 @@
 			"scale": [0.5, 0.5, 0.5]
 		},
 		"ground": {
-			"translation": [0, 4, 0]
+			"translation": [0, 4, 0],
+			"scale": [0.5, 0.5, 0.5]
 		},
 		"head": {
 			"translation": [0, 14, 0]
 		}
 	},
-	"groups": [0,
+	"groups": [
+		0,
 		{
 			"name": "shop",
+			"origin": [8, 8, 8],
+			"color": 0,
 			"children": [
 				{
 					"name": "model",
-					"children": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+					"origin": [8, 8, 8],
+					"color": 0,
+					"children": [
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8,
+						9,
+						10,
+						11,
 						{
 							"name": "model",
+							"origin": [8, 8, 8],
+							"color": 0,
 							"children": [12, 13, 14]
-						}, 15, 16, 17]
+						},
+						15,
+						16,
+						17
+					]
 				}
 			]
 		}
