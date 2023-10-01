@@ -267,6 +267,20 @@ public class MoneyManager extends SavedData {
         return true;
     }
 
+    public boolean removePermit(String owner, int id, int permit) {
+        // Check if account exists
+        if (!existsBankAccount(owner, id)) {
+            AdminShop.LOGGER.error("Can't remove permit from account that doesn't exist");
+            return false;
+        }
+        // Get bank account
+        BankAccount bankAccount = getBankAccount(owner, id);
+        // Add permit to account
+        bankAccount.removePermit(permit);
+        AdminShop.LOGGER.info("Succesfully removed permit from bank account.");
+        return true;
+    }
+
     /**
      * Removes member from bank account
      * @param owner owner UUID

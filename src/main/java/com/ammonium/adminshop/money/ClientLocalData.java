@@ -29,9 +29,7 @@ public class ClientLocalData {
         ClientLocalData.usableAccounts.clear();
         ClientLocalData.usableAccounts.addAll(usableAccounts);
         ClientLocalData.accountMap.clear();
-        ClientLocalData.usableAccounts.forEach(account -> {
-            ClientLocalData.accountMap.put(Pair.of(account.getOwner(), account.getId()), account);
-        });
+        ClientLocalData.usableAccounts.forEach(account -> ClientLocalData.accountMap.put(Pair.of(account.getOwner(), account.getId()), account));
         sortUsableAccounts();
     }
 

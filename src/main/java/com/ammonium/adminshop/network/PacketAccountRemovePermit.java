@@ -16,45 +16,39 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Supplier;
 
-public class PacketAccountAddPermit {
+public class PacketAccountRemovePermit {
     private final int permit;
-    private final int slotIndex;
     private final String accOwner;
     private final int accID;
 
-    public PacketAccountAddPermit(BankAccount bankAccount, int permit, int slotIndex) {
+    public PacketAccountRemovePermit(BankAccount bankAccount, int permit) {
         this.accOwner = bankAccount.getOwner();
         this.accID = bankAccount.getId();
         this.permit = permit;
-        this.slotIndex = slotIndex;
     }
 
-    public PacketAccountAddPermit(Pair<String, Integer> bankAccount, int permit, int slotIndex) {
+    public PacketAccountRemovePermit(Pair<String, Integer> bankAccount, int permit) {
         this.accOwner = bankAccount.getKey();
         this.accID = bankAccount.getValue();
         this.permit = permit;
-        this.slotIndex = slotIndex;
     }
 
-    public PacketAccountAddPermit(String owner, int ownerId, int permit, int slotIndex) {
+    public PacketAccountRemovePermit(String owner, int ownerId, int permit) {
         this.accOwner = owner;
         this.accID = ownerId;
         this.permit = permit;
-        this.slotIndex = slotIndex;
     }
 
-    public PacketAccountAddPermit(FriendlyByteBuf buf) {
+    public PacketAccountRemovePermit(FriendlyByteBuf buf) {
         this.accOwner = buf.readUtf();
         this.accID = buf.readInt();
         this.permit = buf.readInt();
-        this.slotIndex = buf.readInt();
     }
 
     public void toBytes(FriendlyByteBuf buf) {
         buf.writeUtf(accOwner);
         buf.writeInt(accID);
         buf.writeInt(permit);
-        buf.writeInt(slotIndex);
     }
 
     public boolean handle(Supplier<NetworkEvent.Context> supplier) {
@@ -62,17 +56,15 @@ public class PacketAccountAddPermit {
         ctx.enqueueWork(() -> {
             //Client side accessed here
             //Do NOT call client-only code though, since server needs to access this too
-            AdminShop.LOGGER.info("Adding permit tier "+permit+" to "+accOwner+":"+accID);
+            AdminShop.LOGGER.info("Removing permit tier "+permit+" from "+accOwner+":"+accID);
             ServerPlayer player = ctx.getSender();
             assert player != null;
             MoneyManager moneyManager = MoneyManager.get(player.getLevel());
-            boolean success = moneyManager.addPermit(accOwner, accID, permit);
+            boolean success = moneyManager.removePermit(accOwner, accID, permit);
             if (!success) {
-                AdminShop.LOGGER.error("Error adding permit to account!");
+                AdminShop.LOGGER.error("Error removing permit from account!");
             } else {
-                // Remove item from user
-                player.getInventory().removeItem(slotIndex, 1);
-                // Sync money with affected clients
+
                 AdminShop.LOGGER.info("Syncing money with clients");
 
                 // Get current bank account
@@ -86,9 +78,9 @@ public class PacketAccountAddPermit {
                     ServerPlayer serverPlayer = (ServerPlayer) player.getLevel()
                             .getPlayerByUUID(UUID.fromString(memberUUID));
                     if (serverPlayer != null) {
-                        serverPlayer.playNotifySound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 1.0f, 1.0f);
-                        serverPlayer.sendSystemMessage(Component.literal("Adding permit tier " + permit + " to account " +
-                                        MojangAPI.getUsernameByUUID(accOwner) + ":" + accID));
+                        serverPlayer.playNotifySound(SoundEvents.ZOMBIE_VILLAGER_CONVERTED, SoundSource.PLAYERS, 1.0f, 1.0f);
+                        serverPlayer.sendSystemMessage(Component.literal("Removing permit tier " + permit + " from account " +
+                                MojangAPI.getUsernameByUUID(accOwner) + ":" + accID));
                         Messages.sendToPlayer(new PacketSyncMoneyToClient(usableAccounts), serverPlayer);
                     }
                 });

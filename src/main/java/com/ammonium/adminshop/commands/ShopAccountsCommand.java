@@ -4,6 +4,7 @@ import com.ammonium.adminshop.AdminShop;
 import com.ammonium.adminshop.money.BankAccount;
 import com.ammonium.adminshop.money.MoneyManager;
 import com.ammonium.adminshop.network.MojangAPI;
+import com.ammonium.adminshop.network.PacketAccountRemovePermit;
 import com.ammonium.adminshop.network.PacketSyncMoneyToClient;
 import com.ammonium.adminshop.setup.Messages;
 import com.mojang.brigadier.CommandDispatcher;
@@ -25,15 +26,15 @@ public class ShopAccountsCommand {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher){
         LiteralArgumentBuilder<CommandSourceStack> shopAccountsCommand = Commands.literal("shopAccounts");
 
-        // /shopAccounts info
+        // shopAccounts info
         LiteralArgumentBuilder<CommandSourceStack> infoCommand = Commands.literal("info")
                 .executes(command -> info(command.getSource()));
 
-        // /shopAccounts listAccounts
+        // shopAccounts listAccounts
         LiteralArgumentBuilder<CommandSourceStack> listAccountsCommand = Commands.literal("listAccounts")
                         .executes(command -> listAccounts(command.getSource()));
 
-        // /shopAccounts createAccount [<members>]
+        // shopAccounts createAccount [<members>]
         LiteralArgumentBuilder<CommandSourceStack> createAccountCommand = Commands.literal("createAccount")
                         .executes(command -> createAccount(command.getSource()));
         RequiredArgumentBuilder<CommandSourceStack, String> createAccountWithMembersCommand =
@@ -44,7 +45,7 @@ public class ShopAccountsCommand {
                         });
         createAccountCommand.then(createAccountWithMembersCommand);
 
-        // /shopAccounts deleteAccount [id]
+        // shopAccounts deleteAccount [id]
         LiteralArgumentBuilder<CommandSourceStack> deleteAccountCommand = Commands.literal("deleteAccount");
         RequiredArgumentBuilder<CommandSourceStack, Integer> deleteAccountWithIDCommand =
                 Commands.argument("id", IntegerArgumentType.integer())
@@ -54,7 +55,7 @@ public class ShopAccountsCommand {
                         });
         deleteAccountCommand.then(deleteAccountWithIDCommand);
 
-        // /shopAccounts addMember [id] [member]
+        // shopAccounts addMember [id] [member]
         LiteralArgumentBuilder<CommandSourceStack> addMemberCommand = Commands.literal("addMember");
         RequiredArgumentBuilder<CommandSourceStack, Integer> addMemberCommandID = Commands.argument("id",
                 IntegerArgumentType.integer());
@@ -67,7 +68,7 @@ public class ShopAccountsCommand {
                         });
         addMemberCommand.then(addMemberCommandID.then(addMemberCommandMember));
 
-        // /shopAccounts removeMember [id] [member]
+        // shopAccounts removeMember [id] [member]
         LiteralArgumentBuilder<CommandSourceStack> removeMemberCommand = Commands.literal("removeMember");
         RequiredArgumentBuilder<CommandSourceStack, Integer> removeMemberCommandID = Commands.argument("id",
                 IntegerArgumentType.integer());
@@ -80,7 +81,18 @@ public class ShopAccountsCommand {
                 });
         removeMemberCommand.then(removeMemberCommandID.then(removeMemberCommandMember));
 
-        // /shopAccounts transfer [amount] [fromOwner] [fromId] [toOwner] [toId]
+        // shopAccounts removePermit [id] [tier]
+        LiteralArgumentBuilder<CommandSourceStack> removePermitCommand = Commands.literal("removePermit");
+        RequiredArgumentBuilder<CommandSourceStack, Integer> removePermitCommandId = Commands.argument("id", IntegerArgumentType.integer());
+        RequiredArgumentBuilder<CommandSourceStack, Integer> removePermitCommandTier = Commands.argument("tier", IntegerArgumentType.integer())
+                .executes(command -> {
+                    int id = IntegerArgumentType.getInteger(command, "id");
+                    int tier = IntegerArgumentType.getInteger(command, "tier");
+                    return removePermit(command.getSource(), id, tier);
+                });
+        removePermitCommand.then(removePermitCommandId.then(removePermitCommandTier));
+
+        // shopAccounts transfer [amount] [fromOwner] [fromId] [toOwner] [toId]
         LiteralArgumentBuilder<CommandSourceStack> transferCommand = Commands.literal("transfer");
         RequiredArgumentBuilder<CommandSourceStack, Integer> transferCommandAmount = Commands.argument("amount",
                 IntegerArgumentType.integer());
@@ -109,6 +121,7 @@ public class ShopAccountsCommand {
                     .then(deleteAccountCommand)
                     .then(addMemberCommand)
                     .then(removeMemberCommand)
+                    .then(removePermitCommand)
                     .then(transferCommand);
         dispatcher.register(shopAccountsCommand);
     }
@@ -408,6 +421,24 @@ public class ShopAccountsCommand {
                 memberPlayer));
 
         source.sendSuccess(Component.literal("Successfully removed "+member+" from account."), true);
+        return 1;
+    }
+    static int removePermit(CommandSourceStack source, int id, int tier) throws CommandSyntaxException {
+        if (tier == 0) {
+            source.sendFailure(Component.literal("You can't remove default (0) permit from an account!"));
+            return 0;
+        }
+        // Get player and moneyManager
+        ServerPlayer player = source.getPlayerOrException();
+        MoneyManager moneyManager = MoneyManager.get(source.getLevel());
+        // Check if player has account with said ID
+        if (!moneyManager.existsBankAccount(player.getStringUUID(), id)) {
+            source.sendFailure(Component.literal("There are no accounts you own with said ID!"));
+            return 0;
+        }
+        // Delete permit
+        Messages.sendToServer(new PacketAccountRemovePermit(player.getStringUUID(), id, tier));
+        source.sendSuccess(Component.literal("Removed permit from account"), true);
         return 1;
     }
 

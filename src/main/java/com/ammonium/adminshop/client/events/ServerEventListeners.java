@@ -2,7 +2,7 @@ package com.ammonium.adminshop.client.events;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.ammonium.adminshop.AdminShop;
-import com.ammonium.adminshop.commands.ReloadShopCommand;
+import com.ammonium.adminshop.commands.AdminShopCommand;
 import com.ammonium.adminshop.commands.ShopAccountsCommand;
 import com.ammonium.adminshop.money.BankAccount;
 import com.ammonium.adminshop.money.MoneyManager;
@@ -50,7 +50,7 @@ public class ServerEventListeners {
     @SubscribeEvent
     public static void onCommandRegistration(RegisterCommandsEvent event){
         CommandDispatcher<CommandSourceStack> commandDispatcher = event.getDispatcher();
-        ReloadShopCommand.register(commandDispatcher);
+        AdminShopCommand.register(commandDispatcher);
         ShopAccountsCommand.register(commandDispatcher);
     }
 }

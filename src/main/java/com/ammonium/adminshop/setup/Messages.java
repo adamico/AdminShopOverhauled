@@ -55,6 +55,11 @@ public class Messages {
                 .encoder(PacketAccountAddPermit::toBytes)
                 .consumerMainThread(PacketAccountAddPermit::handle)
                 .add();
+        net.messageBuilder(PacketAccountRemovePermit.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(PacketAccountRemovePermit::new)
+                .encoder(PacketAccountRemovePermit::toBytes)
+                .consumerMainThread(PacketAccountRemovePermit::handle)
+                .add();
         net.messageBuilder(PacketUpdateRequest.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(PacketUpdateRequest::new)
                 .encoder(PacketUpdateRequest::toBytes)

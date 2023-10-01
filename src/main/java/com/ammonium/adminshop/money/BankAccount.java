@@ -132,6 +132,9 @@ public class BankAccount {
     public void addPermit(int permit) {
         this.permits.add(permit);
     }
+    public void removePermit(int permit) {
+        this.permits.remove(permit);
+    }
     public boolean hasPermit(int permit) {
         if (permit == 0) { return true; }
         return this.permits.contains(permit);
