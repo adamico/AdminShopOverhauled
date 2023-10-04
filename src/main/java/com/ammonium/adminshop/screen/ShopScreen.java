@@ -10,7 +10,8 @@ import com.ammonium.adminshop.money.BankAccount;
 import com.ammonium.adminshop.money.ClientLocalData;
 import com.ammonium.adminshop.network.MojangAPI;
 import com.ammonium.adminshop.network.PacketAccountAddPermit;
-import com.ammonium.adminshop.network.PacketPurchaseRequest;
+import com.ammonium.adminshop.network.PacketBuyRequest;
+import com.ammonium.adminshop.network.PacketSellRequest;
 import com.ammonium.adminshop.setup.Messages;
 import com.ammonium.adminshop.shop.Shop;
 import com.ammonium.adminshop.shop.ShopItem;
@@ -24,11 +25,17 @@ import net.minecraft.client.resources.language.I18n;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.tags.IReverseTag;
+import net.minecraftforge.registries.tags.ITagManager;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
@@ -179,11 +186,9 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
         //Tooltip for item the player is hovering over
         List<ShopButton> shopButtons = isBuy ? buyButtons : sellButtons;
         Optional<ShopButton> button = shopButtons.stream().filter(b -> b.isMouseOn).findFirst();
-        button.ifPresent(shopButton -> {
-            renderTooltip(matrixStack, shopButton.getTooltipContent(),
-                    Optional.empty(), mouseX-(this.width - this.imageWidth)/2,
-                    mouseY-(this.height - this.imageHeight)/2);
-        });
+        button.ifPresent(shopButton -> renderTooltip(matrixStack, shopButton.getTooltipContent(),
+                Optional.empty(), mouseX-(this.width - this.imageWidth)/2,
+                mouseY-(this.height - this.imageHeight)/2));
         matrixStack.popPose();
 
     }
@@ -206,7 +211,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
                         int key = compoundTag.getInt("key");
                         System.out.println("Key: "+key);
                         // check if key is valid
-                        if (key < 1) {
+                        if (key == 0) {
                             AdminShop.LOGGER.error("Trade permit has invalid key!");
                         }
                         // Add permit tier to bank account
@@ -216,14 +221,49 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
 //                        Minecraft.getInstance().player.playSound(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
                         Messages.sendToServer(new PacketAccountAddPermit(this.usableAccounts.get(this.usableAccountsIndex),
                                 key, slot.getSlotIndex()));
+                        return false;
                     }
                 }
-                // Check if item is in sell map
-                if (Shop.get().getShopSellItemMap().containsKey(item)) {
+                // Check if item is fluid container
+                itemStack.getCapability(ForgeCapabilities.FLUID_HANDLER_ITEM).ifPresent(fluidHandler -> {
+                    FluidStack fluidStack = fluidHandler.getFluidInTank(0);
+                    // Return if container is empty
+                    if (fluidStack.isEmpty()) {return;}
+                    Fluid fluid = fluidHandler.getFluidInTank(0).getFluid();
+                    // Check if fluid is in fluid shop map
+                    if (Shop.get().hasSellShopFluid(fluid)) {
+                        AdminShop.LOGGER.debug("ShopItem: "+fluidStack.getDisplayName().getString());
+                        Messages.sendToServer(new PacketSellRequest(getBankAccount(), slot.getSlotIndex(), fluidStack.getAmount()));
+                        return;
+                    }
+                    // Check if fluid tags are in fluid tag map
+                    ITagManager<Fluid> fluidTagManager = ForgeRegistries.FLUIDS.tags();
+                    Optional<IReverseTag<Fluid>> oFluidReverseTag = fluidTagManager.getReverseTag(fluid);
+                    if (oFluidReverseTag.isEmpty()) {return;}
+                    IReverseTag<Fluid> fluidReverseTag = oFluidReverseTag.get();
+                    Optional<TagKey<Fluid>> oFluidTag = fluidReverseTag.getTagKeys().filter(fluidTag -> Shop.get().hasSellShopFluidTag(fluidTag)).findFirst();
+                    if (oFluidTag.isPresent()) {
+                        // Attempt to sell tag
+                        AdminShop.LOGGER.debug("ShopItem: "+oFluidTag.get().location());
+                        Messages.sendToServer(new PacketSellRequest(getBankAccount(), slot.getSlotIndex(), fluidStack.getAmount()));
+                        return;
+                    }
+
+                });
+                // Check if item is in sell item map
+                if (Shop.get().hasSellShopItem(item)) {
                     ShopItem shopItem = Shop.get().getShopSellItemMap().get(item);
                     // Attempt to sell it
-                    System.out.println("shopItem: "+shopItem.getItem().getDisplayName().getString());
-                    attemptTransaction(getBankAccount(), false, shopItem, itemStack.getCount());
+                    AdminShop.LOGGER.debug("ShopItem: "+shopItem.getItem().getDisplayName().getString());
+                    Messages.sendToServer(new PacketSellRequest(getBankAccount(), slot.getSlotIndex(), itemStack.getCount()));
+                    return false;
+                }
+                // Check if any of item's tags is in sell item tag map
+                Optional<TagKey<Item>> searchTag = itemStack.getTags().filter(itemTag -> Shop.get().hasSellShopItemTag(itemTag)).findFirst();
+                if (searchTag.isPresent()) {
+                    // Attempt to sell tag
+                    AdminShop.LOGGER.debug("ShopItem: "+searchTag.get().location());
+                    Messages.sendToServer(new PacketSellRequest(getBankAccount(), slot.getSlotIndex(), itemStack.getCount()));
                     return false;
                 }
             }
@@ -376,17 +416,12 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
 
     private void attemptTransaction(BankAccount bankAccount, boolean isBuy, ShopItem item, int quantity){
         Pair<String, Integer> accountInfo = Pair.of(bankAccount.getOwner(), bankAccount.getId());
-        Messages.sendToServer(new PacketPurchaseRequest(accountInfo, isBuy, item, quantity));
+        if (isBuy) {
+            Messages.sendToServer(new PacketBuyRequest(accountInfo, item, quantity));
+        } else {
+            Messages.sendToServer(new PacketSellRequest(accountInfo, item, quantity));
+        }
         // Refresh account map
         this.accountMap = ClientLocalData.getAccountMap();
-    }
-
-    private void printInfo(){
-        System.out.println("Buy Buttons: ");
-        buyButtons.forEach(System.out::println);
-        System.out.println("Sell Buttons: ");
-        sellButtons.forEach(System.out::println);
-
-        System.out.println();
     }
 }

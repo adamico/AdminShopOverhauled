@@ -36,6 +36,7 @@ import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.ItemStackHandler;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -50,7 +51,8 @@ import static java.lang.Math.ceil;
 public class Buyer3BE extends BlockEntity implements BuyerMachine {
     private String ownerUUID;
     private Pair<String, Integer> account;
-    private ResourceLocation shopTarget = null;
+    private boolean hasNBT = false;
+    private ShopItem targetShopItem = null;
     private int tickCounter = 0;
 
     private final int buySize = 64;
@@ -88,13 +90,13 @@ public class Buyer3BE extends BlockEntity implements BuyerMachine {
         return account;
     }
 
-    public ResourceLocation getShopTarget() {
-        return shopTarget;
+    public void setTargetShopItem(ShopItem item) {
+        this.targetShopItem = item;
+        if(item != null) this.hasNBT = item.hasNBT();
     }
 
-    @Override
-    public void setShopTarget(ResourceLocation shopTarget) {
-        this.shopTarget = shopTarget;
+    public ShopItem getTargetShopItem() {
+        return this.targetShopItem;
     }
 
     @Override
@@ -130,21 +132,23 @@ public class Buyer3BE extends BlockEntity implements BuyerMachine {
         // item logic
         // Attempt to insert the items, and only perform transaction on what can fit
         MoneyManager moneyManager = MoneyManager.get(level);
-        // Check shopTarget
-        if (buyerEntity.shopTarget == null || !Shop.get().hasBuyShopItem(buyerEntity.shopTarget)) {
+        // Check shopBuyIndex
+        if (buyerEntity.targetShopItem == null) {
             return;
         }
-        ShopItem shopItem = Shop.get().getBuyShopItem(buyerEntity.shopTarget);
-        if (shopItem == null) {
-            AdminShop.LOGGER.error("Buyer shopItem is null!");
+
+        ShopItem shopItem = buyerEntity.getTargetShopItem();
+        // Check shopItem is item and buy only
+        if (!shopItem.isBuy() || !shopItem.isItem()) {
+            AdminShop.LOGGER.error("Buyer shopItem is not buy item!");
             return;
         }
         if (shopItem.getItem().isEmpty()) {
             AdminShop.LOGGER.error("Buyer shopItem is empty!");
             return;
         }
-        Item item = shopItem.getItem().getItem();
-        ItemStack toInsert = new ItemStack(item);
+
+        ItemStack toInsert = shopItem.getItem().copy();
         toInsert.setCount(buySize);
         ItemStackHandler handler = buyerEntity.getItemHandler();
         ItemStack returned = ItemHandlerHelper.insertItemStacked(handler, toInsert, true);
@@ -235,8 +239,15 @@ public class Buyer3BE extends BlockEntity implements BuyerMachine {
             tag.putString("accountUUID", this.account.getKey());
             tag.putInt("accountID", this.account.getValue());
         }
-        if (this.shopTarget != null) {
-            tag.putString("shopTarget", this.shopTarget.toString());
+        if (this.targetShopItem != null) {
+            ResourceLocation targetResource = ForgeRegistries.ITEMS.getKey(this.targetShopItem.getItem().getItem());
+            assert targetResource != null;
+            tag.putString("targetResource", targetResource.toString());
+            tag.putBoolean("hasNBT", this.hasNBT);
+            if (this.hasNBT) {
+                // If NBT item, save index of List<Item>
+                tag.putInt("indexTargetNBT", Shop.get().getShopStockBuyNBT().get(this.targetShopItem.getItem().getItem()).indexOf(this.targetShopItem));
+            }
         }
         return tag;
     }
@@ -269,8 +280,27 @@ public class Buyer3BE extends BlockEntity implements BuyerMachine {
             int accountID = tag.getInt("accountID");
             this.account = Pair.of(accountUUID, accountID);
         }
-        if (tag.contains("shopTarget")) {
-            this.shopTarget = new ResourceLocation(tag.getString("shopTarget"));
+        ResourceLocation targetResource = null;
+        if (tag.contains("targetResource")) {
+            targetResource = new ResourceLocation(tag.getString("targetResource"));
+        }
+        if (tag.contains("hasNBT")) {
+            this.hasNBT = tag.getBoolean("hasNBT");
+        }
+        if (targetResource == null) {
+            AdminShop.LOGGER.debug("Buyer has no targetShopItem");
+            this.targetShopItem = null;
+        } else {
+            Item targetItem = ForgeRegistries.ITEMS.getValue(targetResource);
+            if (!this.hasNBT) {
+                this.targetShopItem = Shop.get().getBuyShopItem(targetItem);
+            } else if (tag.contains("indexTargetNBT")){
+                int indexTargetNBT = tag.getInt("indexTargetNBT");
+                this.targetShopItem = Shop.get().getShopStockBuyNBT().get(targetItem).get(indexTargetNBT);
+            } else {
+                AdminShop.LOGGER.error("Buyer target has hasNBT but no indexTargetNBT!");
+                this.targetShopItem = null;
+            }
         }
     }
 
@@ -285,8 +315,15 @@ public class Buyer3BE extends BlockEntity implements BuyerMachine {
             tag.putString("accountUUID", this.account.getKey());
             tag.putInt("accountID", this.account.getValue());
         }
-        if (this.shopTarget != null) {
-            tag.putString("shopTarget", this.shopTarget.toString());
+        if (this.targetShopItem != null) {
+            ResourceLocation targetResource = ForgeRegistries.ITEMS.getKey(this.targetShopItem.getItem().getItem());
+            assert targetResource != null;
+            tag.putString("targetResource", targetResource.toString());
+            tag.putBoolean("hasNBT", this.hasNBT);
+            if (this.hasNBT) {
+                // If NBT item, save index of List<Item>
+                tag.putInt("indexTargetNBT", Shop.get().getShopStockBuyNBT().get(this.targetShopItem.getItem().getItem()).indexOf(this.targetShopItem));
+            }
         }
     }
 
@@ -302,8 +339,28 @@ public class Buyer3BE extends BlockEntity implements BuyerMachine {
             int accountID = tag.getInt("accountID");
             this.account = Pair.of(accountUUID, accountID);
         }
-        if (tag.contains("shopTarget")) {
-            this.shopTarget = new ResourceLocation(tag.getString("shopTarget"));
+        ResourceLocation targetResource = null;
+        if (tag.contains("targetResource")) {
+            targetResource = new ResourceLocation(tag.getString("targetResource"));
+        }
+        if (tag.contains("hasNBT")) {
+            this.hasNBT = tag.getBoolean("hasNBT");
+        }
+        if (targetResource == null) {
+            AdminShop.LOGGER.debug("Buyer has no targetShopItem");
+            this.targetShopItem = null;
+        } else {
+            Item targetItem = ForgeRegistries.ITEMS.getValue(targetResource);
+            if (!this.hasNBT) {
+                this.targetShopItem = Shop.get().getBuyShopItem(targetItem);
+            } else if (tag.contains("indexTargetNBT")){
+                int indexTargetNBT = tag.getInt("indexTargetNBT");
+                this.targetShopItem = Shop.get().getShopStockBuyNBT().get(targetItem).get(indexTargetNBT);
+            } else {
+                AdminShop.LOGGER.error("Buyer target has hasNBT but no indexTargetNBT!");
+                this.targetShopItem = null;
+            }
+            AdminShop.LOGGER.info("Loaded buyer with targetShopItem "+this.targetShopItem.getItem().getDisplayName().getString());
         }
     }
 

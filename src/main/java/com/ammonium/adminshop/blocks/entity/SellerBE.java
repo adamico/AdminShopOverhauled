@@ -19,6 +19,7 @@ import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.Containers;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
@@ -34,7 +35,6 @@ import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
-import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -42,6 +42,7 @@ import org.jetbrains.annotations.Nullable;
 import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 public class SellerBE extends BlockEntity implements AutoShopMachine {
@@ -54,14 +55,20 @@ public class SellerBE extends BlockEntity implements AutoShopMachine {
         protected void onContentsChanged(int slot) {
             setChanged();
         }
-
         @Override
         public boolean isItemValid(int slot, @NotNull ItemStack stack) {
+            // Check if item is in item map
             boolean result = Shop.get().getShopSellItemMap().containsKey(stack.getItem());
             if (!result) {
+                // Check if item tags are in item tags map
+                Optional<TagKey<Item>> searchTag = stack.getTags().filter(itemTag -> Shop.get().hasSellShopItemTag(itemTag)).findFirst();
+                result = searchTag.isPresent();
+            }
+            if (result) {
+                return super.isItemValid(slot, stack);
+            } else {
                 return false;
             }
-            return super.isItemValid(slot, stack);
         }
     };
 
@@ -127,22 +134,30 @@ public class SellerBE extends BlockEntity implements AutoShopMachine {
 
     public static void sellerTransaction(BlockPos pos, SellerBE sellerEntity, ServerLevel level) {
         ItemStackHandler itemHandler = sellerEntity.getItemHandler();
-        Item item = itemHandler.getStackInSlot(0).getItem();
-        int count = itemHandler.getStackInSlot(0).getCount();
-        if (!Shop.get().getShopSellItemMap().containsKey(item)) {
-            AdminShop.LOGGER.error("Item is not in shop sell map: "+ForgeRegistries.ITEMS.getKey(item));
+        ItemStack toSell = itemHandler.getStackInSlot(0);
+        int count = toSell.getCount();
+        boolean isShopItem = Shop.get().hasSellShopItem(toSell.getItem());
+        ShopItem shopItem;
+        if (isShopItem) {
+            shopItem = Shop.get().getSellShopItem(toSell.getItem());
+        } else {
+            // Check if item tags are in item tags map
+            Optional<TagKey<Item>> searchTag = toSell.getTags().filter(itemTag -> Shop.get().hasSellShopItemTag(itemTag)).findFirst();
+            shopItem = searchTag.map(itemTagKey -> Shop.get().getSellShopItemTag(itemTagKey)).orElse(null);
+            isShopItem = searchTag.isPresent();
+        }
+        if (!isShopItem) {
+            AdminShop.LOGGER.error("Item is not in shop sell map: "+toSell.getDisplayName().getString());
             return;
         }
         itemHandler.extractItem(0, count, false);
-        ShopItem shopItem = Shop.get().getShopSellItemMap().get(item);
         long itemCost = shopItem.getPrice();
         long price = (long) count * itemCost;
         if (count == 0) {
             return;
         }
-        // Get local MoneyManager
+        // Get local MoneyManager and attempt transaction
         MoneyManager moneyManager = MoneyManager.get(level);
-        // attempt transaction
 
         // Check if account is set
         if (sellerEntity.account == null) {

@@ -7,7 +7,10 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.io.*;
@@ -17,8 +20,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Loads and stores the shop contents from a csv file. Is a singleton.
@@ -29,18 +30,20 @@ public class Shop {
     private static final String DEFAULT_SHOP_FILE = "assets/"+ AdminShop.MODID +"/default_shop.csv";
 
     //Matches "(value) as (var_type)" outside a string to turn back into just the value
-    private static final String CT_CAST_REGEX = "([0-9]+(\\.[0-9]*)?|true|false) as " +
-            "(int|short|byte|bool|float|double|long)(\\[\\])?(?=[^\"]*(\"[^\"]*\"[^\"]*)*$)";
+//    private static final String CT_CAST_REGEX = "([0-9]+(\\.[0-9]*)?|true|false) as " +
+//            "(int|short|byte|bool|float|double|long)(\\[\\])?(?=[^\"]*(\"[^\"]*\"[^\"]*)*$)";
     private static Shop instance;
-
     public String shopTextRaw;
-
     private final List<ShopItem> shopStockBuy;
-    private final Map<Item, ShopItem> shopBuyItemMap;
-    private final Map<ResourceLocation, ShopItem> shopBuyResourceLocationMap;
     private final List<ShopItem> shopStockSell;
+    private final Map<Item, List<ShopItem>> shopStockBuyNBT;
+    private final Map<Item, ShopItem> shopBuyItemMap;
     private final Map<Item, ShopItem> shopSellItemMap;
-    private final Map<ResourceLocation, ShopItem> shopSellResourceLocationMap;
+    private final Map<Fluid, ShopItem> shopBuyFluidMap;
+    private final Map<Fluid, ShopItem> shopSellFluidMap;
+    private final Map<TagKey<Item>, ShopItem> shopSellItemTagMap;
+    private final Map<TagKey<Fluid>, ShopItem> shopSellFluidTagMap;
+    private final Map<ItemStack, ShopItem> shopBuyItemNBTMap;
     public List<String> errors;
 
     public static Shop get(){
@@ -52,10 +55,14 @@ public class Shop {
     public Shop(){
         shopStockBuy = new ArrayList<>();
         shopStockSell = new ArrayList<>();
+        shopStockBuyNBT = new HashMap<>();
         shopBuyItemMap = new HashMap<>();
-        shopBuyResourceLocationMap = new HashMap<>();
         shopSellItemMap = new HashMap<>();
-        shopSellResourceLocationMap = new HashMap<>();
+        shopBuyFluidMap = new HashMap<>();
+        shopSellFluidMap = new HashMap<>();
+        shopSellItemTagMap = new HashMap<>();
+        shopSellFluidTagMap = new HashMap<>();
+        shopBuyItemNBTMap = new HashMap<>();
         errors = new ArrayList<>();
 
         loadFromFile((CommandSource) null);
@@ -64,37 +71,76 @@ public class Shop {
     public List<ShopItem> getShopStockBuy() {
         return shopStockBuy;
     }
-
     public List<ShopItem> getShopStockSell() {
         return shopStockSell;
     }
+    public Map<Item, List<ShopItem>> getShopStockBuyNBT() { return shopStockBuyNBT;}
 
     public Map<Item, ShopItem> getShopBuyItemMap() {
         return shopBuyItemMap;
     }
-
-    public Map<ResourceLocation, ShopItem> getShopBuyResourceLocationMap() {
-        return shopBuyResourceLocationMap;
-    }
-    public boolean hasBuyShopItem(ResourceLocation resourceLocation) {
-        return shopBuyResourceLocationMap.containsKey(resourceLocation);
-    }
-    public ShopItem getBuyShopItem(ResourceLocation resourceLocation) {
-        return shopBuyResourceLocationMap.get(resourceLocation);
-    }
-
-    public Map<ResourceLocation, ShopItem> getShopSellResourceLocationMap() {
-        return shopSellResourceLocationMap;
-    }
-    public boolean hasSellShopItem(ResourceLocation resourceLocation) {
-        return shopSellResourceLocationMap.containsKey(resourceLocation);
-    }
-    public ShopItem getSellShopItem(ResourceLocation resourceLocation) {
-        return shopSellResourceLocationMap.get(resourceLocation);
-    }
-
     public Map<Item, ShopItem> getShopSellItemMap() {
         return shopSellItemMap;
+    }
+    public Map<Fluid, ShopItem> getShopBuyFluidMap() {
+        return shopBuyFluidMap;
+    }
+    public Map<Fluid, ShopItem> getShopSellFluidMap() {
+        return shopSellFluidMap;
+    }
+    public Map<TagKey<Item>, ShopItem> getShopSellItemTagMap() {
+        return shopSellItemTagMap;
+    }
+    public Map<TagKey<Fluid>, ShopItem> getShopSellFluidTagMap() {
+        return shopSellFluidTagMap;
+    }
+    public Map<ItemStack, ShopItem> getShopBuyItemNBTMap() {
+        return shopBuyItemNBTMap;
+    }
+
+    public boolean hasBuyShopItem(Item item) {
+        return shopBuyItemMap.containsKey(item);
+    }
+    public ShopItem getBuyShopItem(Item item) {
+        return shopBuyItemMap.get(item);
+    }
+    public boolean hasSellShopItem(Item item) {
+        return shopSellItemMap.containsKey(item);
+    }
+    public ShopItem getSellShopItem(Item item) {
+        return shopSellItemMap.get(item);
+    }
+    public boolean hasBuyShopFluid(Fluid fluid) {
+        return shopBuyFluidMap.containsKey(fluid);
+    }
+    public ShopItem getBuyShopFluid(Fluid fluid) {
+        return shopBuyFluidMap.get(fluid);
+    }
+    public boolean hasSellShopFluid(Fluid fluid) {
+        return shopSellFluidMap.containsKey(fluid);
+    }
+    public ShopItem getSellShopFluid(Fluid fluid) {
+        return shopSellFluidMap.get(fluid);
+    }
+    public boolean hasSellShopItemTag(TagKey<Item> itemTag) {
+        return shopSellItemTagMap.containsKey(itemTag);
+    }
+    public ShopItem getSellShopItemTag(TagKey<Item> itemTag) {
+        return shopSellItemTagMap.get(itemTag);
+    }
+    public boolean hasSellShopFluidTag(TagKey<Fluid> fluidTag) {
+        return shopSellFluidTagMap.containsKey(fluidTag);
+    }
+    public ShopItem getSellShopFluidTag(TagKey<Fluid> fluidTag) {
+        return shopSellFluidTagMap.get(fluidTag);
+    }
+    public boolean hasBuyShopItemNBT(ItemStack item) {
+        if (!shopStockBuyNBT.containsKey(item.getItem())) return false;
+        return (shopStockBuyNBT.get(item.getItem()).stream().anyMatch(shopItem -> shopItem.getItem().getTag().equals(item.getTag())));
+    }
+    public ShopItem getShopBuyItemNBT(ItemStack item) {
+        if (!shopStockBuyNBT.containsKey(item.getItem())) return null;
+        return (shopStockBuyNBT.get(item.getItem()).stream().filter(shopItem -> shopItem.getItem().getTag().equals(item.getTag())).findAny().orElse(null));
     }
 
     public void loadFromFile(CommandSource initiator){
@@ -115,10 +161,14 @@ public class Shop {
         errors.clear();
         shopStockBuy.clear();
         shopStockSell.clear();
+        shopStockBuyNBT.clear();
         shopBuyItemMap.clear();
-        shopBuyResourceLocationMap.clear();
         shopSellItemMap.clear();
-        shopSellResourceLocationMap.clear();
+        shopBuyFluidMap.clear();
+        shopSellFluidMap.clear();
+        shopSellItemTagMap.clear();
+        shopSellFluidTagMap.clear();
+        shopBuyItemNBTMap.clear();
 
         //Parse file
         List<List<String>> parsedCSV = CSVParser.parseCSV(csv);
@@ -137,10 +187,14 @@ public class Shop {
         errors.clear();
         shopStockBuy.clear();
         shopStockSell.clear();
+        shopStockBuyNBT.clear();
         shopBuyItemMap.clear();
-        shopBuyResourceLocationMap.clear();
         shopSellItemMap.clear();
-        shopSellResourceLocationMap.clear();
+        shopBuyFluidMap.clear();
+        shopSellFluidMap.clear();
+        shopSellItemTagMap.clear();
+        shopSellFluidTagMap.clear();
+        shopBuyItemNBTMap.clear();
 
         //Parse file
         List<List<String>> parsedCSV = CSVParser.parseCSV(csv);
@@ -162,6 +216,11 @@ public class Shop {
     }
 
     private void parseLine(String[] line, int lineNumber, List<String> errors){
+        StringBuilder debugLine = new StringBuilder("Parsing line "+lineNumber+": ");
+        for(String segment: line) {
+            debugLine.append(segment).append(",");
+        }
+        AdminShop.LOGGER.debug(debugLine.toString());
         //Skip empty lines
         if(line.length == 0)
             return;
@@ -196,12 +255,6 @@ public class Shop {
                     "Value: "+line[1]);
             isError = true;
         }
-            // Check if item is a valid ResourceLocation
-        ResourceLocation resourceLocation = new ResourceLocation(line[2]);
-        if (!ForgeRegistries.ITEMS.containsKey(resourceLocation)) {
-            errors.add("Line "+lineNumber+":\tItem \""+line[2]+"\"is not a recognized item");
-            isError = true;
-        }
             //Check if price is a number
         long price;
         try {
@@ -226,79 +279,144 @@ public class Shop {
             isError = true;
         }
 
+        //Discovered at least one shop item-breaking error. Return here
+        if(isError) {
+            return;
+        }
+
             //Check if buy or sell
         boolean isBuy = line[0].equalsIgnoreCase("buy") || line[0].equalsIgnoreCase("b");
 
             //Check if both tag and buying
-        boolean isTag = false;
-//        boolean isTag = line[2].contains("<tag:") || line[2].contains("#");
-//        if(isTag && isBuy){
-//            errors.add("Line "+lineNumber+":\tTags can only be sold, not bought." +
-//                    " Please specify a unique item or change the first column to sell");
-//            isError = true;
-//        }
-
-            //Discovered at least one shop item-breaking error. Return here
-        if(isError) {
-            return;
+        boolean isTag = line[2].contains("<tag:") || line[2].contains("#");
+        if(isTag && isBuy){
+            errors.add("Line "+lineNumber+":\tTags can only be sold, not bought." +
+                    " Please specify a unique item or change the first column to sell");
+            isError = true;
         }
         boolean isItem = line[1].equals("item") || line[1].equals("i");
-
-//            //Separate nbt from item/fluid name
-//        String nbtText = null;
-//        CompoundTag nbt = null;
+        //Separate nbt from item/fluid name
+        boolean hasNBT = false;
+        String nbtText = null;
+        CompoundTag nbt = null;
+        // Old KubeJS format
 //        if(line[2].contains(".withTag(")){
+//            hasNBT = true;
 //            String nbtBase = line[2].split("\\.withTag\\(")[1];
 //            nbtText = nbtBase.substring(0, nbtBase.length());
 //            line[2] = line[2].split("\\.withTag\\(")[0];
-//        }else if(line[2].contains("{")){
-//            nbtText = line[2].substring(line[2].indexOf('{')-1).trim();
-//            line[2] = line[2].substring(0, line[2].indexOf('{')-1).trim();
-//        }
-//            //Check if NBT can be parsed
-//        if(nbtText != null){
-//            try {
-//                nbt = parseNbtString(nbtText);
-//            }catch (CommandSyntaxException e){
-//                errors.add("Line "+lineNumber+":\tImproperly formatted NBT. Make sure there aren't too many complex" +
-//                        " castings if copying directly from crafttweaker. You might need to manually remove them.");
-//                errors.add("\tNBT: "+nbtText);
-//                isError = true;
-//            }
-//        }
+//        }else
+        if(line[2].contains("{")){
+            hasNBT = true;
+            nbtText = line[2].substring(line[2].indexOf('{')-1).trim();
+            line[2] = line[2].substring(0, line[2].indexOf('{')-1).trim();
+        }
+        //Check if has NBT and fluid
+        if(hasNBT && !isItem){
+            errors.add("Line "+lineNumber+":\tOnly items can have NBT, not fluids."+
+                    "Please remove NBT from fluid or change to item");
+            isError = true;
+        }
+        //Check if has NBT and selling
+        if(hasNBT && !isBuy){
+            errors.add("Line "+lineNumber+":\tItems with NBT can only be bought, not sold." +
+                    " Please remove NBT from item or change to buy");
+            isError = true;
+        }
+        //Check if NBT can be parsed
+        if(nbtText != null){
+            nbtText = kjsIntoNBT(nbtText);
+            AdminShop.LOGGER.debug("Parsing NBT: "+nbtText);
+            try {
+                nbt = TagParser.parseTag(nbtText);
+            }catch (CommandSyntaxException e){
+                errors.add("Line "+lineNumber+":\tImproperly formatted NBT: "+nbtText);
+                isError = true;
+            }
+        }
 
-//            //Strip extraneous text from item/fluid name
-//        StringBuilder nameBuilder = new StringBuilder();
-//        String[] split = line[2].split(":");
-//            //KubeJS style
-//        if(split.length == 2){
-//            System.out.println("KubeJS Style");
-//            if(isTag){
-//                nameBuilder.append(split[0].substring(1));
-//                nameBuilder.append(':');
-//                nameBuilder.append(split[1]);
-//            }else{
-//                nameBuilder.append(line[2]);
-//            }
-//        }
-//            //Crafttweaker style
-//        else{
-//            System.out.println("Crafttweaker Style");
-//            //mod name : item name, remove the > at the end
-//            if(isTag){
-//                nameBuilder.append(split[2]);
-//                nameBuilder.append(split[3].substring(0, split[3].length()));
-//            }else{
-//                nameBuilder.append(split[1]);
-//                nameBuilder.append(split[2].substring(0, split[2].length()));
-//            }
-//        }
+        //Strip extraneous text from item/fluid name
+        AdminShop.LOGGER.debug("Parsing resource location: "+line[2]);
+        String itemResource = line[2];
+        StringBuilder nameBuilder = new StringBuilder();
+        String[] split = itemResource.split(":");
+            //KubeJS style
+        if (split.length == 1) {
+            errors.add("Line "+lineNumber+": Item \""+itemResource+"\" is not a recognized item");
+            isError = true;
+        } if(split.length == 2){
+            if(isTag){
+                AdminShop.LOGGER.debug("KubeJS Tag");
+                nameBuilder.append(split[0].substring(1));
+                nameBuilder.append(':');
+                nameBuilder.append(split[1]);
+                itemResource = nameBuilder.toString();
+            }else{
+                AdminShop.LOGGER.debug("KubeJS Item");
+                // Parse if in Item.of(''), form
+                if(itemResource.startsWith("Item.of('") && itemResource.endsWith("',")) {
+                    AdminShop.LOGGER.debug("Trimming Item.of(''),");
+                    // Remove them
+                    itemResource = itemResource.substring("Item.of('".length(), itemResource.length() - 2);
+                }
+            }
+        }
+            //Crafttweaker style
+        else{
+            //mod name : item name, remove the > at the end
+            if(isTag){
+                AdminShop.LOGGER.debug("Crafttweaker Tag");
+                nameBuilder.append(split[2]);
+                nameBuilder.append(split[3].substring(0, split[3].length()));
+            }else{
+                AdminShop.LOGGER.debug("Crafttweaker Item");
+                nameBuilder.append(split[1]);
+                nameBuilder.append(split[2].substring(0, split[2].length()));
+            }
+            itemResource = nameBuilder.toString();
+        }
+        // Check if itemResource matches ResourceLocation pattern
+        String pattern = "^[a-z0-9_.-]+:[a-z0-9_.-]+$";
+        if (!itemResource.matches(pattern)) {
+            errors.add("Line "+lineNumber+": Missing ':' or non [a-z0-9_.-] character in item/fluid \""+itemResource+"\"");
+            isError = true;
+        }
 
+        //Discovered at least one shop item-breaking error. Return here
+        if(isError) {
+            return;
+        }
+
+        // Check if item or fluid are a valid ResourceLocation
+        AdminShop.LOGGER.debug("Checking resource location: "+itemResource);
+        if(!isTag && !hasNBT) {
+            ResourceLocation resourceLocation = new ResourceLocation(itemResource);
+            if (isItem && !ForgeRegistries.ITEMS.containsKey(resourceLocation)) {
+                errors.add("Line "+lineNumber+": Item \""+itemResource+"\" is not a recognized item");
+                isError = true;
+            } else if (!isItem && !ForgeRegistries.FLUIDS.containsKey(resourceLocation)) {
+                errors.add("Line "+lineNumber+": Item \""+itemResource+"\" is not a recognized fluid");
+                isError = true;
+            }
+        } else if (isItem && !isTag) {
+            ResourceLocation resourceLocation = new ResourceLocation(itemResource);
+            if (!ForgeRegistries.ITEMS.containsKey(resourceLocation)) {
+                errors.add("Line "+lineNumber+": Item \""+itemResource+"\" is not a recognized item");
+                isError = true;
+            }
+        }
+
+        //Discovered at least one shop item-breaking error. Return here
+        if(isError) {
+            return;
+        }
+
+        AdminShop.LOGGER.debug("Adding ShopItem: isBuy="+isBuy+", isItem="+isItem+", isTag="+isTag+", item:"+itemResource+", nbt:"+((nbtText != null) ? nbtText : "none"));
         ShopItem shopItem = new ShopItem.Builder()
                 .setIsBuy(isBuy)
                 .setIsItem(isItem)
                 .setIsTag(isTag)
-                .setResourceLocation(resourceLocation)
+                .setData(itemResource, nbt)
                 .setPrice(price)
                 .setPermitTier(permitTier)
                 .build();
@@ -308,37 +426,78 @@ public class Shop {
             errors.add("Line "+lineNumber+":\tShop Item could not be created. The item or fluid name does not map to" +
                     " an existing item or fluid.");
             isError = true;
+            return;
         }
             //Check if ShopItem found a matching item/fluid for the supplied tag
-//        if(isTag && item.getItem() == null){
-//            errors.add("Line "+lineNumber+":\t[WARNING] Supplied tag does not match any existing item or fluid." +
-//                    " The shop item will still be created, but will be virtually useless until something is mapped to" +
-//                    " the supplied tag.");
-//            //Continue anyway if no other errors have occurred yet
-//        }
+        if(isTag && shopItem.getItem() == null){
+            errors.add("Line "+lineNumber+":\t[WARNING] Supplied tag does not match any existing item or fluid." +
+                    " The shop item will still be created, but will be virtually useless until something is mapped to" +
+                    " the supplied tag.");
+            //Continue anyway if no other errors have occurred yet
+        }
+
+        // assertions
+        assert !hasNBT || (isItem && isBuy); // only buying items can have NBT
+        assert !isTag || !isBuy; // only selling items/fluids can have tags
 
         List<ShopItem> shopList = isBuy ? shopStockBuy : shopStockSell;
-        Map<Item, ShopItem> shopItemMap = isBuy ? shopBuyItemMap : shopSellItemMap;
-        Map<ResourceLocation, ShopItem> shopResourceLocationMap = isBuy ? shopBuyResourceLocationMap :
-                shopSellResourceLocationMap;
+        if (!isTag && isItem && !hasNBT) {
+            // Item without NBT
+            Map<Item, ShopItem> itemShopItemMap = isBuy ? shopBuyItemMap : shopSellItemMap;
+            itemShopItemMap.put(shopItem.getItem().getItem(), shopItem);
+        } else if (!isTag && isItem && hasNBT && isBuy) {
+            // Buying Item with NBT
+            AdminShop.LOGGER.debug("Saving shopItem to item NBT map");
+            shopBuyItemNBTMap.put(shopItem.getItem(), shopItem);
+            // Add to list of NBT items
+            if (!shopStockBuyNBT.containsKey(shopItem.getItem().getItem())) {
+                shopStockBuyNBT.put(shopItem.getItem().getItem(), new ArrayList<>());
+            }
+            shopStockBuyNBT.get(shopItem.getItem().getItem()).add(shopItem);
+        } else if (!isTag && !isItem) {
+            // Fluid
+            Map<Fluid, ShopItem> fluidShopItemMap = isBuy ? shopBuyFluidMap : shopSellFluidMap;
+            fluidShopItemMap.put(shopItem.getFluid().getFluid(), shopItem);
+        } else if (isTag && isItem && !isBuy) {
+            // Selling Item tag
+            shopSellItemTagMap.put(shopItem.getItemTag(), shopItem);
+        } else if (isTag && !isItem && !isBuy) {
+            // Selling Fluid tag
+            shopSellFluidTagMap.put(shopItem.getFluidTag(), shopItem);
+        }
         shopList.add(shopItem);
-        shopItemMap.put(shopItem.getItem().getItem(), shopItem);
-        shopResourceLocationMap.put(resourceLocation, shopItem);
     }
 
-    /**
-     * Clean the nbt string for any Crafttweaker casting expressions and convert to CompoundTag
-     * @param nbt NBT data in String format
-     * @return CompoundTag equivalent of the parameter string
-     * @throws CommandSyntaxException when nbt cannot be parsed
-     */
-    private CompoundTag parseNbtString(String nbt) throws CommandSyntaxException {
-        Matcher matcher = Pattern.compile(CT_CAST_REGEX).matcher(nbt);
-        while (matcher.find()){
-            String num = matcher.group().substring(0, matcher.group().indexOf(" as"));
-            nbt = nbt.replace(matcher.group(), num);
-        }
-        return TagParser.parseTag(nbt);
+//    /**
+//     * Clean the nbt string for any Crafttweaker casting expressions and convert to CompoundTag
+//     * @param nbt NBT data in String format
+//     * @return CompoundTag equivalent of the parameter string
+//     * @throws CommandSyntaxException when nbt cannot be parsed
+//     */
+//    private CompoundTag parseNbtString(String nbt) throws CommandSyntaxException {
+//        Matcher matcher = Pattern.compile(CT_CAST_REGEX).matcher(nbt);
+//        while (matcher.find()){
+//            String num = matcher.group().substring(0, matcher.group().indexOf(" as"));
+//            nbt = nbt.replace(matcher.group(), num);
+//        }
+//        AdminShop.LOGGER.debug("Attempting to parse tag: "+nbt);
+//        return TagParser.parseTag(nbt);
+//    }
+
+    // Turn KJS-like NBT format into real Minecraft format
+    public static String kjsIntoNBT(String input) {
+        // Replace escaped quote pairs with a single quote
+        String cleaned = input.replaceAll("\\\\\"", "\"");
+        // Remove single quotes around JSON objects
+        cleaned = cleaned.replaceAll("':\\{'", ":{");
+        cleaned = cleaned.replaceAll("'}'", "}");
+        // Remove single quotes around JSON arrays
+        cleaned = cleaned.replaceAll("':\\['", ":['");
+        cleaned = cleaned.replaceAll("']'", "']");
+        // Remove tailing "s and ending ')' character
+        cleaned = cleaned.substring(1, cleaned.length() -2);
+
+        return cleaned;
     }
 
     /**

@@ -2,13 +2,18 @@ package com.ammonium.adminshop.shop;
 
 import com.ammonium.adminshop.AdminShop;
 import net.minecraft.client.resources.language.I18n;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.registries.ForgeRegistries;
 
-import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Holder class for something that is buyable or sellable in the shop.
@@ -18,14 +23,16 @@ import java.util.Objects;
 public class ShopItem {
 
     private boolean isBuy;
-    private boolean isItem;
-    private boolean isTag;
+    private boolean isItem; // true = item, false = fluid
+    private boolean isTag; // true = (item/fluid)Tag, false = (item/fluid)Stack, only when (!isBuy)
     private long price;
     private int permitTier;
-    private ItemStack item;
-    private ResourceLocation resourceLocation;
-    private TagKey<Item> itemTag;
-//    private CompoundTag nbt; //Used with nbt + tags
+    private ItemStack item; // only when (isItem)
+    private FluidStack fluid; // only when (!isItem)
+    private ResourceLocation resourceLocation; // location of either item or fluid, only when (!isTag)
+    private TagKey<Item> itemTag; // only when (isItem && !isBuy)
+    private TagKey<Fluid> fluidTag; // only when (isFluid && !isBuy)
+    private CompoundTag nbt; // only when (isBuy && isItem && !isTag)
 
     private ShopItem(){
 
@@ -34,31 +41,60 @@ public class ShopItem {
     public ItemStack getItem(){
         // Search in item registry if not found
         if (item == null || item.isEmpty()) {
-            Item nitem = ForgeRegistries.ITEMS.getValue(resourceLocation);
-            if (nitem == null || nitem.getDefaultInstance().isEmpty()) {
-                AdminShop.LOGGER.error("No item found with resource location: " + resourceLocation);
+            if(!isTag) {
+                item = new ItemStack(ForgeRegistries.ITEMS.getValue(resourceLocation), 1);
+                item.setTag(nbt);
+            }else{
+                itemTag = ItemTags.create(resourceLocation);
+                Optional<Item> oitem = ForgeRegistries.ITEMS.getValues().stream()
+                        .filter(i -> new ItemStack(i).is(itemTag))
+                        .findFirst();
+                item = new ItemStack(oitem.orElse(null));
             }
-            item = nitem != null ? nitem.getDefaultInstance() : null;
+            if (item.isEmpty()) {
+                if (!isTag) {
+                    AdminShop.LOGGER.error("No item found with location: " + resourceLocation);
+                } else {
+                    AdminShop.LOGGER.error("No item found with tag: " + itemTag.location());
+                }
+            }
         }
+//        AdminShop.LOGGER.debug("Returning ItemStack: "+item.getDisplayName().getString()+", nbt:"+(hasNBT() ? nbt.toString() : "false."));
         return item;
     }
-
-    public ResourceLocation getResourceLocation() {
-        return resourceLocation;
+    public FluidStack getFluid(){
+        // Search in item registry if not found
+        if (fluid == null || fluid.isEmpty()) {
+            if(!isTag){
+                fluid = new FluidStack(ForgeRegistries.FLUIDS.getValue(resourceLocation), 1, nbt);
+            }else{
+                fluidTag = FluidTags.create(resourceLocation);
+                Optional<Fluid> ofluid = ForgeRegistries.FLUIDS.getValues().stream()
+                        .filter(f -> ForgeRegistries.FLUIDS.getHolder(f).get().is(fluidTag))
+                        .findFirst();
+                fluid = new FluidStack(ofluid.get(), 1);
+            }
+            if (fluid.isEmpty()) {
+                if (!isTag) {
+                    AdminShop.LOGGER.error("No fluid found with location: " + resourceLocation);
+                } else {
+                    AdminShop.LOGGER.error("No fluid found with tag: " + fluidTag.location());
+                }
+            }
+        }
+        return fluid;
     }
-
-    public long getPrice() {
-        return price;
+    public long getPrice() {return price;}
+    public int getPermitTier() {return permitTier;}
+    public boolean isBuy() {return isBuy;}
+    public boolean isItem() {return isItem;}
+    public boolean isTag() {return isTag;}
+    public boolean hasNBT() {return (nbt != null && !nbt.isEmpty());}
+    public TagKey<Item> getItemTag() {return itemTag;}
+    public TagKey<Fluid> getFluidTag() {return fluidTag;}
+    public CompoundTag getNbt() {
+        return nbt;
     }
-    public TagKey<Item> getTagItem(){return itemTag;}
-
-    public int getPermitTier() {
-        return permitTier;
-    }
-
-    public boolean isBuy(){return isBuy;}
-    public boolean isItem(){return isItem;}
-    public boolean isTag(){return isTag;}
 
     static class Builder{
         private final ShopItem instance;
@@ -92,33 +128,40 @@ public class ShopItem {
             return this;
         }
 
-//        public Builder setData(String data, CompoundTag nbt){
-//            String [] split = data.split(":");
-//            ResourceLocation resource = new ResourceLocation(split[0], split[1]);
-//            if(instance.isItem) {
-//                if(!instance.isTag) {
-//                    instance.item = new ItemStack(ForgeRegistries.ITEMS.getValue(resource), 1, nbt);
-//                }else{
-//                    instance.itemTag = ItemTags.create(resource);
-//                    Optional<Item> item = ForgeRegistries.ITEMS.getValues().stream()
-//                            .filter(i -> new ItemStack(i).is(instance.itemTag))
-//                            .findFirst();
-//                    instance.item = new ItemStack(item.orElse(null));
-//                    instance.nbt = nbt;
-//                }
-//            }
-//            return this;
-//        }
-        public Builder setResourceLocation(ResourceLocation resourceLocation) {
-//            Item item = ForgeRegistries.ITEMS.getValue(resourceLocation);
-//            if (item == null || item.getDefaultInstance().isEmpty()) {
-//                AdminShop.LOGGER.error("No item found with registry name: " + resourceLocation.toString());
-//            } else {
-//                instance.item = item.getDefaultInstance();
-//            }
-            instance.item = Objects.requireNonNull(
-                    ForgeRegistries.ITEMS.getValue(resourceLocation)).getDefaultInstance();
-            instance.resourceLocation = resourceLocation;
+        public Builder setData(String data, CompoundTag nbt){
+            String [] split = data.split(":");
+            ResourceLocation resource = new ResourceLocation(split[0], split[1]);
+            instance.resourceLocation = resource;
+            if(instance.isItem) {
+                if(!instance.isTag) {
+                    instance.item = new ItemStack(ForgeRegistries.ITEMS.getValue(resource), 1);
+                    instance.item.setTag(nbt);
+                    instance.nbt = nbt;
+                    StringBuilder debugMessage = new StringBuilder("Created ItemStack: ");
+                    debugMessage.append(instance.item.getDisplayName().getString()).append(", ").append(instance.item.getCount()).append(", ");
+                    if (instance.item.getTag() != null) { debugMessage.append(instance.item.getTag()); }
+                    AdminShop.LOGGER.debug(debugMessage.toString());
+                }else{
+                    instance.itemTag = ItemTags.create(resource);
+                    Optional<Item> item = ForgeRegistries.ITEMS.getValues().stream()
+                            .filter(i -> new ItemStack(i).is(instance.itemTag))
+                            .findFirst();
+                    instance.item = new ItemStack(item.orElse(null));
+                    instance.nbt = nbt;
+                }
+            }else{
+                if(!instance.isTag){
+                    instance.fluid = new FluidStack(ForgeRegistries.FLUIDS.getValue(resource), 1, nbt);
+                    instance.nbt = nbt;
+                }else{
+                    instance.fluidTag = FluidTags.create(resource);
+                    Optional<Fluid> fluid = ForgeRegistries.FLUIDS.getValues().stream()
+                            .filter(f -> ForgeRegistries.FLUIDS.getHolder(f).get().is(instance.fluidTag))
+                            .findFirst();
+                    instance.fluid = new FluidStack(fluid.get(), 1);
+                    instance.nbt = nbt;
+                }
+            }
             return this;
         }
 
@@ -132,9 +175,13 @@ public class ShopItem {
      * @return Display name of the item/fluid contained in this
      */
     public String toString(){
-        if(isItem && !isTag) {   //Item
-            return item.getItem().getDefaultInstance().getDisplayName().getString();
-        } else       //Item Tag
-            return I18n.get("gui.item_tag") + ": " + itemTag.location();
+        if(isItem && !isTag)    //Item
+            return item.getDisplayName().getString();
+        else if(isItem)         //Item Tag
+            return I18n.get("gui.item_tag") + itemTag.location();
+        else if(!isTag)         //Fluid
+            return fluid.getDisplayName().getString();
+        else                    //Fluid Tag
+            return I18n.get("gui.fluid_tag") + fluidTag.location();
     }
 }

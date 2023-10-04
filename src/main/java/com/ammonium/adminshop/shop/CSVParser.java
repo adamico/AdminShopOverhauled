@@ -4,19 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CSVParser {
-
-    public static List<List<String>> parseCSV(String csv){
+    public static List<List<String>> parseCSV(String csv) {
         List<List<String>> spreadsheet = new ArrayList<>();
         List<String> row = new ArrayList<>();
         boolean isQuote = false;
-
-        int index = 0;
         StringBuilder cell = new StringBuilder();
-        while(index < csv.length()){
-            if(!isQuote){
-                char next = csv.charAt(index);
-                switch (next){
-                    case ',': //New cell
+        int index = 0;
+        while (index < csv.length()) {
+            char next = csv.charAt(index);
+            if (!isQuote) {
+                switch (next) {
+                    case ',':
                         row.add(cell.toString());
                         cell = new StringBuilder();
                         break;
@@ -35,15 +33,13 @@ public class CSVParser {
                         cell.append(next);
                         break;
                 }
-            }
-            else{
-                char next = csv.charAt(index);
-                switch (next){
+            } else {
+                switch (next) {
                     case '"':
-                        if(index+1 < csv.length() && csv.charAt(index+1) == '"'){
+                        if (index + 1 < csv.length() && csv.charAt(index + 1) == '"') {
+                            cell.append('"');
                             index++;
-                            cell.append(next);
-                        }else{
+                        } else {
                             isQuote = false;
                         }
                         break;
@@ -52,13 +48,12 @@ public class CSVParser {
                         break;
                 }
             }
-
             index++;
         }
-
-
-        row.add(cell.toString());
-        spreadsheet.add(row);
+        if(cell.length() > 0 || isQuote) { // Handling the last cell/row
+            row.add(cell.toString());
+            spreadsheet.add(row);
+        }
         return spreadsheet;
     }
 }

@@ -27,7 +27,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
@@ -41,7 +40,7 @@ public class Buyer3Screen extends AbstractContainerScreen<Buyer3Menu> {
     private Buyer3BE buyerEntity;
     private String ownerUUID;
     private Pair<String, Integer> account;
-    private ResourceLocation shopTarget;
+    private ShopItem shopTarget;
     private ChangeAccountButton changeAccountButton;
     private final List<Pair<String, Integer>> usableAccounts = new ArrayList<>();
     // -1 if bankAccount is not in usableAccounts
@@ -125,7 +124,7 @@ public class Buyer3Screen extends AbstractContainerScreen<Buyer3Menu> {
     private void updateInformation() {
         this.ownerUUID = this.buyerEntity.getOwnerUUID();
         this.account = this.buyerEntity.getAccount();
-        this.shopTarget = this.buyerEntity.getShopTarget();
+        this.shopTarget = this.buyerEntity.getTargetShopItem();
 
         this.usableAccounts.clear();
         ClientLocalData.getUsableAccounts().forEach(account -> this.usableAccounts.add(Pair.of(account.getOwner(),
@@ -150,23 +149,37 @@ public class Buyer3Screen extends AbstractContainerScreen<Buyer3Menu> {
                     .getTeInventoryFirstSlotIndex() + this.menu.getTeInventorySlotCount();
             if (!itemStack.isEmpty() && !isMachineSlot) {
                 // Get item clicked on
-                Item item = itemStack.getItem();
-//                System.out.println("Clicked on item "+item.getRegistryName());
-                // Check if item is in buy map
-                if (Shop.get().getShopBuyItemMap().containsKey(item)) {
-//                    System.out.println("Item is in buy map");
-                    ShopItem shopItem = Shop.get().getShopBuyItemMap().get(item);
-                    // Check if account has permit to buy item
-                    if (getBankAccount().hasPermit(shopItem.getPermitTier())) {
-                        this.shopTarget = ForgeRegistries.ITEMS.getKey(item);
-                        this.buyerEntity.setShopTarget(this.shopTarget);
-                        Messages.sendToServer(new PacketSetBuyerTarget(this.blockPos, this.shopTarget));
-                        return false;
-                    } else {
-                        LocalPlayer player = Minecraft.getInstance().player;
-                        assert player != null;
-                        player.sendSystemMessage(Component.literal("You haven't unlocked that yet!"));
+                AdminShop.LOGGER.debug("Clicked on item "+itemStack.getDisplayName().getString());
+                // Check if item with NBT is in buy map
+                ItemStack singleStack = itemStack.copy();
+                itemStack.setCount(1);
+                boolean isShopItem = Shop.get().hasBuyShopItemNBT(singleStack);
+                ShopItem shopItem = null;
+                if (isShopItem) {
+                    shopItem = Shop.get().getShopBuyItemNBT(singleStack);
+                } else {
+                    // Check if item w/o NBT is in buy map
+                    isShopItem = Shop.get().hasBuyShopItem(itemStack.getItem());
+                    if (isShopItem) {
+                        shopItem = Shop.get().getBuyShopItem(itemStack.getItem());
                     }
+                }
+                // Return super if not in buy map
+                if (!isShopItem || shopItem == null) {
+                    AdminShop.LOGGER.debug("Item not in buy map: "+itemStack.getDisplayName().getString());
+                    return super.mouseClicked(mouseX, mouseY, button);
+                }
+                // Set buyer target
+                // Check if account has permit to buy item
+                if (getBankAccount().hasPermit(shopItem.getPermitTier())) {
+                    this.buyerEntity.setTargetShopItem(this.shopTarget);
+                    this.shopTarget = shopItem;
+                    Messages.sendToServer(new PacketSetBuyerTarget(this.blockPos, this.shopTarget));
+                    return false;
+                } else {
+                    LocalPlayer player = Minecraft.getInstance().player;
+                    assert player != null;
+                    player.sendSystemMessage(Component.literal("You haven't unlocked that yet!"));
                 }
             }
         }
@@ -181,10 +194,12 @@ public class Buyer3Screen extends AbstractContainerScreen<Buyer3Menu> {
         int x = (width - imageWidth) / 2;
         int y = (height - imageHeight) / 2;
 
-        this.blit(pPoseStack, x, y, 0, 0, imageWidth, imageHeight);
-        if (this.shopTarget != null && Shop.get().hasBuyShopItem(this.shopTarget)) {
-            renderItem(pPoseStack, Shop.get().getBuyShopItem(this.shopTarget).getItem().getItem(), x+104,
-                    y+14);
+        blit(pPoseStack, x, y, 0, 0, imageWidth, imageHeight);
+        if (this.shopTarget != null) {
+            renderItem(pPoseStack, this.shopTarget.getItem().getItem(), x+104, y+14);
+            if (this.shopTarget.hasNBT()) {
+                drawString(pPoseStack, font, "+NBT", x+104-font.width("+NBT")-1, y+14, 0xFF55FF);
+            }
         }
     }
 
@@ -214,7 +229,7 @@ public class Buyer3Screen extends AbstractContainerScreen<Buyer3Menu> {
 
         String buyerOwnerUUID = this.buyerEntity.getOwnerUUID();
         Pair<String, Integer> buyerAccount = this.buyerEntity.getAccount();
-        ResourceLocation buyerShopTarget = this.buyerEntity.getShopTarget();
+        ShopItem buyerShopTarget = this.buyerEntity.getTargetShopItem();
 
         boolean shouldUpdateDueToNulls = (this.ownerUUID == null && buyerOwnerUUID != null) ||
                 (this.account == null && buyerAccount != null) ||

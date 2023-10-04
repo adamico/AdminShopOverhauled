@@ -1,6 +1,7 @@
 package com.ammonium.adminshop.client.gui;
 
 import com.ammonium.adminshop.shop.ShopItem;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -9,10 +10,14 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.inventory.InventoryMenu;
+import net.minecraftforge.client.extensions.common.IClientFluidTypeExtensions;
 import org.jetbrains.annotations.NotNull;
 
 import java.text.NumberFormat;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * Shop Item as a clickable button
@@ -29,6 +34,18 @@ public class ShopButton extends Button {
         super(x, y, 16, 16, Component.literal(" "), listener);
         this.itemRenderer = renderer;
         this.item = item;
+        if(!item.isItem()) {
+            Function<ResourceLocation, TextureAtlasSprite> spriteAtlas = Minecraft.getInstance()
+                    .getTextureAtlas(InventoryMenu.BLOCK_ATLAS);
+            IClientFluidTypeExtensions properties = IClientFluidTypeExtensions.of(item.getFluid().getFluid());
+            ResourceLocation resource = properties.getStillTexture();
+            fluidTexture = spriteAtlas.apply(resource);
+            int fcol = properties.getTintColor();
+            fluidColorR = ((fcol >> 16) & 0xFF) / 255.0F;
+            fluidColorG = ((fcol >> 8) & 0xFF) / 255.0F;
+            fluidColorB = (fcol & 0xFF) / 255.0F;
+            fluidColorA = ((fcol >> 24) & 0xFF) / 255.0F;
+        }
     }
 
     @Override
@@ -38,9 +55,16 @@ public class ShopButton extends Button {
             return;
         matrix.pushPose();
 
-        //Draw item
+        //Draw item or fluid
         if(item.isItem()) {
             itemRenderer.renderGuiItem(item.getItem(), x, y);
+        } else { // Render Fluid
+            RenderSystem.bindTexture(fluidTexture.atlas().getId());
+            RenderSystem.setShaderColor(fluidColorR, fluidColorG, fluidColorB, fluidColorA);
+            RenderSystem.setShaderTexture(0,
+                    fluidTexture.atlas().location());
+            blit(matrix, x, y,0, 16, 16, fluidTexture);
+            RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
         }
 
         //Highlight background and write item name if hovered or focused
@@ -57,10 +81,10 @@ public class ShopButton extends Button {
         matrix.scale(.5f, .5f, 1);
         Font font = Minecraft.getInstance().font;
         drawString(matrix, font, getQuantity()+"", 2*(x+16)- font.width(getQuantity()+""), 2*(y)+24, 0xFFFFFF);
-        if(item.isTag()){
-            drawString(matrix, font, "#", 2*x+width*2-font.width("#")-1, 2*y+1, 0xFFC921);
-        }else if(!item.isItem()){
-            drawString(matrix, font, "F", 2*x+1, 2*y+1, 0x6666FF);
+        if(item.isTag()) {
+            drawString(matrix, font, "#", 2 * x + width * 2 - font.width("#") - 1, 2 * y + 1, 0xFFC921);
+        } else if (item.hasNBT()) {
+            drawString(matrix, font, "+NBT", 2 * x + width * 2 - font.width("+NBT") - 1, 2 * y + 1, 0xFF55FF);
         }
         matrix.popPose();
 

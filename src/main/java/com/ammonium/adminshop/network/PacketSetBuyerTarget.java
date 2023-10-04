@@ -2,9 +2,10 @@ package com.ammonium.adminshop.network;
 
 import com.ammonium.adminshop.AdminShop;
 import com.ammonium.adminshop.blocks.BuyerMachine;
+import com.ammonium.adminshop.shop.Shop;
+import com.ammonium.adminshop.shop.ShopItem;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -14,21 +15,21 @@ import java.util.function.Supplier;
 
 public class PacketSetBuyerTarget {
     private final BlockPos pos;
-    private final ResourceLocation resourceLocation;
+    private final ShopItem targetItem;
 
-    public PacketSetBuyerTarget(BlockPos pos, ResourceLocation resourceLocation) {
+    public PacketSetBuyerTarget(BlockPos pos, ShopItem targetItem) {
         this.pos = pos;
-        this.resourceLocation = resourceLocation;
+        this.targetItem = targetItem;
     }
 
     public PacketSetBuyerTarget(FriendlyByteBuf buf) {
         this.pos = buf.readBlockPos();
-        this.resourceLocation = buf.readResourceLocation();
+        this.targetItem = Shop.get().getShopStockBuy().get(buf.readInt());
     }
 
     public void toBytes(FriendlyByteBuf buf) {
         buf.writeBlockPos(this.pos);
-        buf.writeResourceLocation(this.resourceLocation);
+        buf.writeInt(Shop.get().getShopStockBuy().indexOf(this.targetItem));
     }
 
     public boolean handle(Supplier<NetworkEvent.Context> supplier){
@@ -41,7 +42,7 @@ public class PacketSetBuyerTarget {
             ServerPlayer player = ctx.getSender();
 
             if (player != null) {
-                System.out.println("Setting buyer target for "+this.pos+" to "+this.resourceLocation.toString());
+                System.out.println("Setting buyer target for "+this.pos+" to "+this.targetItem.toString());
                 // Get IBuyerBE
                 Level level = player.level;
                 BlockEntity blockEntity = level.getBlockEntity(this.pos);
@@ -56,7 +57,7 @@ public class PacketSetBuyerTarget {
                 }
                 System.out.println("Saving machine account information.");
                 // Apply changes to buyerEntity
-                buyerEntity.setShopTarget(this.resourceLocation);
+                buyerEntity.setTargetShopItem(this.targetItem);
                 blockEntity.setChanged();
                 buyerEntity.sendUpdates();
             }

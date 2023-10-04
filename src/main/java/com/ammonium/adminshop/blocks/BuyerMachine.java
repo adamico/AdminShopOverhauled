@@ -1,7 +1,7 @@
 package com.ammonium.adminshop.blocks;
 
-import net.minecraft.resources.ResourceLocation;
+import com.ammonium.adminshop.shop.ShopItem;
 
 public interface BuyerMachine extends AutoShopMachine {
-    void setShopTarget(ResourceLocation resourceLocation);
+    void setTargetShopItem(ShopItem item);
 }

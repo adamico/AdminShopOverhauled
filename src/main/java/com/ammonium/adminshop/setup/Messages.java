@@ -30,10 +30,15 @@ public class Messages {
                 .encoder(PacketSyncMoneyToClient::toBytes)
                 .consumerMainThread(PacketSyncMoneyToClient::handle)
                 .add();
-        net.messageBuilder(PacketPurchaseRequest.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(PacketPurchaseRequest::new)
-                .encoder(PacketPurchaseRequest::toBytes)
-                .consumerMainThread(PacketPurchaseRequest::handle)
+        net.messageBuilder(PacketBuyRequest.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(PacketBuyRequest::new)
+                .encoder(PacketBuyRequest::toBytes)
+                .consumerMainThread(PacketBuyRequest::handle)
+                .add();
+        net.messageBuilder(PacketSellRequest.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(PacketSellRequest::new)
+                .encoder(PacketSellRequest::toBytes)
+                .consumerMainThread(PacketSellRequest::handle)
                 .add();
         net.messageBuilder(PacketSyncShopToClient.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(PacketSyncShopToClient::new)

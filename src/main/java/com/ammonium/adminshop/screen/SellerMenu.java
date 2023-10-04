@@ -7,15 +7,19 @@ import com.ammonium.adminshop.screen.slot.ModShopInputSlot;
 import com.ammonium.adminshop.shop.Shop;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
+
+import java.util.Optional;
 
 public class SellerMenu extends AbstractContainerMenu {
 
@@ -69,10 +73,14 @@ public class SellerMenu extends AbstractContainerMenu {
 
     @Override
     protected boolean moveItemStackTo(ItemStack pStack, int pStartIndex, int pEndIndex, boolean pReverseDirection) {
+        boolean isValid = isShopItem(pStack);
+        if (!isValid) {
+            AdminShop.LOGGER.debug("Item is not in shop sell map: "+pStack.getDisplayName().getString());
+        }
+
         if (pStartIndex >= TE_INVENTORY_FIRST_SLOT_INDEX && pEndIndex < TE_INVENTORY_FIRST_SLOT_INDEX
-                + TE_INVENTORY_SLOT_COUNT && !Shop.get().getShopSellItemMap().containsKey(pStack.getItem())) {
-            AdminShop.LOGGER.error("Cannot move item stack here");
-            System.out.println("Cannot move item stack here");
+                + TE_INVENTORY_SLOT_COUNT && !isValid) {
+            AdminShop.LOGGER.debug("Cannot move item stack here");
             return false;
         }
         return super.moveItemStackTo(pStack, pStartIndex, pEndIndex, pReverseDirection);
@@ -89,8 +97,7 @@ public class SellerMenu extends AbstractContainerMenu {
         if (index < VANILLA_FIRST_SLOT_INDEX + VANILLA_SLOT_COUNT) {
             // This is a vanilla container slot so merge the stack into the tile inventory
             // Fail if is not a valid sellable item
-            if (!Shop.get().getShopSellItemMap().containsKey(sourceStack.getItem()) ||
-                    !moveItemStackTo(sourceStack, TE_INVENTORY_FIRST_SLOT_INDEX, TE_INVENTORY_FIRST_SLOT_INDEX
+            if (!isShopItem(sourceStack) || !moveItemStackTo(sourceStack, TE_INVENTORY_FIRST_SLOT_INDEX, TE_INVENTORY_FIRST_SLOT_INDEX
                     + TE_INVENTORY_SLOT_COUNT, false)) {
                 return ItemStack.EMPTY;  // EMPTY_ITEM
             }
@@ -127,5 +134,14 @@ public class SellerMenu extends AbstractContainerMenu {
         for (int i = 0; i < 9; ++i) {
             this.addSlot(new Slot(playerInventory, i, 8 + i * 18, 142));
         }
+    }
+    boolean isShopItem(ItemStack stack) {
+        boolean result = Shop.get().hasSellShopItem(stack.getItem());
+        if (!result) {
+            // Check if item tags are in item tags map
+            Optional<TagKey<Item>> searchTag = stack.getTags().filter(itemTag -> Shop.get().hasSellShopItemTag(itemTag)).findFirst();
+            result = searchTag.isPresent();
+        }
+        return result;
     }
 }
