@@ -207,13 +207,18 @@ public class PacketBuyRequest {
                     AdminShop.LOGGER.debug("Attempt to fill with "+toInsert.getDisplayName().getString()+", "+toInsert.getAmount());
                     int filled = fluidHandler.fill(toInsert, IFluidHandler.FluidAction.EXECUTE);
                     AdminShop.LOGGER.debug("Filled with "+filled+" mb");
-                    if (newContainer.get().getItem().equals(Items.BUCKET)) {
-                        ItemStack newBucket = fluidHandler.getContainer();
+
+                    // Replace item
+                    ItemStack newBucket = fluidHandler.getContainer();
+//                    AdminShop.LOGGER.debug("New container: "+newBucket);
+                    if (!newBucket.equals(ogContainer)) {
+//                        AdminShop.LOGGER.debug("Giving new container");
                         itemHandler.extractItem(fillableContainerIdx, 1, false);
                         ItemStack inserted = ItemHandlerHelper.insertItemStacked(itemHandler, newBucket, false);
+//                        AdminShop.LOGGER.debug("Inserted: "+inserted);
                         if (inserted.getCount() != 0) {
-                            player.sendSystemMessage(Component.literal("Error inserting bucket, this shouldn't happen!"));
-                            AdminShop.LOGGER.error("Error inserting bucket, this shouldn't happen! "+inserted.getCount());
+                            player.sendSystemMessage(Component.literal("Error inserting fluid container, this shouldn't happen!"));
+                            AdminShop.LOGGER.error("Error inserting fluid container, this shouldn't happen! "+inserted.getCount());
                         }
                     }
                     });

@@ -13,7 +13,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
@@ -366,14 +365,14 @@ public class PacketSellRequest {
                     return;
                 }
 
-                // Replace item if it was a bucket
+                // Replace item
                 ItemStack returned = fluidHanlder.getContainer();
-                if (returned.getItem().equals(Items.BUCKET)) {
+                if (!returned.equals(toExtract)) {
                     itemHandler.extractItem(slotIndex, 1, false);
                     ItemStack inserted = ItemHandlerHelper.insertItemStacked(itemHandler, returned, false);
                     if (inserted.getCount() != 0) {
-                        player.sendSystemMessage(Component.literal("Error inserting bucket, this shouldn't happen!"));
-                        AdminShop.LOGGER.error("Error inserting bucket, this shouldn't happen! "+inserted.getCount());
+                        player.sendSystemMessage(Component.literal("Error inserting fluid container, this shouldn't happen!"));
+                        AdminShop.LOGGER.error("Error inserting fluid container, this shouldn't happen! "+inserted.getCount());
                     }
                 }
 
@@ -465,18 +464,14 @@ public class PacketSellRequest {
                     return;
                 }
 
-                // Replace item if it was a bucket
+                // Replace item
                 ItemStack returned = fluidHanlder.getContainer();
-                AdminShop.LOGGER.debug("Returned item: "+returned.getDisplayName().getString()+", "+returned.getCount());
-                if (returned.getItem().equals(Items.BUCKET)) {
-                    AdminShop.LOGGER.debug("Handling bucket logic");
-                    ItemStack extracted = itemHandler.extractItem(slotIndex, 1, false);
-                    AdminShop.LOGGER.debug("Extracted: "+extracted.getDisplayName().getString()+", "+extracted.getCount());
+                if (!returned.equals(toExtract.getValue())) {
+                    itemHandler.extractItem(slotIndex, 1, false);
                     ItemStack inserted = ItemHandlerHelper.insertItemStacked(itemHandler, returned, false);
-                    AdminShop.LOGGER.debug("Inserted: "+inserted.getDisplayName().getString()+", "+inserted.getCount());
                     if (inserted.getCount() != 0) {
-                        player.sendSystemMessage(Component.literal("Error inserting bucket, this shouldn't happen!"));
-                        AdminShop.LOGGER.error("Error inserting bucket, this shouldn't happen! "+inserted.getCount());
+                        player.sendSystemMessage(Component.literal("Error inserting fluid container, this shouldn't happen!"));
+                        AdminShop.LOGGER.error("Error inserting fluid container, this shouldn't happen! "+inserted.getCount());
                     }
                 }
 
