@@ -101,11 +101,11 @@ public class ShopButton extends Button {
     }
 
     public List<Component> getTooltipContent(){
-        long price = item.getPrice();
+        long price = item.getPrice() * getQuantity();
         NumberFormat numberFormat = NumberFormat.getInstance();
         String formatted = numberFormat.format(price);
         return List.of(
-                Component.literal("$"+formatted+" "+item.toString()),
+                Component.literal("$"+formatted+" "+getQuantity()+((item.isItem()) ? "x " : "mb ")+item.toString()),
                 Component.literal("Requires Permit Tier: "+item.getPermitTier())
         );
     }
