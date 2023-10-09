@@ -38,30 +38,33 @@ List every account you have access to, meaning you are either the owner or someo
 
 - /shopAccounts createAccount [\<members\>]
 
- Create a new account. When you create it you will be replied with the new account's ID number, which can be used to add new members to it. Optionally, you can include member usernames to add to it.
+Create a new account. When you create it you will be replied with the new account's ID number, which can be used to add new members to it. Optionally, you can include member usernames to add to it.
 
 Examples: /shopAccounts createAccount, /shopAccounts createAccount Ammonium_ Notch Jeb_
 
 - /shopAccounts deleteAccount \<id\>
 
- Deletes an account with the given ID. Note: you can only delete accounts that you are the owner of, and you can't delete your personal (ID: 0) account.
+Deletes an account with the given ID. Note: you can only delete accounts that you are the owner of, and you can't delete your personal (ID: 0) account.
 
 Examples: /shopAccounts deleteAccount 1, /shopAccounts deleteAccount 2
 
 - /shopAccounts addMember \<id\>  \<member\>
 
- Adds a new member with the given username to the account with the given ID. This member will be able to buy and sell from the account.
+Adds a new member with the given username to the account with the given ID. This member will be able to buy and sell from the account.
 
 Examples: /shopAccounts addMember 1 Ammonium_, /shopAccounts addMember 2 Notch
 
 - /shopAccounts removeMember \<id\> \<member\>
 
- Removes said member from the account's members. Same format as addMember.
+Removes said member from the account's members. Same format as addMember.
 
 - /shopAccounts transfer \<amount\> \<fromOwner\> \<fromId\> \<toOwner\> \<toId\>
 
- Transfers \<amount\> money from account \<fromOwner\>:\<fromId\> to account \<toOwner\>:\<toId\>. This is not the only nor easiest way to send money, just buying an expensive item and giving it to the other player for it to sell is much easier.
+Transfers \<amount\> money from account \<fromOwner\>:\<fromId\> to account \<toOwner\>:\<toId\>. This is not the only nor easiest way to send money, just buying an expensive item and giving it to the other player for it to sell is much easier.
 
+- /shopAccounts removePermit \[id\] \[tier\]
+
+Removes a permit of given tier from an account you own with id, if you wanted to do that for some reason
  
 
 # Information for Server Admins and Modpack Developers:
@@ -72,7 +75,8 @@ Adminshop allows you to:
 
 Set up fixed prices at which to buy and sell items from a config file.
 The items are created/destroyed the moment that a player buys or sells them, there is no "limit" to the amount that can be bought or sold.
-Adminshop does not allow you to:
+
+Adminshop does *not* allow you to:
 
 Buy and sell items between players at a player's desired price.
 Have players create their own shops with custom items and prices.
@@ -80,9 +84,13 @@ A player-to-server shop is ideal for server administrators that want to offer pl
 
 For modpack developers, they can add their own Trade Permits as a "gatekeep" in progression in the shop. I.E, you can lock the ability to buy and sell specific items behind a craftable trade permit, and only once you craft and redeem it you can unlock said items in the shop.
 
-The shop's contents can be edited though the shop.csv (Spreadsheet) file in the config folder. The format for adding items and categories is displayed within the csv file itself. You can type /reloadshop to reload the changes. 
+The shop's contents can be edited though the shop.csv (Spreadsheet) file in the config folder. The format for adding items and categories is displayed within the csv file itself. You can type /adminshop reload to reload the changes. 
+
+To add items with NBT, install KubeJS, then get whatever item you want (make sure you only have 1 item in your stack), then run `/kjs hand`. This will give you an Item in KubeJS format (starting with Item.of), which you can use in the item field on shop.csv.
 
 In order to add a custom trade permit, you need to add a crafting recipe for an adminshop:permit item with a NBT value "key" equal to a positive whole number, this is the "tier" of the permit, which dictates which buy/sell items are unlocked with it from the shop (the "tier" is set in the final column of the items in the shop.csv file.
+
+To get a permit as an admin for testing purposes, do `/adminshop givePermit [tier]`
 
 KubeJS is recommended to add custom crafting recipes for trade permits. Experience with KubeJS is recommended. For example, a trade permit which unlocks tier "1" recipes would be written like such:
 ```
