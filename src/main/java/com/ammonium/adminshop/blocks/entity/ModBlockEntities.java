@@ -31,6 +31,14 @@ public class ModBlockEntities {
             BLOCK_ENTITIES.register("buyer_3", () -> BlockEntityType.Builder.of(Buyer3BE::new,
                     ModBlocks.BUYER_3.get()).build(null));
 
+    public static final RegistryObject<BlockEntityType<FluidBuyerBE>> FLUID_BUYER =
+            BLOCK_ENTITIES.register("fluid_buyer", () -> BlockEntityType.Builder.of(FluidBuyerBE::new,
+                    ModBlocks.FLUID_BUYER.get()).build(null));
+
+    public static final RegistryObject<BlockEntityType<FluidSellerBE>> FLUID_SELLER =
+            BLOCK_ENTITIES.register("fluid_seller", () -> BlockEntityType.Builder.of(FluidSellerBE::new,
+                    ModBlocks.FLUID_SELLER.get()).build(null));
+
     public static void register(IEventBus eventBus) {
         BLOCK_ENTITIES.register(eventBus);
     }

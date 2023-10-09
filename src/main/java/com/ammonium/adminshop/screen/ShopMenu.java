@@ -1,6 +1,5 @@
-package com.ammonium.adminshop.blocks;
+package com.ammonium.adminshop.screen;
 
-import com.ammonium.adminshop.screen.ModMenuTypes;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -10,12 +9,12 @@ import net.minecraftforge.items.SlotItemHandler;
 import net.minecraftforge.items.wrapper.InvWrapper;
 import org.jetbrains.annotations.NotNull;
 
-public class ShopContainer extends AbstractContainerMenu {
+public class ShopMenu extends AbstractContainerMenu {
 
     private final Player playerEntity;
     private final IItemHandler playerInventory;
 
-    public ShopContainer(int windowId, Inventory playerInventory, Player player){
+    public ShopMenu(int windowId, Inventory playerInventory, Player player){
         super(ModMenuTypes.SHOP_MENU.get(), windowId);
         this.playerEntity = player;
         this.playerInventory = new InvWrapper(playerInventory);

@@ -2,6 +2,7 @@ package com.ammonium.adminshop.blocks.entity;
 
 import com.ammonium.adminshop.AdminShop;
 import com.ammonium.adminshop.blocks.BuyerMachine;
+import com.ammonium.adminshop.blocks.ItemShopMachine;
 import com.ammonium.adminshop.money.BankAccount;
 import com.ammonium.adminshop.money.MoneyManager;
 import com.ammonium.adminshop.network.PacketSyncMoneyToClient;
@@ -48,7 +49,7 @@ import java.util.UUID;
 
 import static java.lang.Math.ceil;
 
-public class Buyer3BE extends BlockEntity implements BuyerMachine {
+public class Buyer3BE extends BlockEntity implements BuyerMachine, ItemShopMachine {
     private String ownerUUID;
     private Pair<String, Integer> account;
     private boolean hasNBT = false;
@@ -181,7 +182,7 @@ public class Buyer3BE extends BlockEntity implements BuyerMachine {
                 return;
             }
             // Find max amount he can buy
-            buySize = (int) (balance / itemCost);
+            buySize = Math.min((int) (balance / itemCost), buySize);
             price = (long) ceil(buySize * itemCost);
             toInsert.setCount(buySize);
         }
@@ -360,7 +361,7 @@ public class Buyer3BE extends BlockEntity implements BuyerMachine {
                 AdminShop.LOGGER.error("Buyer target has hasNBT but no indexTargetNBT!");
                 this.targetShopItem = null;
             }
-            AdminShop.LOGGER.info("Loaded buyer with targetShopItem "+this.targetShopItem.getItem().getDisplayName().getString());
+            AdminShop.LOGGER.debug("Loaded buyer with targetShopItem "+((this.targetShopItem != null) ? this.targetShopItem.getItem().getDisplayName().getString() : "none"));
         }
     }
 

@@ -1,6 +1,6 @@
 package com.ammonium.adminshop.network;
 
-import com.ammonium.adminshop.blocks.AutoShopMachine;
+import com.ammonium.adminshop.blocks.ShopMachine;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
@@ -31,7 +31,7 @@ public class PacketUpdateRequest {
             ServerPlayer player = ctx.getSender();
             if (player != null) {
                 BlockEntity be = player.level.getBlockEntity(pos);
-                if (be instanceof AutoShopMachine autoShopMachine) {
+                if (be instanceof ShopMachine autoShopMachine) {
                     autoShopMachine.sendUpdates();
                 }
             }

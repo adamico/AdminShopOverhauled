@@ -16,6 +16,7 @@ import net.minecraftforge.client.extensions.common.IClientFluidTypeExtensions;
 import org.jetbrains.annotations.NotNull;
 
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
@@ -104,10 +105,12 @@ public class ShopButton extends Button {
         long price = item.getPrice() * getQuantity();
         NumberFormat numberFormat = NumberFormat.getInstance();
         String formatted = numberFormat.format(price);
-        return List.of(
-                Component.literal("$"+formatted+" "+getQuantity()+((item.isItem()) ? "x " : "mb ")+item.toString()),
-                Component.literal("Requires Permit Tier: "+item.getPermitTier())
-        );
+        List<Component> tootlip = new ArrayList<>();
+        tootlip.add(Component.literal("$"+formatted+" "+getQuantity()+((item.isItem()) ? "x " : "mb ")+item.toString()));
+        if (item.getPermitTier() != 0) {
+            tootlip.add(Component.literal("Requires Permit Tier: "+item.getPermitTier()));
+        }
+        return tootlip;
     }
 
     public ShopItem getShopItem(){

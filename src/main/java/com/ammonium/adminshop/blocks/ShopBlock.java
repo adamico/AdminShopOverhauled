@@ -1,6 +1,7 @@
 package com.ammonium.adminshop.blocks;
 
 import com.ammonium.adminshop.blocks.entity.ShopBE;
+import com.ammonium.adminshop.screen.ShopMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -119,7 +120,7 @@ public class ShopBlock extends BaseEntityBlock {
 
                     @Override
                     public AbstractContainerMenu createMenu(int windowId, Inventory playerInventory, Player playerEntity) {
-                        return new ShopContainer(windowId, playerInventory, playerEntity);
+                        return new ShopMenu(windowId, playerInventory, playerEntity);
                     }
                 };
                 NetworkHooks.openScreen((ServerPlayer) player, containerProvider);

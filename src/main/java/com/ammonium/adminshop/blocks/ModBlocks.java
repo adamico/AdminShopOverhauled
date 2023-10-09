@@ -36,6 +36,12 @@ public class ModBlocks {
     public static final RegistryObject<Block> SELLER = registerLoreBlock("seller",
             SellerBlock::new, ModSetup.ITEM_GROUP, "Max Sell Speed: 64 items/second");
 
+    public static final RegistryObject<Block> FLUID_BUYER = registerLoreBlock("fluid_buyer",
+            FluidBuyerBlock::new, ModSetup.ITEM_GROUP, "Max Buy Speed: 4000mb/second");
+
+    public static final RegistryObject<Block> FLUID_SELLER = registerLoreBlock("fluid_seller",
+            FluidSellerBlock::new, ModSetup.ITEM_GROUP, "Max Sell Speed: 64000mb/second");
+
     private static <T extends Block> RegistryObject<T> registerBlock(String name, Supplier<T> block, CreativeModeTab tab) {
         RegistryObject<T> toReturn = BLOCKS.register(name, block);
         registerBlockItem(name, toReturn, tab);

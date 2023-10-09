@@ -11,6 +11,8 @@
   "block.adminshop.buyer_1": "T1 Buyer",
   "block.adminshop.buyer_2": "T2 Buyer",
   "block.adminshop.buyer_3": "T3 Buyer",
+  "block.adminshop.fluid_buyer": "Fluid Buyer",
+  "block.adminshop.fluid_seller": "Fluid Seller",
   "itemGroup.adminshop": "Admin Shop",
   "screen.adminshop.seller": "Seller",
   "screen.adminshop.buyer": "Buyer",

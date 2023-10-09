@@ -1,7 +1,7 @@
 package com.ammonium.adminshop.network;
 
 import com.ammonium.adminshop.AdminShop;
-import com.ammonium.adminshop.blocks.AutoShopMachine;
+import com.ammonium.adminshop.blocks.ShopMachine;
 import com.ammonium.adminshop.money.BankAccount;
 import com.ammonium.adminshop.money.MoneyManager;
 import net.minecraft.core.BlockPos;
@@ -56,8 +56,8 @@ public class PacketMachineAccountChange {
                 // Get SellerBE
                 Level level = player.level;
                 BlockEntity blockEntity = level.getBlockEntity(this.pos);
-                if (!(blockEntity instanceof AutoShopMachine machineEntity)) {
-                    AdminShop.LOGGER.error("BlockEntity at pos is not MachineWithOwnerAndAccount");
+                if (!(blockEntity instanceof ShopMachine machineEntity)) {
+                    AdminShop.LOGGER.error("BlockEntity at pos is not ShopMachine");
                     return;
                 }
                 // Check machine's owner is the same as player

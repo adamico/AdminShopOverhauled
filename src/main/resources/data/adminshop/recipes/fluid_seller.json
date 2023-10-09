@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "I#I",
+    "I@I",
+    "III"
+  ],
+  "key": {
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "@": {
+      "item": "minecraft:ender_chest"
+    },
+    "#": {
+      "item": "minecraft:bucket"
+    }
+  },
+  "result": {
+    "item": "adminshop:fluid_buyer"
+  }
+}

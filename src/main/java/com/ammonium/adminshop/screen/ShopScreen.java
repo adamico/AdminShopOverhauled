@@ -2,7 +2,6 @@ package com.ammonium.adminshop.screen;
 
 import com.ammonium.adminshop.AdminShop;
 import com.ammonium.adminshop.blocks.ShopBlock;
-import com.ammonium.adminshop.blocks.ShopContainer;
 import com.ammonium.adminshop.client.gui.BuySellButton;
 import com.ammonium.adminshop.client.gui.ChangeAccountButton;
 import com.ammonium.adminshop.client.gui.ShopButton;
@@ -45,7 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
+public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
     private final ResourceLocation GUI = new ResourceLocation(AdminShop.MODID, "textures/gui/shop_gui.png");
     private final String GUI_BUY = "gui.buy";
     private final String GUI_SELL = "gui.sell";
@@ -55,7 +54,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
     private static final int SHOP_BUTTON_Y = 33;
     private static final int SHOP_BUTTON_SIZE = 18;
     private int rows_passed = 0;
-    private final ShopContainer shopContainer;
+    private final ShopMenu shopMenu;
     private final List<ShopButton> buyButtons;
     private final List<ShopButton> sellButtons;
     private List<ShopItem> searchResults;
@@ -69,7 +68,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
     private int tickCounter = 0;
     private String search = "";
 
-    public ShopScreen(ShopContainer container, Inventory inv, Component name) {
+    public ShopScreen(ShopMenu container, Inventory inv, Component name) {
         super(container, inv, name);
 
         assert Minecraft.getInstance().player != null;
@@ -93,7 +92,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
                 account.getId())));
         this.usableAccountsIndex = 0;
 
-        this.shopContainer = container;
+        this.shopMenu = container;
         this.imageWidth = 195;
         this.imageHeight = 222;
         this.tickCounter = 0;
@@ -246,9 +245,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopContainer> {
                         // Attempt to sell tag
                         AdminShop.LOGGER.debug("ShopItem: "+oFluidTag.get().location());
                         Messages.sendToServer(new PacketSellRequest(getBankAccount(), slot.getSlotIndex(), fluidStack.getAmount()));
-                        return;
                     }
-
                 });
                 // Check if item is in sell item map
                 if (Shop.get().hasSellShopItem(item)) {
