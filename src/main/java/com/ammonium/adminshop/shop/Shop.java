@@ -236,7 +236,7 @@ public class Shop {
         //Parse each column and confirm it contains "valid" input
         boolean isError = false;
         if(line.length < 5){
-            errors.add("Line "+lineNumber+":\tExpected shop item on this row, which requires 5 columns." +
+            errors.add("Line "+lineNumber+": Expected shop item on this row, which requires 5 columns." +
                     " Not enough columns");
             isError = true;
             return;
@@ -244,14 +244,14 @@ public class Shop {
             //Check if buy or sell is correctly specified
         if(!(line[0].equalsIgnoreCase("buy") || line[0].equalsIgnoreCase("sell")
                 || line[0].equalsIgnoreCase("b") || line[0].equalsIgnoreCase("s"))){
-            errors.add("Line "+lineNumber+":\tFirst column must be either \"buy\", \"sell\", \"b\", or \"s\""+
+            errors.add("Line "+lineNumber+": First column must be either \"buy\", \"sell\", \"b\", or \"s\""+
                     "Value: "+line[0]);
             isError = true;
         }
             //Check if item or fluid is correctly specified
         if(!(line[1].equalsIgnoreCase("item") || line[1].equalsIgnoreCase("i")
                 || line[1].equals("fluid") || line[1].equalsIgnoreCase("f"))) {
-            errors.add("Line "+lineNumber+":\tSecond column must be either \"item\", \"fluid\", \"i\", or \"f\""+
+            errors.add("Line "+lineNumber+": Second column must be either \"item\", \"fluid\", \"i\", or \"f\""+
                     "Value: "+line[1]);
             isError = true;
         }
@@ -261,7 +261,7 @@ public class Shop {
             price = Long.parseLong(line[3]);
         }catch (NumberFormatException e){
             price = 1;
-            errors.add("Line "+lineNumber+":\tFourth column must be a whole number. Value:"+line[3]);
+            errors.add("Line "+lineNumber+": Fourth column must be a whole number. Value:"+line[3]);
             isError = true;
         }
             // Check if permit tier is a non-negative integer
@@ -270,12 +270,12 @@ public class Shop {
             permitTier = Integer.parseInt(line[4]);
         } catch (NumberFormatException e){
             permitTier = 0;
-            errors.add("Line "+lineNumber+":\tFifth column must be a non-negative integer. Value:"+line[3]);
+            errors.add("Line "+lineNumber+": Fifth column must be a non-negative integer. Value:"+line[3]);
             isError = true;
         }
         if (permitTier < 0) {
             permitTier = 0;
-            errors.add("Line "+lineNumber+":\tFifth column must be a non-negative integer. Value:"+line[3]);
+            errors.add("Line "+lineNumber+": Fifth column must be a non-negative integer. Value:"+line[3]);
             isError = true;
         }
 
@@ -290,7 +290,7 @@ public class Shop {
             //Check if both tag and buying
         boolean isTag = line[2].contains("<tag:") || line[2].contains("#");
         if(isTag && isBuy){
-            errors.add("Line "+lineNumber+":\tTags can only be sold, not bought." +
+            errors.add("Line "+lineNumber+": Tags can only be sold, not bought." +
                     " Please specify a unique item or change the first column to sell");
             isError = true;
         }
@@ -313,13 +313,13 @@ public class Shop {
         }
         //Check if has NBT and fluid
         if(hasNBT && !isItem){
-            errors.add("Line "+lineNumber+":\tOnly items can have NBT, not fluids."+
+            errors.add("Line "+lineNumber+": Only items can have NBT, not fluids."+
                     "Please remove NBT from fluid or change to item");
             isError = true;
         }
         //Check if has NBT and selling
         if(hasNBT && !isBuy){
-            errors.add("Line "+lineNumber+":\tItems with NBT can only be bought, not sold." +
+            errors.add("Line "+lineNumber+": Items with NBT can only be bought, not sold." +
                     " Please remove NBT from item or change to buy");
             isError = true;
         }
@@ -330,7 +330,7 @@ public class Shop {
             try {
                 nbt = TagParser.parseTag(nbtText);
             }catch (CommandSyntaxException e){
-                errors.add("Line "+lineNumber+":\tImproperly formatted NBT: "+nbtText);
+                errors.add("Line "+lineNumber+": Improperly formatted NBT: "+nbtText);
                 isError = true;
             }
         }
@@ -377,7 +377,7 @@ public class Shop {
         }
         // Check if itemResource matches ResourceLocation pattern
         String pattern = "^[a-z0-9_.-]+:[a-z0-9_.-]+$";
-        if (!itemResource.matches(pattern)) {
+        if (!isTag && !itemResource.matches(pattern)) {
             errors.add("Line "+lineNumber+": Missing ':' or non [a-z0-9_.-] character in item/fluid \""+itemResource+"\"");
             isError = true;
         }
@@ -423,14 +423,14 @@ public class Shop {
 
             //Check if ShopItem was created correctly
         if(!isTag && shopItem.getItem() == null){
-            errors.add("Line "+lineNumber+":\tShop Item could not be created. The item or fluid name does not map to" +
+            errors.add("Line "+lineNumber+": Shop Item could not be created. The item or fluid name does not map to" +
                     " an existing item or fluid.");
             isError = true;
             return;
         }
             //Check if ShopItem found a matching item/fluid for the supplied tag
         if(isTag && shopItem.getItem() == null){
-            errors.add("Line "+lineNumber+":\t[WARNING] Supplied tag does not match any existing item or fluid." +
+            errors.add("Line "+lineNumber+": [WARNING] Supplied tag does not match any existing item or fluid." +
                     " The shop item will still be created, but will be virtually useless until something is mapped to" +
                     " the supplied tag.");
             //Continue anyway if no other errors have occurred yet
