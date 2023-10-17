@@ -66,18 +66,9 @@ public class TankGauge extends AbstractWidget {
     }
 
     @Override
-    public void renderToolTip(PoseStack pPoseStack, int pMouseX, int pMouseY) {
-        AdminShop.LOGGER.debug("Render Tooltip");
-        super.renderToolTip(pPoseStack, pMouseX, pMouseY);
-    }
-
-    @Override
-    protected void renderBg(PoseStack pPoseStack, Minecraft pMinecraft, int pMouseX, int pMouseY) {
-        super.renderBg(pPoseStack, pMinecraft, pMouseX, pMouseY);
-    }
-
-    @Override
-    public void renderButton(@NotNull PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+    public void renderWidget(@NotNull PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+        int x = getX();
+        int y = getY();
         //super.renderButton(matrix, x, y, partialTicks);
         if(!visible) return;
         matrix.pushPose();
@@ -110,6 +101,11 @@ public class TankGauge extends AbstractWidget {
         matrix.popPose();
     }
 
+    @Override
+    protected void updateWidgetNarration(NarrationElementOutput pNarrationElementOutput) {
+        return;
+    }
+
     public int getQuantity(){
         if (tank.getFluid().isEmpty()) return 0;
         return tank.getFluidAmount();
@@ -125,10 +121,5 @@ public class TankGauge extends AbstractWidget {
                     Component.literal(tank.getFluid().getDisplayName().getString()));
         }
         return tootlip;
-    }
-
-    @Override
-    public void updateNarration(NarrationElementOutput pNarrationElementOutput) {
-        return;
     }
 }

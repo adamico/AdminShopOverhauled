@@ -10,8 +10,12 @@ import com.ammonium.adminshop.setup.Config;
 import com.ammonium.adminshop.setup.ModSetup;
 import com.ammonium.adminshop.shop.Shop;
 import com.mojang.logging.LogUtils;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.CreativeModeTabEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -61,5 +65,28 @@ public class AdminShop {
     @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.FORGE)
     public static class ForgeEvents {
 
+    }
+
+    // Registered on the MOD event bus
+// Assume we have RegistryObject<Item> and RegistryObject<Block> called ITEM and BLOCK
+    @SubscribeEvent
+    public void buildContents(CreativeModeTabEvent.Register event) {
+        event.registerCreativeModeTab(new ResourceLocation(MODID, "example"), builder ->
+                // Set name of tab to display
+                builder.title(Component.translatable("item_group." + MODID))
+                        // Set icon of creative tab
+                        .icon(() -> new ItemStack(ModBlocks.SHOP.get()))
+                        // Add default items to tab
+                        .displayItems((params, output) -> {
+                            output.accept(ModItems.PERMIT.get());
+                            output.accept(ModBlocks.SHOP.get());
+                            output.accept(ModBlocks.BUYER_1.get());
+                            output.accept(ModBlocks.BUYER_2.get());
+                            output.accept(ModBlocks.BUYER_3.get());
+                            output.accept(ModBlocks.SELLER.get());
+                            output.accept(ModBlocks.FLUID_BUYER.get());
+                            output.accept(ModBlocks.FLUID_SELLER.get());
+                        })
+        );
     }
 }

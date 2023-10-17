@@ -8,6 +8,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.entity.ItemRenderer;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -32,7 +33,7 @@ public class ShopButton extends Button {
     public boolean isMouseOn = false;
 
     public ShopButton(ShopItem item, int x, int y, ItemRenderer renderer, OnPress listener) {
-        super(x, y, 16, 16, Component.literal(" "), listener);
+        super(x, y, 16, 16, Component.literal(" "), listener, DEFAULT_NARRATION);
         this.itemRenderer = renderer;
         this.item = item;
         if(!item.isItem()) {
@@ -50,7 +51,9 @@ public class ShopButton extends Button {
     }
 
     @Override
-    public void renderButton(@NotNull PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+    public void renderWidget(@NotNull PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+        int x = getX();
+        int y = getY();
         //super.renderButton(matrix, x, y, partialTicks);
         if(!visible)
             return;
@@ -58,12 +61,12 @@ public class ShopButton extends Button {
 
         //Draw item or fluid
         if(item.isItem()) {
-            itemRenderer.renderGuiItem(item.getItem(), x, y);
+            itemRenderer.renderGuiItem(matrix, item.getItem(), x, y);
         } else { // Render Fluid
             RenderSystem.bindTexture(fluidTexture.atlas().getId());
             RenderSystem.setShaderColor(fluidColorR, fluidColorG, fluidColorB, fluidColorA);
             RenderSystem.setShaderTexture(0,
-                    fluidTexture.atlas().location());
+                    fluidTexture.atlasLocation());
             blit(matrix, x, y,0, 16, 16, fluidTexture);
             RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
         }

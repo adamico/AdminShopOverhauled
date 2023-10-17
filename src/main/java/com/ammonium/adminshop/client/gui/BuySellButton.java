@@ -25,7 +25,7 @@ public class BuySellButton extends Button {
     private boolean isBuy;
 
     public BuySellButton(int x, int y, String buyText, String sellText, boolean isBuy, OnPress listener) {
-        super(x, y, 50, 12, Component.literal(isBuy ? buyText : sellText), listener);
+        super(x, y, 50, 12, Component.literal(isBuy ? buyText : sellText), listener, DEFAULT_NARRATION);
         this.isBuy = isBuy;
     }
 
@@ -43,6 +43,8 @@ public class BuySellButton extends Button {
         if(!visible) {
             return;
         }
+        int x = getX();
+        int y = getY();
 
         RenderSystem.setShaderTexture(0, GUI);
         if(isBuy){
