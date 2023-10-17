@@ -247,6 +247,6 @@ public class Buyer3Screen extends AbstractContainerScreen<Buyer3Menu> {
     private void renderItem(PoseStack matrixStack, Item item, int x, int y) {
         ItemRenderer itemRenderer = this.minecraft.getItemRenderer();
         ItemStack itemStack = new ItemStack(item);
-        itemRenderer.renderAndDecorateFakeItem(itemStack, x, y);
+        itemRenderer.renderAndDecorateFakeItem(matrixStack, itemStack, x, y);
     }
 }

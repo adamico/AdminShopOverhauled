@@ -8,8 +8,10 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.entity.ItemRenderer;
+import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.InventoryMenu;
@@ -29,6 +31,7 @@ public class ShopButton extends Button {
     private ShopItem item;
     private ItemRenderer itemRenderer;
     private TextureAtlasSprite fluidTexture;
+    private int fluidTextureId;
     private float fluidColorR, fluidColorG, fluidColorB, fluidColorA;
     public boolean isMouseOn = false;
 
@@ -42,6 +45,14 @@ public class ShopButton extends Button {
             IClientFluidTypeExtensions properties = IClientFluidTypeExtensions.of(item.getFluid().getFluid());
             ResourceLocation resource = properties.getStillTexture();
             fluidTexture = spriteAtlas.apply(resource);
+            TextureManager manager = Minecraft.getInstance().getTextureManager();
+            AbstractTexture abstractTexture = manager.getTexture(InventoryMenu.BLOCK_ATLAS);
+            TextureAtlas atlas = null;
+            if (abstractTexture instanceof TextureAtlas) {
+                atlas = (TextureAtlas) abstractTexture;
+            }
+            assert atlas != null;
+            fluidTextureId = atlas.getId();
             int fcol = properties.getTintColor();
             fluidColorR = ((fcol >> 16) & 0xFF) / 255.0F;
             fluidColorG = ((fcol >> 8) & 0xFF) / 255.0F;
@@ -63,7 +74,7 @@ public class ShopButton extends Button {
         if(item.isItem()) {
             itemRenderer.renderGuiItem(matrix, item.getItem(), x, y);
         } else { // Render Fluid
-            RenderSystem.bindTexture(fluidTexture.atlas().getId());
+            RenderSystem.bindTexture(fluidTextureId);
             RenderSystem.setShaderColor(fluidColorR, fluidColorG, fluidColorB, fluidColorA);
             RenderSystem.setShaderTexture(0,
                     fluidTexture.atlasLocation());
@@ -72,7 +83,7 @@ public class ShopButton extends Button {
         }
 
         //Highlight background and write item name if hovered or focused
-        if(isHoveredOrFocused()){
+        if(isHovered()){
             isMouseOn = true;
             fill(matrix, x, y, x+width, y+height, 0xFFFFFFDF);
         }else{

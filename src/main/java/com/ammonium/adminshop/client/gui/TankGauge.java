@@ -1,13 +1,15 @@
 package com.ammonium.adminshop.client.gui;
 
-import com.ammonium.adminshop.AdminShop;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.InventoryMenu;
@@ -24,6 +26,7 @@ public class TankGauge extends AbstractWidget {
 
     private IFluidTank tank;
     private TextureAtlasSprite fluidTexture;
+    private int fluidTextureId;
     private float fluidColorR, fluidColorG, fluidColorB, fluidColorA;
     public boolean isMouseOn = false;
 
@@ -39,6 +42,14 @@ public class TankGauge extends AbstractWidget {
             IClientFluidTypeExtensions properties = IClientFluidTypeExtensions.of(getFluid());
             ResourceLocation resource = properties.getStillTexture();
             fluidTexture = spriteAtlas.apply(resource);
+            TextureManager manager = Minecraft.getInstance().getTextureManager();
+            AbstractTexture abstractTexture = manager.getTexture(InventoryMenu.BLOCK_ATLAS);
+            TextureAtlas atlas = null;
+            if (abstractTexture instanceof TextureAtlas) {
+                atlas = (TextureAtlas) abstractTexture;
+            }
+            assert atlas != null;
+            fluidTextureId = atlas.getId();
             int fcol = properties.getTintColor();
             fluidColorR = ((fcol >> 16) & 0xFF) / 255.0F;
             fluidColorG = ((fcol >> 8) & 0xFF) / 255.0F;
@@ -77,10 +88,10 @@ public class TankGauge extends AbstractWidget {
         // Render Fluid
         if(!tank.getFluid().isEmpty()) {
             setFluidTextures();
-            RenderSystem.bindTexture(fluidTexture.atlas().getId());
+            RenderSystem.bindTexture(fluidTextureId);
             RenderSystem.setShaderColor(fluidColorR, fluidColorG, fluidColorB, fluidColorA);
             RenderSystem.setShaderTexture(0,
-                    fluidTexture.atlas().location());
+                    fluidTexture.atlasLocation());
             float pixelsPerMb = height / (float) tank.getCapacity();
             int filledHeight = (int) (pixelsPerMb * getQuantity());
             blit(matrix, x, y+(height-filledHeight),0, width, filledHeight, fluidTexture);

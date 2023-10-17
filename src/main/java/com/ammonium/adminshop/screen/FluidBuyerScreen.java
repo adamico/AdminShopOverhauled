@@ -19,7 +19,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -54,6 +57,7 @@ public class FluidBuyerScreen extends AbstractContainerScreen<FluidBuyerMenu> {
     // -1 if bankAccount is not in usableAccounts
     private int usableAccountsIndex;
     private TextureAtlasSprite fluidTexture = null;
+    private int fluidTextureId;
     private float fluidColorR, fluidColorG, fluidColorB, fluidColorA;
     private TankGauge tankGauge;
 
@@ -285,10 +289,10 @@ public class FluidBuyerScreen extends AbstractContainerScreen<FluidBuyerMenu> {
             setFluidTexture(fluid);
         }
         // Render Fluid
-        RenderSystem.bindTexture(fluidTexture.atlas().getId());
+        RenderSystem.bindTexture(fluidTextureId);
         RenderSystem.setShaderColor(fluidColorR, fluidColorG, fluidColorB, fluidColorA);
         RenderSystem.setShaderTexture(0,
-                fluidTexture.atlas().location());
+                fluidTexture.atlasLocation());
         blit(matrix, x, y,0, width, height, fluidTexture);
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
     }
@@ -300,6 +304,14 @@ public class FluidBuyerScreen extends AbstractContainerScreen<FluidBuyerMenu> {
         IClientFluidTypeExtensions properties = IClientFluidTypeExtensions.of(fluid);
         ResourceLocation resource = properties.getStillTexture();
         fluidTexture = spriteAtlas.apply(resource);
+        TextureManager manager = Minecraft.getInstance().getTextureManager();
+        AbstractTexture abstractTexture = manager.getTexture(InventoryMenu.BLOCK_ATLAS);
+        TextureAtlas atlas = null;
+        if (abstractTexture instanceof TextureAtlas) {
+            atlas = (TextureAtlas) abstractTexture;
+        }
+        assert atlas != null;
+        fluidTextureId = atlas.getId();
         int fcol = properties.getTintColor();
         fluidColorR = ((fcol >> 16) & 0xFF) / 255.0F;
         fluidColorG = ((fcol >> 8) & 0xFF) / 255.0F;

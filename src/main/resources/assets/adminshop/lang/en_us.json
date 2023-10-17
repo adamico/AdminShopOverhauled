@@ -13,7 +13,7 @@
   "block.adminshop.buyer_3": "T3 Buyer",
   "block.adminshop.fluid_buyer": "Fluid Buyer",
   "block.adminshop.fluid_seller": "Fluid Seller",
-  "itemGroup.adminshop": "Admin Shop",
+  "item_group.adminshop": "Admin Shop",
   "screen.adminshop.seller": "Seller",
   "screen.adminshop.buyer": "Buyer",
   "item_group.adminshop.creativetab": "AdminShop",
