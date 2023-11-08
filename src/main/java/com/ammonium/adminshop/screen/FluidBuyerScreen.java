@@ -285,12 +285,13 @@ public class FluidBuyerScreen extends AbstractContainerScreen<FluidBuyerMenu> {
             setFluidTexture(fluid);
         }
         // Render Fluid
-        RenderSystem.bindTexture(fluidTexture.atlas().getId());
+        RenderSystem.enableBlend();
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShaderTexture(0, fluidTexture.atlas().location());
         RenderSystem.setShaderColor(fluidColorR, fluidColorG, fluidColorB, fluidColorA);
-        RenderSystem.setShaderTexture(0,
-                fluidTexture.atlas().location());
         blit(matrix, x, y,0, width, height, fluidTexture);
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+        RenderSystem.disableBlend();
     }
 
     private void setFluidTexture(Fluid fluid) {

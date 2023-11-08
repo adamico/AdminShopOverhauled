@@ -60,6 +60,5 @@ public class AdminShop {
     // Event bus for receiving Forge Events)
     @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.FORGE)
     public static class ForgeEvents {
-
     }
 }

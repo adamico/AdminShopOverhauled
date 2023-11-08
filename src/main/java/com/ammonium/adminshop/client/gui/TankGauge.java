@@ -7,6 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -25,6 +26,7 @@ public class TankGauge extends AbstractWidget {
     private IFluidTank tank;
     private TextureAtlasSprite fluidTexture;
     private float fluidColorR, fluidColorG, fluidColorB, fluidColorA;
+    private int textureWidth, textureHeight;
     public boolean isMouseOn = false;
 
     private Fluid getFluid() {
@@ -44,6 +46,8 @@ public class TankGauge extends AbstractWidget {
             fluidColorG = ((fcol >> 8) & 0xFF) / 255.0F;
             fluidColorB = (fcol & 0xFF) / 255.0F;
             fluidColorA = ((fcol >> 24) & 0xFF) / 255.0F;
+            textureWidth = fluidTexture.getWidth();
+            textureHeight = fluidTexture.getHeight();
         }
     }
     public TankGauge(FluidTank tank, int x, int y, int width, int height) {
@@ -83,17 +87,33 @@ public class TankGauge extends AbstractWidget {
         matrix.pushPose();
 //        AdminShop.LOGGER.debug("Tank contents: "+tank.getFluid().getAmount()+"mb "+tank.getFluid().getDisplayName().getString());
 
-        // Render Fluid
+        // Render Tank Contents
         if(!tank.getFluid().isEmpty()) {
             setFluidTextures();
-            RenderSystem.bindTexture(fluidTexture.atlas().getId());
+            // Set render for fluid
+            enableScissor(x, y, x + width, y + height);
+            RenderSystem.enableBlend();
+            RenderSystem.setShader(GameRenderer::getPositionTexShader);
+            RenderSystem.setShaderTexture(0, fluidTexture.atlas().location());
             RenderSystem.setShaderColor(fluidColorR, fluidColorG, fluidColorB, fluidColorA);
-            RenderSystem.setShaderTexture(0,
-                    fluidTexture.atlas().location());
+            // Get height value proportional to filled capacity
             float pixelsPerMb = height / (float) tank.getCapacity();
             int filledHeight = (int) (pixelsPerMb * getQuantity());
-            blit(matrix, x, y+(height-filledHeight),0, width, filledHeight, fluidTexture);
+            // Calculate the number of full tiles and the remainder
+            int fullTiles = filledHeight / textureHeight;
+            int remainderHeight = filledHeight % textureHeight;
+            // Render tiled texture
+            for(int j = 0; j < fullTiles; j++) {
+                blit(matrix, x, y + height - ((j+1) * textureHeight), getBlitOffset() + 100, width, textureHeight, fluidTexture);
+            }
+            // Render remainder
+            if (remainderHeight > 0) {
+                blit(matrix, x, y + height - (fullTiles * textureHeight) - remainderHeight, getBlitOffset() + 100, width, remainderHeight, fluidTexture);
+            }
+            // Reset render
             RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+            RenderSystem.disableBlend();
+            RenderSystem.disableScissor();
         }
 
         //Highlight background and write fluid name if hovered or focused

@@ -307,7 +307,13 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
         shopButtons.clear();
         // Skip rows scrolled past
         int numPassed = rows_passed*NUM_COLS;
-        shopItems = shopItems.subList(numPassed, Math.min(numPassed+NUM_ROWS*NUM_COLS, shopItems.size()));
+//        shopItems = shopItems.subList(numPassed, Math.min(numPassed+NUM_ROWS*NUM_COLS, shopItems.size()));
+        if (numPassed < shopItems.size()) {
+            shopItems = shopItems.subList(numPassed, Math.min(numPassed+NUM_ROWS*NUM_COLS, shopItems.size()));
+        } else {
+            AdminShop.LOGGER.error("Scrolled farther down that should've!");
+            shopItems = new ArrayList<>(); // or however you want to handle this case
+        }
         // Add buttons
         for(int j = 0; j < shopItems.size(); j++){
             final int j2 = j;

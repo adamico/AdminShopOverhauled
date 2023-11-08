@@ -7,6 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.network.chat.Component;
@@ -60,12 +61,16 @@ public class ShopButton extends Button {
         if(item.isItem()) {
             itemRenderer.renderGuiItem(item.getItem(), x, y);
         } else { // Render Fluid
-            RenderSystem.bindTexture(fluidTexture.atlas().getId());
+            // Set render for fluid
+//            enableScissor(x, y, x + width, y + height);
+            RenderSystem.enableBlend();
+            RenderSystem.setShader(GameRenderer::getPositionTexShader);
+            RenderSystem.setShaderTexture(0, fluidTexture.atlas().location());
             RenderSystem.setShaderColor(fluidColorR, fluidColorG, fluidColorB, fluidColorA);
-            RenderSystem.setShaderTexture(0,
-                    fluidTexture.atlas().location());
             blit(matrix, x, y,0, 16, 16, fluidTexture);
             RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+            RenderSystem.disableBlend();
+//            RenderSystem.disableScissor();
         }
 
         //Highlight background and write item name if hovered or focused
