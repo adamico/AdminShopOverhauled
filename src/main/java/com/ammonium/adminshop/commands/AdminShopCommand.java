@@ -44,8 +44,9 @@ public class AdminShopCommand {
         getPermitCommand.then(getPermitCommandTier);
 
         // adminshop give {owner} {id} {amount}
-        RequiredArgumentBuilder<CommandSourceStack, EntitySelector> giveMoneyCommand = Commands.argument("owner", EntityArgument.players())
+        LiteralArgumentBuilder<CommandSourceStack> giveMoneyCommand = Commands.literal("give")
                 .requires(source -> source.hasPermission(3))
+                .then(Commands.argument("owner", EntityArgument.players())
                 .then(Commands.argument("id", IntegerArgumentType.integer())
                         .then(Commands.argument("amount", IntegerArgumentType.integer())
                                 .executes(context -> {
@@ -55,7 +56,7 @@ public class AdminShopCommand {
                                     return giveMoney(context.getSource(), ownerSelector, id, amount);
                                 })
                         )
-                );
+                ));
 
         adminShopCommand.then(reloadShopCommand)
                         .then(getPermitCommand)
