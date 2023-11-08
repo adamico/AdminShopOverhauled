@@ -320,7 +320,7 @@ public class BuyerBE extends BlockEntity implements BuyerMachine, ItemShopMachin
             ResourceLocation targetResource = ForgeRegistries.ITEMS.getKey(this.targetShopItem.getItem().getItem());
             assert targetResource != null;
             tag.putString("targetResource", targetResource.toString());
-            AdminShop.LOGGER.info("Saving buyer NBT: "+this.hasNBT);
+//            AdminShop.LOGGER.debug("Saving buyer NBT: "+this.hasNBT);
             tag.putBoolean("hasNBT", this.hasNBT);
             if (this.hasNBT) {
                 // If NBT item, save index of List<Item>
