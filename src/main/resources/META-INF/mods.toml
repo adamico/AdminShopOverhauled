@@ -63,3 +63,9 @@ Can buy and sell Items, Fluids, and Forge Energy (can only *sell* energy)
     versionRange="[1.19.4,)"
     ordering="NONE"
     side="BOTH"
+[[dependencies.adminshop]]
+    modId="jei"
+    mandatory=false
+    versionRange="$jei_range"
+    ordering="AFTER"
+    side="BOTH"

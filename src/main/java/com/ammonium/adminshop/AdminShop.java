@@ -8,7 +8,6 @@ import com.ammonium.adminshop.screen.ModMenuTypes;
 import com.ammonium.adminshop.setup.ClientSetup;
 import com.ammonium.adminshop.setup.Config;
 import com.ammonium.adminshop.setup.ModSetup;
-import com.ammonium.adminshop.shop.Shop;
 import com.mojang.logging.LogUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -16,7 +15,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.CreativeModeTabEvent;
-import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
@@ -50,14 +48,6 @@ public class AdminShop {
     private void setup(final FMLCommonSetupEvent event) {
         // some preinit code
 //        LOGGER.info("HELLO FROM PREINIT");
-    }
-
-    // You can use SubscribeEvent and let the Event Bus discover methods to call
-    @SubscribeEvent
-    public void onServerStarting(ServerStartingEvent event) {
-        // Do something when the server starts
-        LOGGER.info("Loading Shop");
-        Shop.get();
     }
 
     // You can use EventBusSubscriber to automatically subscribe events on the contained class (this is subscribing to the FORGE
