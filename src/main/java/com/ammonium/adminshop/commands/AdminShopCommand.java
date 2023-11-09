@@ -4,7 +4,6 @@ import com.ammonium.adminshop.item.ModItems;
 import com.ammonium.adminshop.money.MoneyManager;
 import com.ammonium.adminshop.network.PacketSyncMoneyToClient;
 import com.ammonium.adminshop.setup.Messages;
-import com.ammonium.adminshop.shop.Shop;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -28,11 +27,6 @@ public class AdminShopCommand {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher){
         LiteralArgumentBuilder<CommandSourceStack> adminShopCommand = Commands.literal("adminshop");
-
-        // adminshop reload
-        LiteralArgumentBuilder<CommandSourceStack> reloadShopCommand = Commands.literal("reload")
-                        .requires(source -> source.hasPermission(3))
-                        .executes(command -> reloadShop(command.getSource()));
 
         // adminshop getPermit [tier]
         LiteralArgumentBuilder<CommandSourceStack> getPermitCommand = Commands.literal("getPermit").requires(source -> source.hasPermission(3));
@@ -58,20 +52,9 @@ public class AdminShopCommand {
                         )
                 ));
 
-        adminShopCommand.then(reloadShopCommand)
-                        .then(getPermitCommand)
+        adminShopCommand.then(getPermitCommand)
                         .then(giveMoneyCommand);
         dispatcher.register(adminShopCommand);
-    }
-
-    static int reloadShop(CommandSourceStack source){
-        try {
-            Shop.get().loadFromFile(source.getPlayerOrException());
-        }catch (CommandSyntaxException e){
-            return 0;
-        }
-//        source.sendSuccess(Component.literal("In order to update JEI, you must do a full /reload"), true);
-        return 1;
     }
 
     static int getPermit(CommandSourceStack source, int tier) throws CommandSyntaxException {
