@@ -15,20 +15,23 @@ public class PacketSyncShopToClient {
     }
 
     public PacketSyncShopToClient(FriendlyByteBuf buf){
-        shopData = new String(buf.readByteArray());
+        shopData = buf.readUtf(32767);
     }
 
     public void toBytes(FriendlyByteBuf buf){
-        buf.writeByteArray(shopData.getBytes());
+        buf.writeUtf(shopData, 32767);
     }
+
 
     public boolean handle(Supplier<NetworkEvent.Context> supplier){
         NetworkEvent.Context ctx = supplier.get();
         ctx.enqueueWork(() -> {
             //Client side accessed here
-            //Do NOT call client-only code though, since server needs to access this too
+            // Sync shop
             Shop.get().loadFromFile(Minecraft.getInstance().player);
+
         });
         return true;
     }
+
 }
