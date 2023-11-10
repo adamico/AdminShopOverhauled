@@ -35,10 +35,9 @@ public class BalanceDisplay {
         tick++;
         if (event.phase == TickEvent.Phase.END && player != null && tick >= 20) {
             tick = 0;
-            //BankAccount selectedAccount = getBankAccount();
-            //Pair<String, Integer> selectedAccountInfo = Pair.of(selectedAccount.getOwner(), selectedAccount.getId());
-            //For testing purposes
-            Pair<String, Integer> selectedAccountInfo = Pair.of("", 1);
+            String playerUUID = player.getStringUUID();
+            ClientLocalData.sortUsableAccounts();
+            Pair<String, Integer> selectedAccountInfo = Pair.of(playerUUID, 1);
             balance = ClientLocalData.getMoney(selectedAccountInfo);
             history[1] = history[0];
             history[0] = balance - lastBalance;
