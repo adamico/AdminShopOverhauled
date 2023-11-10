@@ -13,6 +13,7 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.material.Fluid;
+import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import java.io.*;
@@ -28,8 +29,8 @@ import java.util.Map;
  */
 public class Shop {
 
-    private static final String SHOP_FILE_LOCATION = "config/"+ AdminShop.MODID +"/shop.csv";
-    private static final String DEFAULT_SHOP_FILE = "assets/"+ AdminShop.MODID +"/default_shop.csv";
+    private static final Path SHOP_FILE_PATH = FMLPaths.CONFIGDIR.get().resolve("adminshop/shop.csv");
+    private static final String DEFAULT_SHOP_FILE = "assets/adminshop/default_shop.csv";
 
     //Matches "(value) as (var_type)" outside a string to turn back into just the value
 //    private static final String CT_CAST_REGEX = "([0-9]+(\\.[0-9]*)?|true|false) as " +
@@ -174,7 +175,7 @@ public class Shop {
     public void loadFromFile(CommandSource initiator){
         generateDefaultShopFile();
         try {
-            loadFromFile(Files.readString(Path.of(SHOP_FILE_LOCATION)), initiator);
+            loadFromFile(Files.readString(SHOP_FILE_PATH), initiator);
         }catch (FileNotFoundException e) {
             AdminShop.LOGGER.error("Shop file not found. This should not happen!");
         }catch (IOException e){
@@ -197,6 +198,12 @@ public class Shop {
         shopSellItemTagMap.clear();
         shopSellFluidTagMap.clear();
         shopBuyItemNBTMap.clear();
+
+        // Generate defaults if csv data is empty
+        if (csv == null || csv.equals("")) {
+            generateDefaultShopFile();
+            return;
+        }
 
         //Parse file
         List<List<String>> parsedCSV = CSVParser.parseCSV(csv);
@@ -223,6 +230,12 @@ public class Shop {
         shopSellItemTagMap.clear();
         shopSellFluidTagMap.clear();
         shopBuyItemNBTMap.clear();
+
+        // Generate defaults if csv data is empty
+        if (csv == null || csv.equals("")) {
+            generateDefaultShopFile();
+            return;
+        }
 
         //Parse file
         List<List<String>> parsedCSV = CSVParser.parseCSV(csv);
@@ -532,15 +545,14 @@ public class Shop {
      * Generate a default shop file if one does not already exist
      */
     private void generateDefaultShopFile(){
-        Path shop_file_path = Path.of(SHOP_FILE_LOCATION);
-        if(Files.notExists(shop_file_path)){
+        if(Files.notExists(SHOP_FILE_PATH)){
             try {
                 InputStream defStream = AdminShop.class.getClassLoader().getResourceAsStream(DEFAULT_SHOP_FILE);
                 byte [] buffer = new byte[defStream.available()];
                 defStream.read(buffer);
                 Files.createDirectories(Path.of("config/"+AdminShop.MODID));
-                Files.createFile(shop_file_path);
-                FileOutputStream outStream = new FileOutputStream(new File(SHOP_FILE_LOCATION));
+                Files.createFile(SHOP_FILE_PATH);
+                FileOutputStream outStream = new FileOutputStream(SHOP_FILE_PATH.toFile());
                 outStream.write(buffer);
             }catch (IOException e){
                 AdminShop.LOGGER.error("Could not copy default shop file to config");

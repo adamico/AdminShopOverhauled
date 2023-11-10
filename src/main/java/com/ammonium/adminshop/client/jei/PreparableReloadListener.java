@@ -11,30 +11,28 @@ import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.server.ServerLifecycleHooks;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.stream.Collectors;
 
 public class PreparableReloadListener extends SimplePreparableReloadListener<String> {
-    private static final String CONFIG_PATH = "./config/adminshop/shop.csv";
+    private static final Path CONFIG_PATH = FMLPaths.CONFIGDIR.get().resolve("adminshop/shop.csv");
     @Override
     protected String prepare(ResourceManager pResourceManager, ProfilerFiller pProfiler) {
-        Path path = Paths.get(CONFIG_PATH);
         // Ensure the NIO approach is used only on the server side or in a common environment
-        if (!path.toFile().exists()) {
-            // Handle the case where the file doesn't exist
-            // Log an error, throw an exception, or create the file
+        if (!Files.exists(CONFIG_PATH)) {
+            // Return empty string if config not found
             AdminShop.LOGGER.error("Shop.csv not found!");
-            return null;
+            return "";
         }
 
         // Use try-with-resources to ensure the reader is closed after use
-        try (BufferedReader reader = Files.newBufferedReader(path)) {
+        try (BufferedReader reader = Files.newBufferedReader(CONFIG_PATH)) {
             // Read the file into a String
             // This assumes the entire file content is to be read into a single String
             // If the file is large, consider processing it line by line instead
@@ -44,7 +42,8 @@ public class PreparableReloadListener extends SimplePreparableReloadListener<Str
             AdminShop.LOGGER.error("IOException reading shop.csv");
             e.printStackTrace();
         }
-        return null;
+        // Return empty string if IOException
+        return "";
     }
 
     @Override
