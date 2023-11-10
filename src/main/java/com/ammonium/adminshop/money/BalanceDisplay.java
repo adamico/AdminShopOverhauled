@@ -1,6 +1,8 @@
 package com.ammonium.adminshop.money;
 
 import com.ammonium.adminshop.AdminShop;
+import com.ammonium.adminshop.setup.Config;
+
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -30,7 +32,7 @@ public class BalanceDisplay {
 
     @SubscribeEvent
     public static void onTick(TickEvent.ClientTickEvent event) {
-        //if (!Config.emcDisplay.get()) return;
+        if (!Config.balanceDisplay.get()) return;
         LocalPlayer player = getPlayer();
         tick++;
         if (event.phase == TickEvent.Phase.END && player != null && tick >= 20) {
@@ -52,13 +54,13 @@ public class BalanceDisplay {
 
     @SubscribeEvent
     public static void clientDisconnect(ClientPlayerNetworkEvent.LoggingOut event) {
-        //if (!Config.emcDisplay.get()) return;
+        if (!Config.balanceDisplay.get()) return;
         reset();
     }
 
     @SubscribeEvent
     public static void onRenderGUI(CustomizeGuiOverlayEvent.DebugText  event) {
-        //if (!Config.emcDisplay.get()) return;
+        if (!Config.balanceDisplay.get()) return;
         long avg = history[0] + history[1];
         String str = String.valueOf(balance);
         if (avg != 0) str += " " + (avg > 0 ? (ChatFormatting.GREEN + "+") : (ChatFormatting.RED)) + avg + "/s";

@@ -8,6 +8,7 @@ public class Config {
 
     public static ForgeConfigSpec.LongValue STARTING_MONEY;
     public static String SHOP_CONTENTS;
+    public static ForgeConfigSpec.BooleanValue balanceDisplay;
 
     public static void register(){
         ForgeConfigSpec.Builder config = new ForgeConfigSpec.Builder();
@@ -23,6 +24,10 @@ public class Config {
         STARTING_MONEY = config
                 .comment("Amount of money each player starts with. Must be a whole number.")
                 .defineInRange("starting_money", 100, 0, Long.MAX_VALUE);
+
+        balanceDisplay = config
+                .comment("Displays your current balance and gained balance per second in the top left corner")
+                .define("Enabled", true);
         config.pop();
     }
 }
