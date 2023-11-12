@@ -25,4 +25,5 @@ public class Config {
                 .defineInRange("starting_money", 100, 0, Long.MAX_VALUE);
         config.pop();
     }
+
 }

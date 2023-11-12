@@ -50,6 +50,11 @@ public class Messages {
                 .encoder(PacketMachineAccountChange::toBytes)
                 .consumerMainThread(PacketMachineAccountChange::handle)
                 .add();
+        net.messageBuilder(PacketChangeDefaultAccount.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(PacketChangeDefaultAccount::new)
+                .encoder(PacketChangeDefaultAccount::toBytes)
+                .consumerMainThread(PacketChangeDefaultAccount::handle)
+                .add();
         net.messageBuilder(PacketSetBuyerTarget.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(PacketSetBuyerTarget::new)
                 .encoder(PacketSetBuyerTarget::toBytes)

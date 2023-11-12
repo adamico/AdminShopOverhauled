@@ -2,6 +2,7 @@ package com.ammonium.adminshop.blocks;
 
 import com.ammonium.adminshop.blocks.entity.FluidBuyerBE;
 import com.ammonium.adminshop.blocks.entity.ModBlockEntities;
+import com.ammonium.adminshop.money.MoneyManager;
 import com.ammonium.adminshop.screen.FluidBuyerMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -100,9 +101,12 @@ public class FluidBuyerBlock extends BaseEntityBlock {
         if (!pLevel.isClientSide) {
             // Server side code
             BlockEntity blockEntity = pLevel.getBlockEntity(pPos);
+            // Set initial values
             if (pPlacer instanceof ServerPlayer serverPlayer && blockEntity instanceof FluidBuyerBE fbuyerEntity) {
+                MoneyManager moneyManager = MoneyManager.get(pLevel);
+                Pair<String, Integer> defaultAccount = moneyManager.getDefaultAccount(serverPlayer.getStringUUID());
                 fbuyerEntity.setOwnerUUID(serverPlayer.getStringUUID());
-                fbuyerEntity.setAccount(Pair.of(serverPlayer.getStringUUID(), 1));
+                fbuyerEntity.setAccount(defaultAccount);
                 fbuyerEntity.setChanged();
                 fbuyerEntity.sendUpdates();
             }
