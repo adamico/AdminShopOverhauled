@@ -70,9 +70,13 @@ public class ClientConfig {
     }
     // Gets the default account of the player
     public static Pair<String, Integer> getDefaultAccount() {
-        JsonObject clientData = ClientConfig.loadClientData();
         assert Minecraft.getInstance().player != null;
+        JsonObject clientData = ClientConfig.loadClientData();
         Pair<String, Integer> defaultAccount = Pair.of(Minecraft.getInstance().player.getStringUUID(), 1);
+        if (clientData == null || clientData.isJsonNull()) {
+            AdminShop.LOGGER.info("No default account data found");
+            return defaultAccount;
+        }
         if (clientData.has("accOwner") && clientData.has("accId")) {
             defaultAccount = Pair.of(clientData.get("accOwner").getAsString(), clientData.get("accId").getAsInt());
         }
