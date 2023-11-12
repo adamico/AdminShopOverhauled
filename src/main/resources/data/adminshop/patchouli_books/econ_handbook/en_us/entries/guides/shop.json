@@ -16,7 +16,7 @@
     },
     {
       "type": "patchouli:text",
-      "text": "5: Current Bank Account. Shows the current bank account selected for the Shop.$(br)6: Change account button. Click to change the current bank account selected."
+      "text": "5: Current Bank Account. Shows the current bank account selected for the Shop.$(br)6: Change account button. Click to change the current bank account selected.$(br)7: Sets current account as new default when you open a shop or place a seller/buyer."
     },
     {
       "type": "patchouli:image",

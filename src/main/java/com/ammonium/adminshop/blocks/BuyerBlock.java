@@ -2,6 +2,7 @@ package com.ammonium.adminshop.blocks;
 
 import com.ammonium.adminshop.blocks.entity.BuyerBE;
 import com.ammonium.adminshop.blocks.entity.ModBlockEntities;
+import com.ammonium.adminshop.money.MoneyManager;
 import com.ammonium.adminshop.screen.BuyerMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -111,9 +112,12 @@ public class BuyerBlock extends BaseEntityBlock {
         if (!pLevel.isClientSide) {
             // Server side code
             BlockEntity blockEntity = pLevel.getBlockEntity(pPos);
+            // Set initial values
             if (pPlacer instanceof ServerPlayer serverPlayer && blockEntity instanceof BuyerBE buyerEntity) {
+                MoneyManager moneyManager = MoneyManager.get(pLevel);
+                Pair<String, Integer> defaultAccount = moneyManager.getDefaultAccount(serverPlayer.getStringUUID());
                 buyerEntity.setOwnerUUID(serverPlayer.getStringUUID());
-                buyerEntity.setAccount(Pair.of(serverPlayer.getStringUUID(), 1));
+                buyerEntity.setAccount(defaultAccount);
                 buyerEntity.setChanged();
                 buyerEntity.sendUpdates();
             }
