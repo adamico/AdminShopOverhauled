@@ -66,13 +66,19 @@ public class ShopItem {
         // Search in item registry if not found
         if (fluid == null || fluid.isEmpty()) {
             if(!isTag){
-                fluid = new FluidStack(ForgeRegistries.FLUIDS.getValue(resourceLocation), 1, nbt);
+                Fluid rfluid = ForgeRegistries.FLUIDS.getValue(resourceLocation);
+                if (rfluid == null) {
+                    fluid = FluidStack.EMPTY;
+                } else {
+                    fluid = new FluidStack(rfluid, 1, nbt);
+                }
             }else{
                 fluidTag = FluidTags.create(resourceLocation);
-                Optional<Fluid> ofluid = ForgeRegistries.FLUIDS.getValues().stream()
-                        .filter(f -> ForgeRegistries.FLUIDS.getHolder(f).get().is(fluidTag))
-                        .findFirst();
-                fluid = new FluidStack(ofluid.get(), 1);
+                Optional<Fluid> oFluid = ForgeRegistries.FLUIDS.getValues().stream()
+                        .filter(f ->
+                                ForgeRegistries.FLUIDS.getHolder(f).map(fluidHolder -> fluidHolder.is(fluidTag)).orElse(false)
+                        ).findAny();
+                fluid = oFluid.map(value -> new FluidStack(value, 1)).orElse(FluidStack.EMPTY);
             }
             if (fluid.isEmpty()) {
                 if (!isTag) {
