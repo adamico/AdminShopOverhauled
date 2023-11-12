@@ -27,7 +27,7 @@ public class Config {
 
         balanceDisplay = config
                 .comment("Displays your current balance and gained balance per second in the top left corner")
-                .define("Enabled", true);
+                .define("Balance Display", true);
         config.pop();
     }
 
