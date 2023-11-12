@@ -1,6 +1,7 @@
 package com.ammonium.adminshop.money;
 
 import com.ammonium.adminshop.AdminShop;
+import com.ammonium.adminshop.setup.ClientConfig;
 import com.ammonium.adminshop.setup.Config;
 
 import net.minecraft.ChatFormatting;
@@ -39,8 +40,7 @@ public class BalanceDisplay {
             tick = 0;
             String playerUUID = player.getStringUUID();
             ClientLocalData.sortUsableAccounts();
-            Pair<String, Integer> selectedAccountInfo = Pair.of(playerUUID, 1);
-            balance = ClientLocalData.getMoney(selectedAccountInfo);
+            balance = ClientLocalData.getMoney(ClientConfig.getDefaultAccount());
             history[1] = history[0];
             history[0] = balance - lastBalance;
             lastBalance = balance;
