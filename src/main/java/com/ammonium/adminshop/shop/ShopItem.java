@@ -66,13 +66,19 @@ public class ShopItem {
         // Search in item registry if not found
         if (fluid == null || fluid.isEmpty()) {
             if(!isTag){
-                fluid = new FluidStack(ForgeRegistries.FLUIDS.getValue(resourceLocation), 1, nbt);
+                Fluid rfluid = ForgeRegistries.FLUIDS.getValue(resourceLocation);
+                if (rfluid == null) {
+                    fluid = FluidStack.EMPTY;
+                } else {
+                    fluid = new FluidStack(rfluid, 1, nbt);
+                }
             }else{
                 fluidTag = FluidTags.create(resourceLocation);
-                Optional<Fluid> ofluid = ForgeRegistries.FLUIDS.getValues().stream()
-                        .filter(f -> ForgeRegistries.FLUIDS.getHolder(f).get().is(fluidTag))
-                        .findFirst();
-                fluid = new FluidStack(ofluid.get(), 1);
+                Optional<Fluid> oFluid = ForgeRegistries.FLUIDS.getValues().stream()
+                        .filter(f ->
+                                ForgeRegistries.FLUIDS.getHolder(f).map(fluidHolder -> fluidHolder.is(fluidTag)).orElse(false)
+                        ).findAny();
+                fluid = oFluid.map(value -> new FluidStack(value, 1)).orElse(FluidStack.EMPTY);
             }
             if (fluid.isEmpty()) {
                 if (!isTag) {
@@ -128,13 +134,16 @@ public class ShopItem {
             return this;
         }
 
-        public Builder setData(String data, CompoundTag nbt){
-            String [] split = data.split(":");
-            ResourceLocation resource = new ResourceLocation(split[0], split[1]);
+        public Builder setData(String resourceString, CompoundTag nbt){
+            ResourceLocation resource = new ResourceLocation(resourceString);
             instance.resourceLocation = resource;
             if(instance.isItem) {
                 if(!instance.isTag) {
-                    instance.item = new ItemStack(ForgeRegistries.ITEMS.getValue(resource), 1);
+                    Item item = ForgeRegistries.ITEMS.getValue(resource);
+                    if (item == null) {
+                        AdminShop.LOGGER.error("Error creating ShopItem: Item \""+resource+"\" not found!");
+                    }
+                    instance.item = new ItemStack(item, 1);
                     instance.item.setTag(nbt);
                     instance.nbt = nbt;
                     StringBuilder debugMessage = new StringBuilder("Created ItemStack: ");
@@ -143,24 +152,39 @@ public class ShopItem {
                     AdminShop.LOGGER.debug(debugMessage.toString());
                 }else{
                     instance.itemTag = ItemTags.create(resource);
-                    Optional<Item> item = ForgeRegistries.ITEMS.getValues().stream()
+                    Optional<Item> oItem = ForgeRegistries.ITEMS.getValues().stream()
                             .filter(i -> new ItemStack(i).is(instance.itemTag))
                             .findFirst();
-                    instance.item = new ItemStack(item.orElse(null));
+                    if (oItem.isEmpty()) {
+                        AdminShop.LOGGER.error("Error creating ShopItem: Item tag \""+resource+"\" not found!");
+                    }
+                    instance.item = new ItemStack(oItem.orElse(null));
+//                    AdminShop.LOGGER.info("Item stack item: "+instance.item.getDisplayName().getString());
                     instance.nbt = nbt;
                 }
             }else{
                 if(!instance.isTag){
-                    instance.fluid = new FluidStack(ForgeRegistries.FLUIDS.getValue(resource), 1, nbt);
-                    instance.nbt = nbt;
+                    Fluid fluid = ForgeRegistries.FLUIDS.getValue(resource);
+                    if (fluid != null) {
+                        instance.fluid = new FluidStack(fluid, 1, nbt);
+                    } else {
+                        AdminShop.LOGGER.error("Error creating ShopItem: Fluid \""+resource+"\" not found!");
+                        instance.fluid = FluidStack.EMPTY;
+                    }
                 }else{
                     instance.fluidTag = FluidTags.create(resource);
-                    Optional<Fluid> fluid = ForgeRegistries.FLUIDS.getValues().stream()
-                            .filter(f -> ForgeRegistries.FLUIDS.getHolder(f).get().is(instance.fluidTag))
-                            .findFirst();
-                    instance.fluid = new FluidStack(fluid.get(), 1);
-                    instance.nbt = nbt;
+                    Optional<Fluid> oFluid = ForgeRegistries.FLUIDS.getValues().stream()
+                            .filter(f ->
+                                    ForgeRegistries.FLUIDS.getHolder(f).map(fluidHolder -> fluidHolder.is(instance.fluidTag)).orElse(false)
+                            ).findAny();
+                    if (oFluid.isPresent()) {
+                        instance.fluid = new FluidStack(oFluid.get(), 1);
+                    } else {
+                        AdminShop.LOGGER.error("Error creating ShopItem: Fluid tag \""+resource+"\" not found!");
+                        instance.fluid = FluidStack.EMPTY;
+                    }
                 }
+                instance.nbt = nbt;
             }
             return this;
         }

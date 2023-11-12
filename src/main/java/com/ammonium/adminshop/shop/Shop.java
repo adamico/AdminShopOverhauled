@@ -4,11 +4,14 @@ import com.ammonium.adminshop.AdminShop;
 import com.ammonium.adminshop.client.jei.ShopBuyWrapper;
 import com.ammonium.adminshop.client.jei.ShopSellWrapper;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.commands.CommandSource;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -16,13 +19,13 @@ import net.minecraft.world.level.material.Fluid;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.registries.ForgeRegistries;
 
-import java.io.*;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Loads and stores the shop contents from a csv file. Is a singleton.
@@ -173,6 +176,7 @@ public class Shop {
     }
 
     public void loadFromFile(CommandSource initiator){
+        AdminShop.LOGGER.debug("loadFromFile(CommandSource)");
         generateDefaultShopFile();
         try {
             loadFromFile(Files.readString(SHOP_FILE_PATH), initiator);
@@ -185,6 +189,7 @@ public class Shop {
     }
 
     public void loadFromFile(String csv, CommandSource initiator) {
+        AdminShop.LOGGER.debug("loadFromFile(String, CommandSource)");
         //Clear out existing shop data
         shopTextRaw = csv;
         errors.clear();
@@ -217,6 +222,7 @@ public class Shop {
     }
 
     public void loadFromFile(String csv) {
+        AdminShop.LOGGER.debug("loadFromFile(String)");
         //Clear out existing shop data
         shopTextRaw = csv;
         errors.clear();
@@ -248,9 +254,11 @@ public class Shop {
     }
 
     public void printErrors(CommandSource initiator){
-        if(initiator != null){
-            if(errors.size() == 0)
+        AdminShop.LOGGER.debug("Errors size:"+errors.size()+", initiator:"+initiator);
+        if(initiator instanceof LocalPlayer){
+            if(errors.size() == 0) {
                 initiator.sendSystemMessage(Component.literal("Shop reloaded, syntax is correct!"));
+            }
             errors.forEach(e -> initiator.sendSystemMessage(Component.literal(e)));
             errors.clear();
         }
@@ -385,7 +393,7 @@ public class Shop {
         if (split.length == 1) {
             errors.add("Line "+lineNumber+": Item \""+itemResource+"\" is not a recognized item");
             isError = true;
-        } if(split.length == 2){
+        } else if(split.length == 2){
             if(isTag){
                 AdminShop.LOGGER.debug("KubeJS Tag");
                 nameBuilder.append(split[0].substring(1));
@@ -428,22 +436,43 @@ public class Shop {
             return;
         }
 
+        // assertions
+        assert !hasNBT || (isItem && isBuy); // only buying items can have NBT
+        assert !isTag || !isBuy; // only selling items/fluids can have tags
+
         // Check if item or fluid are a valid ResourceLocation
         AdminShop.LOGGER.debug("Checking resource location: "+itemResource);
+        ResourceLocation resourceLocation = new ResourceLocation(itemResource);
+        // First check: non-tag item or fluid
         if(!isTag && !hasNBT) {
-            ResourceLocation resourceLocation = new ResourceLocation(itemResource);
             if (isItem && !ForgeRegistries.ITEMS.containsKey(resourceLocation)) {
-                errors.add("Line "+lineNumber+": Item \""+itemResource+"\" is not a recognized item");
+                errors.add("Line "+lineNumber+": Item \""+itemResource+"\" is not a valid item!");
                 isError = true;
             } else if (!isItem && !ForgeRegistries.FLUIDS.containsKey(resourceLocation)) {
-                errors.add("Line "+lineNumber+": Item \""+itemResource+"\" is not a recognized fluid");
+                errors.add("Line "+lineNumber+": Item \""+itemResource+"\" is not a valid fluid!");
                 isError = true;
             }
-        } else if (isItem && !isTag) {
-            ResourceLocation resourceLocation = new ResourceLocation(itemResource);
-            if (!ForgeRegistries.ITEMS.containsKey(resourceLocation)) {
-                errors.add("Line "+lineNumber+": Item \""+itemResource+"\" is not a recognized item");
-                isError = true;
+        }   // Second check: selling and item/fluid tag exists
+        else if (isTag) {
+            if (isItem) {
+                TagKey<Item> itemTag = ItemTags.create(resourceLocation);
+                Optional<Item> oItem = ForgeRegistries.ITEMS.getValues().stream()
+                        .filter(i -> new ItemStack(i).is(itemTag))
+                        .findFirst();
+                if (oItem.isEmpty()) {
+                    errors.add("Line "+lineNumber+": Item tag \""+itemResource+"\" is not a valid item tag!");
+                    isError = true;
+                }
+            } else {
+                TagKey<Fluid> fluidTag = FluidTags.create(resourceLocation);
+                Optional<Fluid> oFluid = ForgeRegistries.FLUIDS.getValues().stream()
+                        .filter(f ->
+                                ForgeRegistries.FLUIDS.getHolder(f).map(fluidHolder -> fluidHolder.is(fluidTag)).orElse(false)
+                        ).findAny();
+                if (oFluid.isEmpty()) {
+                    errors.add("Line "+lineNumber+": Fluid tag \""+itemResource+"\" is not a valid fluid tag!");
+                    isError = true;
+                }
             }
         }
 
@@ -476,10 +505,6 @@ public class Shop {
                     " the supplied tag.");
             //Continue anyway if no other errors have occurred yet
         }
-
-        // assertions
-        assert !hasNBT || (isItem && isBuy); // only buying items can have NBT
-        assert !isTag || !isBuy; // only selling items/fluids can have tags
 
         List<ShopItem> shopList = isBuy ? shopStockBuy : shopStockSell;
         if (!isTag && isItem && !hasNBT) {

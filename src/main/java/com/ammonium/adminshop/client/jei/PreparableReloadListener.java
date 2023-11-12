@@ -53,7 +53,6 @@ public class PreparableReloadListener extends SimplePreparableReloadListener<Str
         // Ensure we are on the server side
         if (FMLEnvironment.dist == Dist.DEDICATED_SERVER || FMLEnvironment.dist == Dist.CLIENT) {
             Shop.get().loadFromFile(shopTextRaw);
-
             MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
             if (server != null) {
                 AdminShop.LOGGER.debug("Sending to players...");
