@@ -7,6 +7,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.minecraft.client.Minecraft;
 import net.minecraft.server.MinecraftServer;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.loading.FMLPaths;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -14,7 +16,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 
-// Config for default account. Is world-specific and should *only* be accessed from the client side
+@OnlyIn(Dist.CLIENT)
 public class ClientConfig {
     private static final String CLIENT_CONFIG_FOLDER = FMLPaths.CONFIGDIR.get().resolve("adminshop").toString();
     private static final Gson GSON = new Gson();
@@ -79,7 +81,7 @@ public class ClientConfig {
         // Obtain from reading config
         assert Minecraft.getInstance().player != null;
         JsonObject clientData = ClientConfig.loadClientData();
-        Pair<String, Integer> defaultAccount = Pair.of(Minecraft.getInstance().player.getStringUUID(), 1);
+        defaultAccount = Pair.of(Minecraft.getInstance().player.getStringUUID(), 1);
         if (clientData == null || clientData.isJsonNull()) {
             AdminShop.LOGGER.info("No default account data found");
             return defaultAccount;
