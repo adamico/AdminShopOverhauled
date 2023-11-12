@@ -1,6 +1,7 @@
 package com.ammonium.adminshop.setup;
 
 import com.ammonium.adminshop.AdminShop;
+import com.ammonium.adminshop.network.PacketChangeDefaultAccount;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -17,6 +18,7 @@ import java.io.FileWriter;
 public class ClientConfig {
     private static final String CLIENT_CONFIG_FOLDER = FMLPaths.CONFIGDIR.get().resolve("adminshop").toString();
     private static final Gson GSON = new Gson();
+    private static Pair<String, Integer> defaultAccount = null;
 
     private static String getServerName() {
         String name;
@@ -70,6 +72,11 @@ public class ClientConfig {
     }
     // Gets the default account of the player
     public static Pair<String, Integer> getDefaultAccount() {
+        // Get account from memory if possible
+        if (defaultAccount != null) {
+            return defaultAccount;
+        }
+        // Obtain from reading config
         assert Minecraft.getInstance().player != null;
         JsonObject clientData = ClientConfig.loadClientData();
         Pair<String, Integer> defaultAccount = Pair.of(Minecraft.getInstance().player.getStringUUID(), 1);
@@ -81,6 +88,21 @@ public class ClientConfig {
             defaultAccount = Pair.of(clientData.get("accOwner").getAsString(), clientData.get("accId").getAsInt());
         }
         return defaultAccount;
+    }
+
+    public static void setDefaultAccount(Pair<String, Integer> account) {
+        assert Minecraft.getInstance().level != null && Minecraft.getInstance().level.isClientSide;
+        assert Minecraft.getInstance().player != null;
+
+        defaultAccount = account;
+
+        JsonObject clientData = new JsonObject();
+        clientData.addProperty("accOwner", account.getKey());
+        clientData.addProperty("accId", account.getValue());
+        ClientConfig.saveClientData(clientData);
+
+        // Send change packet to server
+        Messages.sendToServer(new PacketChangeDefaultAccount(Minecraft.getInstance().player.getStringUUID(), account.getKey(), account.getValue()));
     }
 
 }

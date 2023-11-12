@@ -8,12 +8,14 @@ import com.ammonium.adminshop.client.gui.SetDefaultAccountButton;
 import com.ammonium.adminshop.client.gui.ShopButton;
 import com.ammonium.adminshop.money.BankAccount;
 import com.ammonium.adminshop.money.ClientLocalData;
-import com.ammonium.adminshop.network.*;
+import com.ammonium.adminshop.network.MojangAPI;
+import com.ammonium.adminshop.network.PacketAccountAddPermit;
+import com.ammonium.adminshop.network.PacketBuyRequest;
+import com.ammonium.adminshop.network.PacketSellRequest;
 import com.ammonium.adminshop.setup.ClientConfig;
 import com.ammonium.adminshop.setup.Messages;
 import com.ammonium.adminshop.shop.Shop;
 import com.ammonium.adminshop.shop.ShopItem;
-import com.google.gson.JsonObject;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
@@ -140,16 +142,10 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
 
     // Update and save the default account to the client config
     public void setDefaultAccount(Pair<String, Integer> account) {
-        JsonObject clientData = new JsonObject();
-        clientData.addProperty("accOwner", account.getKey());
-        clientData.addProperty("accId", account.getValue());
-        ClientConfig.saveClientData(clientData);
-
+        // Update ClientConfig
+        ClientConfig.setDefaultAccount(account);
         // Update the usableAccountsIndex with the new values
         this.usableAccountsIndex = findUsableAccountIndex(account);
-
-        // Send change packet to server
-        Messages.sendToServer(new PacketChangeDefaultAccount(this.playerUUID, account.getKey(), account.getValue()));
     }
 
     private Pair<String, Integer> getAccountDetails() {
