@@ -17,6 +17,7 @@ import java.util.*;
 public class MoneyManager extends SavedData {
 
     private static final String COMPOUND_TAG_NAME = "adminshop_ledger";
+    private static final String DEFAULT_ACCOUNTS_TAG = "adminshop_defaultaccs";
 
     private static final int MAX_ACCOUNTS = 8;
 
@@ -33,6 +34,44 @@ public class MoneyManager extends SavedData {
     // A map with playerUUID and a List of every BankAccount player is member or owner of
     private final Map<String, List<BankAccount>> sharedAccounts = new HashMap<>();
 
+    // Map from player UUID to pair of default account
+    private final Map<String, Pair<String, Integer>> defaultAccounts = new HashMap<>();
+
+    // Get default account. Make sure player still has access to account. If not yet set, make it the personal account
+    public Pair<String, Integer> getDefaultAccount(String playerUUID) {
+        Pair<String, Integer> personalAccount = Pair.of(playerUUID, 1);
+
+        // If default account is not set or the player no longer has access to it, set to personal account
+        Pair<String, Integer> defaultAcc = defaultAccounts.getOrDefault(playerUUID, personalAccount);
+        boolean hasAccess = sharedAccounts.getOrDefault(playerUUID, Collections.emptyList()).stream()
+                .anyMatch(account -> account.getOwner().equals(defaultAcc.getKey()) && account.getId() == defaultAcc.getValue());
+
+        if (!hasAccess) {
+            // Update to personal account if no longer has access or default was not set
+            defaultAccounts.put(playerUUID, personalAccount);
+            setDirty();
+            return personalAccount;
+        }
+
+        return defaultAcc;
+    }
+
+    // Sets default account of player on the server side.
+    public boolean setDefaultAccount(String playerUUID, String accOwner, int accId) {
+        // Search if player has access to that account
+        boolean hasAccess = sharedAccounts.get(playerUUID).stream().anyMatch(account -> (account.getOwner().equals(accOwner) && account.getId() == accId));
+        if (!hasAccess) {
+            AdminShop.LOGGER.error("Player "+playerUUID+" does not have access to "+accOwner+":"+accId);
+            return false;
+        }
+        defaultAccounts.put(playerUUID, Pair.of(accOwner, accId));
+        setDirty();
+        return true;
+    }
+    public boolean setDefaultAccount(String playerUUID, Pair<String, Integer> account) {
+        return setDefaultAccount(playerUUID, account.getKey(), account.getValue());
+    }
+
     public Map<String, List<BankAccount>> getSharedAccounts() {
         return sharedAccounts;
     }
@@ -41,12 +80,17 @@ public class MoneyManager extends SavedData {
         return accountSet;
     }
 
+    // Remove player from shared account
     public boolean removeSharedAccount(String playerUUID, String accOwner, int accID) {
         Optional<BankAccount> search = sharedAccounts.get(playerUUID).stream().filter(account -> (account.getOwner()
                 .equals(accOwner) && account.getId() == accID)).findAny();
         if (search.isPresent()) {
             BankAccount result = search.get();
             sharedAccounts.get(playerUUID).remove(result);
+            // If set as player's default account, reset to personal account
+            if (defaultAccounts.get(playerUUID).equals(Pair.of(result.getOwner(), result.getId()))) {
+                defaultAccounts.put(playerUUID, Pair.of(playerUUID, 1));
+            }
             return true;
         } else {
             return false;
@@ -96,16 +140,22 @@ public class MoneyManager extends SavedData {
         BankAccount newAccount = new BankAccount(owner, id, members);
         accountSet.add(newAccount);
         // If first account, initialize maps
+
+        // Add to accountsOwned
         if (!accountsOwned.containsKey(owner)) {
             accountsOwned.put(owner, 1);
         } else {
             accountsOwned.put(owner, accountsOwned.get(owner)+1);
         }
-        // Add to sorted map
+        // Add to sortedAccountMap
         if (!sortedAccountMap.containsKey(owner)) {
             sortedAccountMap.put(owner, new HashMap<>());
         }
         sortedAccountMap.get(owner).put(id, newAccount);
+        // Add to defaultAccounts
+        if (!defaultAccounts.containsKey(owner)) {
+            defaultAccounts.put(owner, Pair.of(owner, 1));
+        }
         newAccount.getMembers().forEach(member -> {
             // If first account, initialize map
             if (!sharedAccounts.containsKey(member)) {
@@ -368,6 +418,17 @@ public class MoneyManager extends SavedData {
 
     public MoneyManager(CompoundTag tag){
         AdminShop.LOGGER.info("Reading MoneyManager...");
+        if (tag.contains(DEFAULT_ACCOUNTS_TAG)) {
+            defaultAccounts.clear();
+            ListTag defaultsLedger = tag.getList(DEFAULT_ACCOUNTS_TAG, 10);
+            defaultsLedger.forEach(defaultsTag -> {
+                CompoundTag compoundTag = (CompoundTag) defaultsTag;
+                String player = compoundTag.getString("player");
+                String accOwner = compoundTag.getString("accOwner");
+                int accId = compoundTag.getInt("accId");
+                defaultAccounts.put(player, Pair.of(accOwner, accId));
+            });
+        }
         if (tag.contains(COMPOUND_TAG_NAME)) {
             ListTag ledger = tag.getList(COMPOUND_TAG_NAME, 10);
             accountSet.clear();
@@ -415,9 +476,20 @@ public class MoneyManager extends SavedData {
     @Override
     public @NotNull CompoundTag save(CompoundTag tag) {
         AdminShop.LOGGER.info("Saving MoneyManager...");
+        ListTag defaultsLedger = new ListTag();
+        defaultAccounts.forEach((player, account) -> {
+            AdminShop.LOGGER.info("Saving default account "+player+" -> "+account.getKey()+":"+account.getValue());
+            CompoundTag defaultTag = new CompoundTag();
+            defaultTag.putString("player", player);
+            defaultTag.putString("accOwner", account.getKey());
+            defaultTag.putInt("accId", account.getValue());
+            defaultsLedger.add(defaultTag);
+        });
+        tag.put(DEFAULT_ACCOUNTS_TAG, defaultsLedger);
+
         ListTag ledger = new ListTag();
 
-        accountSet.forEach((account) -> {
+        accountSet.forEach(account -> {
             AdminShop.LOGGER.info("Saving "+account.getOwner()+":"+account.getId());
             CompoundTag bankAccountTag = account.serializeTag();
             ledger.add(bankAccountTag);

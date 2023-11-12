@@ -12,9 +12,6 @@ public class ClientLocalData {
     private static final Map<Pair<String, Integer>, BankAccount> accountMap = new HashMap<>();
 
 
-//    private static final List<ShopItem> shopBuyItems = new ArrayList<>();
-//    private static final List<ShopItem> shopSellItems = new ArrayList<>();
-
     public static List<BankAccount> getUsableAccounts() {
         return usableAccounts;
     }
@@ -36,18 +33,6 @@ public class ClientLocalData {
         ClientLocalData.usableAccounts.forEach(account -> ClientLocalData.accountMap.put(Pair.of(account.getOwner(), account.getId()), account));
         sortUsableAccounts();
     }
-
-//    public static void setShopBuyItems(List<ShopItem> shopBuyItems) {
-//        ClientLocalData.shopBuyItems.clear();
-//        ClientLocalData.shopBuyItems.addAll(shopBuyItems);
-//        AdminShop.LOGGER.debug("Synced shop buy items with client");
-//    }
-//
-//    public static void setShopSellItems(List<ShopItem> shopSellItems) {
-//        ClientLocalData.shopSellItems.clear();
-//        ClientLocalData.shopSellItems.addAll(shopSellItems);
-//        AdminShop.LOGGER.debug("Synced shop sell items with client");
-//    }
 
     // Sort usableAccounts, first by pair.getKey() == playerUUID, if not sort alphabetically, then by pair.getValue() in
     // ascending order. Index is preserved to the original account it pointed to.

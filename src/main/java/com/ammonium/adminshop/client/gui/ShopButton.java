@@ -26,8 +26,8 @@ import java.util.function.Function;
  */
 public class ShopButton extends Button {
 
-    private ShopItem item;
-    private ItemRenderer itemRenderer;
+    private final ShopItem item;
+    private final ItemRenderer itemRenderer;
     private TextureAtlasSprite fluidTexture;
     private float fluidColorR, fluidColorG, fluidColorB, fluidColorA;
     public boolean isMouseOn = false;
@@ -111,7 +111,7 @@ public class ShopButton extends Button {
         NumberFormat numberFormat = NumberFormat.getInstance();
         String formatted = numberFormat.format(price);
         List<Component> tootlip = new ArrayList<>();
-        tootlip.add(Component.literal("$"+formatted+" "+getQuantity()+((item.isItem()) ? "x " : "mb ")+item.toString()));
+        tootlip.add(Component.literal("$"+formatted+" "+getQuantity()+((item.isItem()) ? "x " : "mb ")+item));
         if (item.getPermitTier() != 0) {
             tootlip.add(Component.literal("Requires Permit Tier: "+item.getPermitTier()));
         }
