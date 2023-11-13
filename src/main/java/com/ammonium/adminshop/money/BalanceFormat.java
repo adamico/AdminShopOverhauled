@@ -12,8 +12,6 @@ import java.util.Arrays;
 import java.util.Locale;
 
 public class BalanceFormat extends DecimalFormat {
-    public static BalanceFormat INSTANCE = new BalanceFormat();
-    private static final DecimalFormat decimalFormat = new DecimalFormat();
     public static final double FORMAT_START = 1000000;
 
     public enum IgnoreShiftType {
@@ -35,16 +33,10 @@ public class BalanceFormat extends DecimalFormat {
         if (shouldFormat(value, ignoreShiftType)) {
             NumberName name = NumberName.findName(value);
             if(name == null) return NumberFormat.getNumberInstance(Locale.US).format(value);
-            // config: get full/short numbers
             return getShort(value) + (true ? String.format(" %s", name.getName(false)) : name.getName(true));
         } else return NumberFormat.getNumberInstance(Locale.US).format(value);
     }
 
-    public boolean shouldFormat(long value) {
-        return shouldFormat(value, IgnoreShiftType.NONE);
-    }
-    // Check if number should be formatted
-    // Only if: config & IST is format & Shift not down & value > 1M
     public static boolean shouldFormat(long value, IgnoreShiftType ignoreShiftType) {
         return (true && ignoreShiftType != IgnoreShiftType.NO_FORMAT && (ignoreShiftType == IgnoreShiftType.FORMAT || !Screen.hasShiftDown()) && value > FORMAT_START);
     }
@@ -74,7 +66,6 @@ public class BalanceFormat extends DecimalFormat {
         return String.format("%s.%s", sig, dec);
     }
 
-    // TO CHECK!!!!!
     public enum NumberName {
         MILLION(1e6, "M"),
         BILLION(1e9, "B"),
@@ -116,7 +107,6 @@ public class BalanceFormat extends DecimalFormat {
         public double getValue() {return value;}
 
         static @Nullable NumberName findName(long value) {
-            // reduce is a quick and dirty solution to get the last element
             return Arrays.stream(VALUES).filter(v -> value >= v.getValue()).reduce((first, second) -> second).orElse(null);
         }
     }
