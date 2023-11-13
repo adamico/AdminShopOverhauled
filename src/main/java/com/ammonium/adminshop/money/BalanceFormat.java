@@ -1,5 +1,6 @@
 package com.ammonium.adminshop.money;
 
+import com.ammonium.adminshop.AdminShop;
 import com.ammonium.adminshop.setup.Config;
 import net.minecraft.client.gui.screens.Screen;
 
@@ -33,18 +34,21 @@ public class BalanceFormat extends DecimalFormat {
         if (shouldFormat(value, ignoreShiftType)) {
             NumberName name = NumberName.findName(value);
             if(name == null) return NumberFormat.getNumberInstance(Locale.US).format(value);
-            return getShort(value) + (true ? String.format(" %s", name.getName(false)) : name.getName(true));
+            return getShort(value) + (Config.displayFormat.get().equals("Full") ? String.format(" %s", name.getName(false)) : name.getName(true));
         } else return NumberFormat.getNumberInstance(Locale.US).format(value);
     }
 
     public static boolean shouldFormat(long value, IgnoreShiftType ignoreShiftType) {
-        return (true && ignoreShiftType != IgnoreShiftType.NO_FORMAT && (ignoreShiftType == IgnoreShiftType.FORMAT || !Screen.hasShiftDown()) && value > FORMAT_START);
+        if (Config.displayFormat.get().equals("Disabled")) {
+            AdminShop.LOGGER.info("Formatting is disabled");}
+        else {
+            AdminShop.LOGGER.info("Formatting is enabled");}
+        return (Config.displayFormat.get().equals("Disabled") && ignoreShiftType != IgnoreShiftType.NO_FORMAT && (ignoreShiftType == IgnoreShiftType.FORMAT || !Screen.hasShiftDown()) && value > FORMAT_START);
     }
 
     public static String getShort(long value) {
         return getShort((int) value);
     }
-
 
     static String getShort(int value) {
         String str = String.valueOf(value);

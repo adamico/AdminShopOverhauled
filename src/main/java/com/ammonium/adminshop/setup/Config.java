@@ -4,11 +4,16 @@ import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.config.ModConfig;
 
+import java.util.List;
+
 public class Config {
 
     public static ForgeConfigSpec.LongValue STARTING_MONEY;
     public static String SHOP_CONTENTS;
     public static ForgeConfigSpec.BooleanValue balanceDisplay;
+    public static ForgeConfigSpec.ConfigValue<String> displayFormat;
+    public static List<String> values = List.of("Full", "Short", "Disabled");
+
 
     public static void register(){
         ForgeConfigSpec.Builder config = new ForgeConfigSpec.Builder();
@@ -24,10 +29,18 @@ public class Config {
         STARTING_MONEY = config
                 .comment("Amount of money each player starts with. Must be a whole number.")
                 .defineInRange("starting_money", 100, 0, Long.MAX_VALUE);
+        config.pop();
+
+        config.comment("Display configurations. Options for changing client view")
+                .push("display_config");
 
         balanceDisplay = config
                 .comment("Displays your current balance and gained balance per second in the top left corner")
                 .define("Balance Display", true);
+
+        displayFormat = config
+                .comment("If monetary values should be formatted as M/B/T/etc (Short), Million/Billion/Trillion/etc (Full), or be disabled")
+                .defineInList("Balance Display", "Full", values);
         config.pop();
     }
 
