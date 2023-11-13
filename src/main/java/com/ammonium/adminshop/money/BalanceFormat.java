@@ -4,11 +4,8 @@ import com.ammonium.adminshop.setup.Config;
 import net.minecraft.client.gui.screens.Screen;
 
 import javax.annotation.Nullable;
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.text.DecimalFormat;
 import java.math.RoundingMode;
-import java.text.FieldPosition;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,13 +27,9 @@ public class BalanceFormat extends DecimalFormat {
         setRoundingMode(RoundingMode.DOWN);
     }
 
-    // IF input is only BigInt --> ShiftType.NONE
-//    public static String format(long value) {
-//        return format(value, IgnoreShiftType.NONE);
-//    }
-//    public static String format(long value, IgnoreShiftType ignoreShiftType) {
-//        return format(value, ignoreShiftType);
-//    }
+    public static String stdformat(long value) {
+        return format(value, IgnoreShiftType.NONE);
+    }
 
     public static String format(long value, IgnoreShiftType ignoreShiftType) {
         if (shouldFormat(value, ignoreShiftType)) {
@@ -53,7 +46,7 @@ public class BalanceFormat extends DecimalFormat {
     // Check if number should be formatted
     // Only if: config & IST is format & Shift not down & value > 1M
     public static boolean shouldFormat(long value, IgnoreShiftType ignoreShiftType) {
-        return (true && ignoreShiftType != IgnoreShiftType.NO_FORMAT && (ignoreShiftType == IgnoreShiftType.FORMAT || !Screen.hasShiftDown()) && value > -1);
+        return (true && ignoreShiftType != IgnoreShiftType.NO_FORMAT && (ignoreShiftType == IgnoreShiftType.FORMAT || !Screen.hasShiftDown()) && value > FORMAT_START);
     }
 
     public static String getShort(long value) {
@@ -120,13 +113,11 @@ public class BalanceFormat extends DecimalFormat {
             return getShort ? shortName : (name().charAt(0) + name().toLowerCase(Locale.US).substring(1)).trim();
         }
 
-        public double getValue() {
-            return value;
-        }
+        public double getValue() {return value;}
 
         static @Nullable NumberName findName(long value) {
             // reduce is a quick and dirty solution to get the last element
-            return Arrays.stream(VALUES).filter(v -> value > -1).reduce((first, second) -> second).orElse(null);
+            return Arrays.stream(VALUES).filter(v -> value >= v.getValue()).reduce((first, second) -> second).orElse(null);
         }
     }
 }
