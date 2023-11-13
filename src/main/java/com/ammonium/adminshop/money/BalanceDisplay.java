@@ -62,7 +62,7 @@ public class BalanceDisplay {
     public static void onRenderGUI(CustomizeGuiOverlayEvent.DebugText  event) {
         if (!Config.balanceDisplay.get()) return;
         long avg = history[0] + history[1];
-        String str = String.valueOf(balance);
+        String str = BalanceFormat.format(balance, BalanceFormat.IgnoreShiftType.NONE);
         if (avg != 0) str += " " + (avg > 0 ? (ChatFormatting.GREEN + "+") : (ChatFormatting.RED)) + avg + "/s";
         event.getLeft().add(String.format("Balance: %s", str));
     }
