@@ -8,6 +8,7 @@ import com.ammonium.adminshop.client.gui.SetDefaultAccountButton;
 import com.ammonium.adminshop.client.gui.ShopButton;
 import com.ammonium.adminshop.money.BankAccount;
 import com.ammonium.adminshop.money.ClientLocalData;
+import com.ammonium.adminshop.money.MoneyFormat;
 import com.ammonium.adminshop.network.*;
 import com.ammonium.adminshop.setup.ClientConfig;
 import com.ammonium.adminshop.setup.Messages;
@@ -212,8 +213,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
         BankAccount selectedAccount = getBankAccount();
         Pair<String, Integer> selectedAccountInfo = Pair.of(selectedAccount.getOwner(), selectedAccount.getId());
         long money = ClientLocalData.getMoney(selectedAccountInfo);
-        NumberFormat numberFormat = NumberFormat.getInstance();
-        String formatted = numberFormat.format(money);
+        String formatted = MoneyFormat.format(money, MoneyFormat.FormatType.SHORT);
         drawString(matrixStack, Minecraft.getInstance().font,
                 I18n.get(GUI_MONEY) + formatted,
                 getXSize() - font.width(I18n.get(GUI_MONEY) + formatted) - 6,
