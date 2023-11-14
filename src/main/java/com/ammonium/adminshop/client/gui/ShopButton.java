@@ -110,12 +110,12 @@ public class ShopButton extends Button {
         long price = item.getPrice() * getQuantity();
         NumberFormat numberFormat = NumberFormat.getInstance();
         String formatted = numberFormat.format(price);
-        List<Component> tootlip = new ArrayList<>();
-        tootlip.add(Component.literal("$"+formatted+" "+getQuantity()+((item.isItem()) ? "x " : "mb ")+item));
+        List<Component> tooltip = new ArrayList<>();
+        tooltip.add(Component.literal("$"+formatted+" "+getQuantity()+((item.isItem()) ? "x " : "mb ")+item));
         if (item.getPermitTier() != 0) {
-            tootlip.add(Component.literal("Requires Permit Tier: "+item.getPermitTier()));
+            tooltip.add(Component.literal("Requires Permit Tier: "+item.getPermitTier()));
         }
-        return tootlip;
+        return tooltip;
     }
 
     public ShopItem getShopItem(){
