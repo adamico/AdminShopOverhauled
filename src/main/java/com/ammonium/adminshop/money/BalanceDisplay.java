@@ -3,10 +3,10 @@ package com.ammonium.adminshop.money;
 import com.ammonium.adminshop.AdminShop;
 import com.ammonium.adminshop.setup.ClientConfig;
 import com.ammonium.adminshop.setup.Config;
-
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
@@ -14,6 +14,7 @@ import net.minecraftforge.client.event.CustomizeGuiOverlayEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+
 import javax.annotation.Nullable;
 
 @OnlyIn(Dist.CLIENT)
@@ -60,7 +61,7 @@ public class BalanceDisplay {
         long avg = history[0] + history[1];
         String str = MoneyFormat.cfgformat(balance);
         if (avg != 0) str += " " + (avg > 0 ? (ChatFormatting.GREEN + "+") : (ChatFormatting.RED)) + avg + "/s";
-        event.getLeft().add(String.format("Balance: %s", str));
+        event.getLeft().add(String.format("Balance: " + I18n.get("gui.money_message") + "%s", str));
     }
 
 }
