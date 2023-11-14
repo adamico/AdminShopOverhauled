@@ -63,5 +63,3 @@ public class BalanceDisplay {
         if (avg != 0) str += " " + (avg > 0 ? (ChatFormatting.GREEN + "+") : (ChatFormatting.RED)) + avg + "/s";
         event.getLeft().add(String.format("Balance: " + I18n.get("gui.money_message") + "%s", str));
     }
-
-}
