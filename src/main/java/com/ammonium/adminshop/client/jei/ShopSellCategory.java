@@ -2,6 +2,7 @@ package com.ammonium.adminshop.client.jei;
 
 import com.ammonium.adminshop.AdminShop;
 import com.ammonium.adminshop.blocks.ModBlocks;
+import com.ammonium.adminshop.money.MoneyFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.builder.IRecipeSlotBuilder;
@@ -13,6 +14,7 @@ import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.recipe.category.IRecipeCategory;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
@@ -58,7 +60,7 @@ public class ShopSellCategory implements IRecipeCategory<ShopSellWrapper>{
         int tierY = 80;
 
         // Draw the price
-        String priceText = "Sell Price: "+recipe.getPrice();
+        String priceText = "Sell Price: "+ I18n.get("gui.money_message") + MoneyFormat.format(recipe.getPrice(), MoneyFormat.FormatType.SHORT);
         Minecraft.getInstance().font.draw(stack, priceText, priceX, priceY, 0xFF555555);
 
         // Draw the required tier
