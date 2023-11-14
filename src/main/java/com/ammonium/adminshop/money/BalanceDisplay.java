@@ -3,7 +3,6 @@ package com.ammonium.adminshop.money;
 import com.ammonium.adminshop.AdminShop;
 import com.ammonium.adminshop.setup.ClientConfig;
 import com.ammonium.adminshop.setup.Config;
-
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -14,7 +13,6 @@ import net.minecraftforge.client.event.CustomizeGuiOverlayEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import org.apache.commons.lang3.tuple.Pair;
 
 import javax.annotation.Nullable;
 
@@ -34,11 +32,9 @@ public class BalanceDisplay {
     @SubscribeEvent
     public static void onTick(TickEvent.ClientTickEvent event) {
         if (!Config.balanceDisplay.get()) return;
-        LocalPlayer player = getPlayer();
         tick++;
-        if (event.phase == TickEvent.Phase.END && player != null && tick >= 20) {
+        if (event.phase == TickEvent.Phase.END && tick >= 20) {
             tick = 0;
-            String playerUUID = player.getStringUUID();
             ClientLocalData.sortUsableAccounts();
             balance = ClientLocalData.getMoney(ClientConfig.getDefaultAccount());
             history[1] = history[0];
@@ -59,7 +55,7 @@ public class BalanceDisplay {
     }
 
     @SubscribeEvent
-    public static void onRenderGUI(CustomizeGuiOverlayEvent.DebugText  event) {
+    public static void onRenderGUI(CustomizeGuiOverlayEvent.DebugText event) {
         if (!Config.balanceDisplay.get()) return;
         long avg = history[0] + history[1];
         String str = String.valueOf(balance);
