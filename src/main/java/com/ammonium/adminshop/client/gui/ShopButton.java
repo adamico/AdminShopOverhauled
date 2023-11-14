@@ -1,5 +1,6 @@
 package com.ammonium.adminshop.client.gui;
 
+import com.ammonium.adminshop.money.MoneyFormat;
 import com.ammonium.adminshop.shop.ShopItem;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -108,8 +109,7 @@ public class ShopButton extends Button {
 
     public List<Component> getTooltipContent(){
         long price = item.getPrice() * getQuantity();
-        NumberFormat numberFormat = NumberFormat.getInstance();
-        String formatted = numberFormat.format(price);
+        String formatted = MoneyFormat.format(price, MoneyFormat.FormatType.SHORT);
         List<Component> tooltip = new ArrayList<>();
         tooltip.add(Component.literal("$"+formatted+" "+getQuantity()+((item.isItem()) ? "x " : "mb ")+item));
         if (item.getPermitTier() != 0) {
