@@ -2,9 +2,7 @@ package com.ammonium.adminshop.setup;
 
 import com.ammonium.adminshop.AdminShop;
 import com.ammonium.adminshop.network.PacketChangeDefaultAccount;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.api.distmarker.Dist;
@@ -15,6 +13,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
 
 @OnlyIn(Dist.CLIENT)
 public class ClientConfig {
@@ -35,7 +34,8 @@ public class ClientConfig {
                 name = Minecraft.getInstance().getCurrentServer().ip;
             }
         } catch (Exception e) {
-            AdminShop.LOGGER.error("Error getting server name", e);
+            AdminShop.LOGGER.error("Error getting server name: "+e.getLocalizedMessage());
+            e.printStackTrace();
             name = "default";
         }
         return name;
@@ -49,8 +49,8 @@ public class ClientConfig {
         if (clientDataFile.exists()) {
             try (FileReader reader = new FileReader(clientDataFile)) {
                 readObject = JsonParser.parseReader(reader).getAsJsonObject();
-            } catch (Exception e) {
-                AdminShop.LOGGER.debug("Exception while loading client data");
+            } catch (IOException | JsonParseException | IllegalStateException e) {
+                AdminShop.LOGGER.debug("Exception while loading client data: "+e.getLocalizedMessage());
                 e.printStackTrace();
             }
         }
@@ -67,8 +67,8 @@ public class ClientConfig {
 
         try (FileWriter writer = new FileWriter(clientDataFile)) {
             GSON.toJson(data, writer);
-        } catch (Exception e) {
-            AdminShop.LOGGER.debug("Exception while saving client data");
+        } catch (IOException | JsonIOException e) {
+            AdminShop.LOGGER.debug("Exception while saving client data: "+e.getLocalizedMessage());
             e.printStackTrace();
         }
     }

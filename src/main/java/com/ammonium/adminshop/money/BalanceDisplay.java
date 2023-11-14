@@ -4,9 +4,6 @@ import com.ammonium.adminshop.AdminShop;
 import com.ammonium.adminshop.setup.ClientConfig;
 import com.ammonium.adminshop.setup.Config;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
@@ -14,9 +11,7 @@ import net.minecraftforge.client.event.CustomizeGuiOverlayEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-
-import javax.annotation.Nullable;
-
+import net.minecraft.client.resources.language.I18n;
 @OnlyIn(Dist.CLIENT)
 @Mod.EventBusSubscriber(modid = AdminShop.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class BalanceDisplay {
@@ -25,17 +20,11 @@ public class BalanceDisplay {
     private static long lastBalance = 0;
     private static int tick = 0;
 
-    private static @Nullable
-    LocalPlayer getPlayer() {
-        return Minecraft.getInstance().player;
-    }
-
     @SubscribeEvent
     public static void onTick(TickEvent.ClientTickEvent event) {
         if (!Config.balanceDisplay.get()) return;
-        LocalPlayer player = getPlayer();
         tick++;
-        if (event.phase == TickEvent.Phase.END && player != null && tick >= 20) {
+        if (event.phase == TickEvent.Phase.END && tick >= 20) {
             tick = 0;
             balance = ClientLocalData.getMoney(ClientConfig.getDefaultAccount());
             history[1] = history[0];
@@ -56,10 +45,12 @@ public class BalanceDisplay {
     }
 
     @SubscribeEvent
-    public static void onRenderGUI(CustomizeGuiOverlayEvent.DebugText  event) {
+    public static void onRenderGUI(CustomizeGuiOverlayEvent.DebugText event) {
         if (!Config.balanceDisplay.get()) return;
         long avg = history[0] + history[1];
         String str = MoneyFormat.cfgformat(balance);
         if (avg != 0) str += " " + (avg > 0 ? (ChatFormatting.GREEN + "+") : (ChatFormatting.RED)) + avg + "/s";
         event.getLeft().add(String.format("Balance: " + I18n.get("gui.money_message") + "%s", str));
     }
+
+}

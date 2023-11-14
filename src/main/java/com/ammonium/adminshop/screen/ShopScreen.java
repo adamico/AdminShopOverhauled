@@ -9,7 +9,10 @@ import com.ammonium.adminshop.client.gui.ShopButton;
 import com.ammonium.adminshop.money.BankAccount;
 import com.ammonium.adminshop.money.ClientLocalData;
 import com.ammonium.adminshop.money.MoneyFormat;
-import com.ammonium.adminshop.network.*;
+import com.ammonium.adminshop.network.MojangAPI;
+import com.ammonium.adminshop.network.PacketAccountAddPermit;
+import com.ammonium.adminshop.network.PacketBuyRequest;
+import com.ammonium.adminshop.network.PacketSellRequest;
 import com.ammonium.adminshop.setup.ClientConfig;
 import com.ammonium.adminshop.setup.Messages;
 import com.ammonium.adminshop.shop.Shop;
@@ -38,7 +41,6 @@ import net.minecraftforge.registries.tags.ITagManager;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -217,7 +219,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
         drawString(matrixStack, Minecraft.getInstance().font,
                 I18n.get(GUI_MONEY) + formatted,
                 getXSize() - font.width(I18n.get(GUI_MONEY) + formatted) - 6,
-                6, 0xffffff); //x, y, color
+                6, 0xffffff);
 
         // Bank account
         drawString(matrixStack, font, MojangAPI.getUsernameByUUID(selectedAccountInfo.getKey())+":"+

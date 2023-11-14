@@ -11,13 +11,13 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraftforge.client.extensions.common.IClientFluidTypeExtensions;
 import org.jetbrains.annotations.NotNull;
 
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -99,9 +99,9 @@ public class ShopButton extends Button {
     }
 
     public int getQuantity(){
-        if(Screen.hasControlDown() && Screen.hasShiftDown())
+        if(Screen.hasControlDown() && Screen.hasAltDown())
             return item.isItem() ? 64 : 1000;
-        else if(Screen.hasControlDown() || Screen.hasShiftDown())
+        else if(Screen.hasControlDown() || Screen.hasAltDown())
             return item.isItem() ? 16 : 100;
         else
             return 1;
@@ -111,7 +111,7 @@ public class ShopButton extends Button {
         long price = item.getPrice() * getQuantity();
         String formatted = MoneyFormat.format(price, MoneyFormat.FormatType.SHORT);
         List<Component> tooltip = new ArrayList<>();
-        tooltip.add(Component.literal("$"+formatted+" "+getQuantity()+((item.isItem()) ? "x " : "mb ")+item));
+        tooltip.add(Component.literal(I18n.get("gui.money_message")+formatted+" "+getQuantity()+((item.isItem()) ? "x " : "mb ")+item));
         if (item.getPermitTier() != 0) {
             tooltip.add(Component.literal("Requires Permit Tier: "+item.getPermitTier()));
         }
