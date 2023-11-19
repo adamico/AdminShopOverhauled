@@ -2,10 +2,10 @@ package com.ammonium.adminshop.setup;
 
 import com.ammonium.adminshop.AdminShop;
 import com.ammonium.adminshop.network.PacketChangeDefaultAccount;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ServerData;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -15,6 +15,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
 
 @OnlyIn(Dist.CLIENT)
 public class ClientConfig {
@@ -32,10 +33,16 @@ public class ClientConfig {
                 name = server.getWorldData().getLevelName();
             } else {
                 // Dedicated server or multiplayer
-                name = Minecraft.getInstance().getCurrentServer().ip;
+                ServerData serverData = Minecraft.getInstance().getCurrentServer();
+                if (serverData == null) {
+                    name = "default";
+                } else {
+                    name = serverData.ip;
+                }
             }
         } catch (Exception e) {
-            AdminShop.LOGGER.error("Error getting server name", e);
+            AdminShop.LOGGER.error("Error getting server name: "+e.getLocalizedMessage());
+            e.printStackTrace();
             name = "default";
         }
         return name;
@@ -49,8 +56,8 @@ public class ClientConfig {
         if (clientDataFile.exists()) {
             try (FileReader reader = new FileReader(clientDataFile)) {
                 readObject = JsonParser.parseReader(reader).getAsJsonObject();
-            } catch (Exception e) {
-                AdminShop.LOGGER.debug("Exception while loading client data");
+            } catch (IOException | JsonParseException | IllegalStateException e) {
+                AdminShop.LOGGER.debug("Exception while loading client data: "+e.getLocalizedMessage());
                 e.printStackTrace();
             }
         }
@@ -67,8 +74,8 @@ public class ClientConfig {
 
         try (FileWriter writer = new FileWriter(clientDataFile)) {
             GSON.toJson(data, writer);
-        } catch (Exception e) {
-            AdminShop.LOGGER.debug("Exception while saving client data");
+        } catch (IOException | JsonIOException e) {
+            AdminShop.LOGGER.debug("Exception while saving client data: "+e.getLocalizedMessage());
             e.printStackTrace();
         }
     }
@@ -79,9 +86,10 @@ public class ClientConfig {
             return defaultAccount;
         }
         // Obtain from reading config
-        assert Minecraft.getInstance().player != null;
+        LocalPlayer player = Minecraft.getInstance().player;
+        assert player != null;
         JsonObject clientData = ClientConfig.loadClientData();
-        defaultAccount = Pair.of(Minecraft.getInstance().player.getStringUUID(), 1);
+        defaultAccount = Pair.of(player.getStringUUID(), 1);
         if (clientData == null || clientData.isJsonNull()) {
             AdminShop.LOGGER.info("No default account data found");
             return defaultAccount;

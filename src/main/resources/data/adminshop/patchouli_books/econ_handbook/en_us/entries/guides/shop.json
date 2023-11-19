@@ -12,7 +12,7 @@
     },
     {
       "type": "patchouli:text",
-      "text": "1: Buy/Sell toggle. Click to change between buy and sell mode. The pressed button shows what mode the Shop is currently on.$(br)2: Search box. Type an item name to search for it, if the shop is too large. (Hint: you can use your scrolling wheel to see more items!)$(br)3: Account Balance.$(br)4: Buy/Sell area. Click to buy or sell the item. Press Control or Shift to buy 16 at a time, and press both for 64."
+      "text": "1: Buy/Sell toggle. Click to change between buy and sell mode. The pressed button shows what mode the Shop is currently on.$(br)2: Search box. Type an item name to search for it, if the shop is too large. (Hint: you can use your scrolling wheel to see more items!)$(br)3: Account Balance.$(br)4: Buy/Sell area. Click to buy or sell the item. Press Alt for exact number, Control or Shift to buy 16 at a time, and both for 64."
     },
     {
       "type": "patchouli:text",

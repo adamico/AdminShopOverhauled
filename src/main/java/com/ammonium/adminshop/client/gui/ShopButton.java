@@ -1,5 +1,6 @@
 package com.ammonium.adminshop.client.gui;
 
+import com.ammonium.adminshop.money.MoneyFormat;
 import com.ammonium.adminshop.shop.ShopItem;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -12,13 +13,13 @@ import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraftforge.client.extensions.common.IClientFluidTypeExtensions;
 import org.jetbrains.annotations.NotNull;
 
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -117,14 +118,14 @@ public class ShopButton extends Button {
 
     public List<Component> getTooltipContent(){
         long price = item.getPrice() * getQuantity();
-        NumberFormat numberFormat = NumberFormat.getInstance();
-        String formatted = numberFormat.format(price);
-        List<Component> tootlip = new ArrayList<>();
-        tootlip.add(Component.literal("$"+formatted+" "+getQuantity()+((item.isItem()) ? "x " : "mb ")+item));
+        List<Component> tooltip = new ArrayList<>();
+        tooltip.add(Component.literal(I18n.get("gui.money_message")+(Screen.hasAltDown() ? MoneyFormat.forcedFormat(price, MoneyFormat.FormatType.RAW) :
+                MoneyFormat.forcedFormat(price, MoneyFormat.FormatType.SHORT))+
+                " "+getQuantity()+((item.isItem()) ? "x " : "mb ")+item));
         if (item.getPermitTier() != 0) {
-            tootlip.add(Component.literal("Requires Permit Tier: "+item.getPermitTier()));
+            tooltip.add(Component.literal("Requires Permit Tier: "+item.getPermitTier()));
         }
-        return tootlip;
+        return tooltip;
     }
 
     public ShopItem getShopItem(){
