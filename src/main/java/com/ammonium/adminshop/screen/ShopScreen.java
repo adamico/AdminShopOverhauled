@@ -215,7 +215,8 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
         BankAccount selectedAccount = getBankAccount();
         Pair<String, Integer> selectedAccountInfo = Pair.of(selectedAccount.getOwner(), selectedAccount.getId());
         long money = ClientLocalData.getMoney(selectedAccountInfo);
-        String formatted = MoneyFormat.format(money, MoneyFormat.FormatType.SHORT);
+        String formatted = Screen.hasAltDown() ? MoneyFormat.forcedFormat(money, MoneyFormat.FormatType.RAW) :
+                MoneyFormat.forcedFormat(money, MoneyFormat.FormatType.SHORT);
         drawString(matrixStack, Minecraft.getInstance().font,
                 I18n.get(GUI_MONEY) + formatted,
                 getXSize() - font.width(I18n.get(GUI_MONEY) + formatted) - 6,

@@ -1,5 +1,6 @@
 package com.ammonium.adminshop.money;
 
+import com.ammonium.adminshop.AdminShop;
 import com.ammonium.adminshop.setup.Config;
 import net.minecraft.client.gui.screens.Screen;
 
@@ -45,44 +46,36 @@ public class MoneyFormat extends DecimalFormat {
     public static String format(long value, FormatType noShift, FormatType onShift) {
         NumberName name = NumberName.findName(value);
         if(name == null | value < FORMAT_START) return NumberFormat.getNumberInstance(Locale.US).format(value);
-//        if (Screen.hasShiftDown()) {return doFormat(value, name, onShift);}
-//        else {return doFormat(value, name, noShift);}
         return Screen.hasShiftDown() ? doFormat(value, name, onShift) : doFormat(value, name, noShift);
     }
 
     public static String doFormat(long value, NumberName name, FormatType formattype) {
+//        AdminShop.LOGGER.debug("Doing format "+value+", "+name+", "+formattype);
         if (formattype == FormatType.SHORT) {
+//            AdminShop.LOGGER.debug("Short Format: "+getShort(value)+" "+name.getName(true));
             return getShort(value) + name.getName(true);
         }
         else if (formattype == FormatType.FULL) {
+//            AdminShop.LOGGER.debug("Full Format: "+getShort(value)+" "+name.getName(false));
             return getShort(value) + String.format(" %s", name.getName(false));
         }
         else return NumberFormat.getNumberInstance(Locale.US).format(value);
     }
 
     public static String getShort(long value) {
-        return getShort((int) value);
-    }
-
-    static String getShort(int value) {
         String str = String.valueOf(value);
-        ArrayList<String> list = new ArrayList<>();
-        StringBuilder current = new StringBuilder();
-        for(int i = str.length(); i > 0; i--) {
-            if(current.length() >= 3) {
-                list.add(current.reverse().toString());
-                current.delete(0, current.length());
-            }
-            current.append(str.charAt(i - 1));
+        int len = str.length();
+
+        if (len < 4) {
+            return str;
         }
-        if(!current.isEmpty()) {
-            list.add(current.reverse().toString());
-            current.delete(0, current.length());
-        }
-        String sig = list.get(list.size() - 1);
-        String dec = list.get(list.size() - 2).substring(0, 2);
+
+        String sig = str.substring(0, len % 3 == 0 ? 3 : len % 3);
+        String dec = str.substring(sig.length(), Math.min(sig.length() + 2, len));
+
         return String.format("%s.%s", sig, dec);
     }
+
 
     public enum NumberName {
         MILLION(1e6, "M"),

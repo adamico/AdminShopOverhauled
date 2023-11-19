@@ -4,6 +4,8 @@ import com.ammonium.adminshop.AdminShop;
 import com.ammonium.adminshop.network.PacketChangeDefaultAccount;
 import com.google.gson.*;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ServerData;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -31,7 +33,12 @@ public class ClientConfig {
                 name = server.getWorldData().getLevelName();
             } else {
                 // Dedicated server or multiplayer
-                name = Minecraft.getInstance().getCurrentServer().ip;
+                ServerData serverData = Minecraft.getInstance().getCurrentServer();
+                if (serverData == null) {
+                    name = "default";
+                } else {
+                    name = serverData.ip;
+                }
             }
         } catch (Exception e) {
             AdminShop.LOGGER.error("Error getting server name: "+e.getLocalizedMessage());
@@ -79,9 +86,10 @@ public class ClientConfig {
             return defaultAccount;
         }
         // Obtain from reading config
-        assert Minecraft.getInstance().player != null;
+        LocalPlayer player = Minecraft.getInstance().player;
+        assert player != null;
         JsonObject clientData = ClientConfig.loadClientData();
-        defaultAccount = Pair.of(Minecraft.getInstance().player.getStringUUID(), 1);
+        defaultAccount = Pair.of(player.getStringUUID(), 1);
         if (clientData == null || clientData.isJsonNull()) {
             AdminShop.LOGGER.info("No default account data found");
             return defaultAccount;

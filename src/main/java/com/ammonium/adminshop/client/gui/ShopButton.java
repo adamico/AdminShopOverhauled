@@ -99,9 +99,9 @@ public class ShopButton extends Button {
     }
 
     public int getQuantity(){
-        if(Screen.hasControlDown() && Screen.hasAltDown())
+        if(Screen.hasControlDown() && Screen.hasShiftDown())
             return item.isItem() ? 64 : 1000;
-        else if(Screen.hasControlDown() || Screen.hasAltDown())
+        else if(Screen.hasControlDown() || Screen.hasShiftDown())
             return item.isItem() ? 16 : 100;
         else
             return 1;
@@ -109,9 +109,10 @@ public class ShopButton extends Button {
 
     public List<Component> getTooltipContent(){
         long price = item.getPrice() * getQuantity();
-        String formatted = MoneyFormat.format(price, MoneyFormat.FormatType.SHORT);
         List<Component> tooltip = new ArrayList<>();
-        tooltip.add(Component.literal(I18n.get("gui.money_message")+formatted+" "+getQuantity()+((item.isItem()) ? "x " : "mb ")+item));
+        tooltip.add(Component.literal(I18n.get("gui.money_message")+(Screen.hasAltDown() ? MoneyFormat.forcedFormat(price, MoneyFormat.FormatType.RAW) :
+                MoneyFormat.forcedFormat(price, MoneyFormat.FormatType.SHORT))+
+                " "+getQuantity()+((item.isItem()) ? "x " : "mb ")+item));
         if (item.getPermitTier() != 0) {
             tooltip.add(Component.literal("Requires Permit Tier: "+item.getPermitTier()));
         }

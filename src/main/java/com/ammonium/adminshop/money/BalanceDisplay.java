@@ -4,6 +4,8 @@ import com.ammonium.adminshop.AdminShop;
 import com.ammonium.adminshop.setup.ClientConfig;
 import com.ammonium.adminshop.setup.Config;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
@@ -11,7 +13,6 @@ import net.minecraftforge.client.event.CustomizeGuiOverlayEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraft.client.resources.language.I18n;
 @OnlyIn(Dist.CLIENT)
 @Mod.EventBusSubscriber(modid = AdminShop.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class BalanceDisplay {
@@ -23,6 +24,7 @@ public class BalanceDisplay {
     @SubscribeEvent
     public static void onTick(TickEvent.ClientTickEvent event) {
         if (!Config.balanceDisplay.get()) return;
+        if (Minecraft.getInstance().player == null) return;
         tick++;
         if (event.phase == TickEvent.Phase.END && tick >= 20) {
             tick = 0;
