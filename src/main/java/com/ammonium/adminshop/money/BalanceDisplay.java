@@ -51,7 +51,7 @@ public class BalanceDisplay {
         if (!Config.balanceDisplay.get()) return;
         long avg = history[0] + history[1];
         String str = MoneyFormat.cfgformat(balance);
-        if (avg != 0) str += " " + (avg > 0 ? (ChatFormatting.GREEN + "+") : (ChatFormatting.RED)) + avg + "/s";
+        if (avg != 0) str += " " + (avg > 0 ? (ChatFormatting.GREEN + "+") : (ChatFormatting.RED)) + MoneyFormat.format(avg, MoneyFormat.FormatType.SHORT, MoneyFormat.FormatType.RAW) + "/s";
         event.getLeft().add(String.format("Balance: " + I18n.get("gui.money_message") + "%s", str));
     }
 

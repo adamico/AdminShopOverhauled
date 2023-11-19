@@ -1,14 +1,12 @@
 package com.ammonium.adminshop.money;
 
-import com.ammonium.adminshop.AdminShop;
 import com.ammonium.adminshop.setup.Config;
 import net.minecraft.client.gui.screens.Screen;
 
 import javax.annotation.Nullable;
-import java.text.DecimalFormat;
 import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Locale;
 
@@ -36,7 +34,7 @@ public class MoneyFormat extends DecimalFormat {
     // Format is always X irrespective of shift
     public static String forcedFormat(long value, FormatType forced) {
         return format(value, forced, forced);
-    };
+    }
 
     // If noShift not specified -> noShift = RAW
     public static String format(long value, FormatType noShift) {
@@ -45,7 +43,7 @@ public class MoneyFormat extends DecimalFormat {
 
     public static String format(long value, FormatType noShift, FormatType onShift) {
         NumberName name = NumberName.findName(value);
-        if(name == null | value < FORMAT_START) return NumberFormat.getNumberInstance(Locale.US).format(value);
+        if(name == null | Math.abs(value) < FORMAT_START) return NumberFormat.getNumberInstance(Locale.US).format(value);
         return Screen.hasShiftDown() ? doFormat(value, name, onShift) : doFormat(value, name, noShift);
     }
 
@@ -59,22 +57,28 @@ public class MoneyFormat extends DecimalFormat {
 //            AdminShop.LOGGER.debug("Full Format: "+getShort(value)+" "+name.getName(false));
             return getShort(value) + String.format(" %s", name.getName(false));
         }
-        else return NumberFormat.getNumberInstance(Locale.US).format(value);
+        else {
+//            AdminShop.LOGGER.debug("Number Format: "+NumberFormat.getNumberInstance(Locale.US).format(value));
+            return NumberFormat.getNumberInstance(Locale.US).format(value);
+        }
     }
 
     public static String getShort(long value) {
-        String str = String.valueOf(value);
+        boolean isNegative = value < 0;
+        String str = String.valueOf(Math.abs(value));
         int len = str.length();
 
         if (len < 4) {
-            return str;
+            return isNegative ? "-" + str : str;
         }
 
         String sig = str.substring(0, len % 3 == 0 ? 3 : len % 3);
         String dec = str.substring(sig.length(), Math.min(sig.length() + 2, len));
 
-        return String.format("%s.%s", sig, dec);
+        String result = String.format("%s.%s", sig, dec);
+        return isNegative ? "-" + result : result;
     }
+
 
 
     public enum NumberName {
@@ -118,7 +122,8 @@ public class MoneyFormat extends DecimalFormat {
         public double getValue() {return value;}
 
         static @Nullable NumberName findName(long value) {
-            return Arrays.stream(VALUES).filter(v -> value >= v.getValue()).reduce((first, second) -> second).orElse(null);
+            return Arrays.stream(VALUES).filter(v -> Math.abs(value) >= v.getValue()).reduce((first, second) -> second).orElse(null);
         }
+
     }
 }
