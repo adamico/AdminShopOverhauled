@@ -72,6 +72,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
     private int tickCounter = 0;
     private String search = "";
     private final Pair<String, Integer> personalAccount;
+    private int relX, relY;
 
     public ShopScreen(ShopMenu container, Inventory inv, Component name) {
         super(container, inv, name);
@@ -163,10 +164,11 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
     @Override
     protected void init() {
         super.init();
-        int relX = (this.width - this.imageWidth) / 2;
-        int relY = (this.height - this.imageHeight) / 2;
-        createShopButtons(true, relX, relY);
+        relX = (this.width - this.imageWidth) / 2;
+        relY = (this.height - this.imageHeight) / 2;
+        rows_passed = 0;
         createShopButtons(false, relX, relY);
+        createShopButtons(true, relX, relY);
         createBuySellButton(relX, relY);
         createChangeAccountButton(relX, relY);
         createSetDefaultAccountButton(relX, relY);
@@ -185,6 +187,22 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
             this.tickCounter = 0;
             filterSearch();
         }
+        // Render scroll indicators
+        int max_rows_passed = (int) Math.max(Math.ceil(searchResults.size() / (double) NUM_COLS) - 4, 0);
+//        AdminShop.LOGGER.debug("rows_passed:"+rows_passed+", max_rows_passed:"+max_rows_passed+", searchResults.size:"+searchResults.size());
+//        AdminShop.LOGGER.debug("relX:"+relX+", relY:"+relY);
+        matrixStack.pushPose();
+        RenderSystem.setShaderTexture(0, GUI);
+        matrixStack.translate(0, 0, 300);
+        // Top scroll indicator
+        if (rows_passed > 0) {
+            blit(matrixStack, relX+15, relY+32, 15, 223, 162, 8);
+        }
+        // Bottom scroll indicator
+        if (rows_passed < max_rows_passed) {
+            blit(matrixStack, relX+15, relY+96, 15, 232, 162, 8);
+        }
+        matrixStack.popPose();
     }
 
     private void filterSearch() {

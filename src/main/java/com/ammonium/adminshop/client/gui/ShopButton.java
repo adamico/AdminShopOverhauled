@@ -84,7 +84,7 @@ public class ShopButton extends Button {
         //Write quantity based on buttons pressed (sneak & run)
         matrix.pushPose();
 //        matrix.translate(0, 0, itemRenderer.blitOffset+201);
-        matrix.translate(0, 0, 201);
+        matrix.translate(0, 0, itemRenderer.blitOffset+101);
         matrix.scale(.5f, .5f, 1);
         Font font = Minecraft.getInstance().font;
         drawString(matrix, font, getQuantity()+"", 2*(x+16)- font.width(getQuantity()+""), 2*(y)+24, 0xFFFFFF);
