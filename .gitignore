@@ -24,3 +24,6 @@ libs
 
 # Files from Forge MDK
 forge*changelog.txt
+.vscode/launch.json
+.vscode/settings.json
+AdminShopOverhauled.code-workspace
