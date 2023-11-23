@@ -127,7 +127,7 @@ public class ShopAccountsCommand {
     }
 
     private static int info(CommandSourceStack source) {
-        source.sendSuccess(Component.literal("AdminShop, a mod originally by Vnator and forked by Ammonium_"),
+        source.sendSuccess(() -> Component.literal("AdminShop, a mod originally by Vnator and forked by Ammonium_"),
                 true);
         return 1;
     }
@@ -182,7 +182,7 @@ public class ShopAccountsCommand {
             });
         }
 
-        source.sendSuccess(Component.literal(returnMessage.toString()), true);
+        source.sendSuccess(() -> Component.literal(returnMessage.toString()), true);
         return 1;
     }
 
@@ -251,7 +251,7 @@ public class ShopAccountsCommand {
         // Sync client data with all members
         memberPlayers.forEach(member -> Messages.sendToPlayer(new PacketSyncMoneyToClient(
                 moneyManager.getSharedAccounts().get(member.getStringUUID())), member));
-        source.sendSuccess(Component.literal("Created new account with ID "+newId), true);
+        source.sendSuccess(() -> Component.literal("Created new account with ID "+newId), true);
         return 1;
     }
 
@@ -294,7 +294,7 @@ public class ShopAccountsCommand {
                 new PacketSyncMoneyToClient(moneyManager.getSharedAccounts().get(memberPlayer.getStringUUID())),
                 memberPlayer));
 
-        source.sendSuccess(Component.literal("Successfully deleted account "+id), true);
+        source.sendSuccess(() -> Component.literal("Successfully deleted account "+id), true);
         return 1;
     }
 
@@ -352,7 +352,7 @@ public class ShopAccountsCommand {
                 new PacketSyncMoneyToClient(moneyManager.getSharedAccounts().get(memberPlayer.getStringUUID())),
                 memberPlayer));
 
-        source.sendSuccess(Component.literal("Successfully added "+member+" to account."), true);
+        source.sendSuccess(() -> Component.literal("Successfully added "+member+" to account."), true);
         return 1;
     }
     private static int removeMember(CommandSourceStack source, int id, String member) throws CommandSyntaxException {
@@ -420,7 +420,7 @@ public class ShopAccountsCommand {
                 new PacketSyncMoneyToClient(moneyManager.getSharedAccounts().get(memberPlayer.getStringUUID())),
                 memberPlayer));
 
-        source.sendSuccess(Component.literal("Successfully removed "+member+" from account."), true);
+        source.sendSuccess(() -> Component.literal("Successfully removed "+member+" from account."), true);
         return 1;
     }
     static int removePermit(CommandSourceStack source, int id, int tier) throws CommandSyntaxException {
@@ -438,7 +438,7 @@ public class ShopAccountsCommand {
         }
         // Delete permit
         Messages.sendToServer(new PacketAccountRemovePermit(player.getStringUUID(), id, tier));
-        source.sendSuccess(Component.literal("Removed permit from account"), true);
+        source.sendSuccess(() -> Component.literal("Removed permit from account"), true);
         return 1;
     }
 
@@ -501,7 +501,7 @@ public class ShopAccountsCommand {
             source.sendFailure(Component.literal("Error adding to destination account"));
         }
         AdminShop.LOGGER.info("Transfer successful");
-        source.sendSuccess(Component.literal("Transfer successful!"), true);
+        source.sendSuccess(() -> Component.literal("Transfer successful!"), true);
         return 1;
     }
     private static String getUsernameByUUID(ServerLevel level, String uuid) {

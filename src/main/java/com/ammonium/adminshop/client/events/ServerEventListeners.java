@@ -34,7 +34,7 @@ public class ServerEventListeners {
         ServerPlayer player = (ServerPlayer) event.getEntity();
         AdminShop.LOGGER.debug("Calling SyncShop from onPlayerLogin");
         Messages.sendToPlayer(new PacketSyncShopToClient(Shop.get().shopTextRaw), player);
-        MoneyManager moneyManager = MoneyManager.get(event.getEntity().getLevel());
+        MoneyManager moneyManager = MoneyManager.get(event.getEntity().level());
         Map<String, List<BankAccount>> sharedAccounts = moneyManager.getSharedAccounts();
         List<BankAccount> usableAccounts;
         if (!sharedAccounts.containsKey(event.getEntity().getStringUUID())) {

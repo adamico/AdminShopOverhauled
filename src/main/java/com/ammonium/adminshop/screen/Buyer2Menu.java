@@ -22,14 +22,14 @@ public class Buyer2Menu extends AbstractContainerMenu {
     private final Level level;
 
     public Buyer2Menu(int windowId, Inventory inv, FriendlyByteBuf extraData) {
-        this(windowId, inv, inv.player.level.getBlockEntity(extraData.readBlockPos()));
+        this(windowId, inv, inv.player.level().getBlockEntity(extraData.readBlockPos()));
     }
 
     public Buyer2Menu(int windowId, Inventory inv, BlockEntity entity) {
         super(ModMenuTypes.BUYER_2_MENU.get(), windowId);
         checkContainerSize(inv, TE_INVENTORY_SLOT_COUNT);
         this.blockEntity = ((Buyer2BE) entity);
-        this.level = inv.player.level;
+        this.level = inv.player.level();
 
         addPlayerInventory(inv);
         addPlayerHotbar(inv);

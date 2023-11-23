@@ -20,15 +20,19 @@ import com.ammonium.adminshop.shop.ShopItem;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -77,12 +81,13 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
 
     public ShopScreen(ShopMenu container, Inventory inv, Component name) {
         super(container, inv, name);
-
-        assert Minecraft.getInstance().player != null;
-        assert Minecraft.getInstance().level != null;
-        assert Minecraft.getInstance().level.isClientSide;
-
-        this.playerUUID = Minecraft.getInstance().player.getStringUUID();
+        Minecraft mc = Minecraft.getInstance();
+        assert mc.player != null;
+        assert mc.level != null;
+        assert mc.level.isClientSide;
+        
+        Player player = mc.player;
+        this.playerUUID = player.getStringUUID();
         this.personalAccount = Pair.of(playerUUID, 1);
         this.accountMap = ClientLocalData.getAccountMap();
 
@@ -178,11 +183,11 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
     }
 
     @Override
-    public void render(@NotNull PoseStack matrixStack, int mouseX, int mouseY, float partialTicks){
-        this.renderBackground(matrixStack);
-        super.render(matrixStack, mouseX, mouseY, partialTicks);
-        this.searchBar.render(matrixStack, mouseX, mouseY, partialTicks);
-        this.renderTooltip(matrixStack, mouseX, mouseY);
+    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks){
+        this.renderBackground(guiGraphics);
+        super.render(guiGraphics, mouseX, mouseY, partialTicks);
+        this.searchBar.render(guiGraphics, mouseX, mouseY, partialTicks);
+        this.renderTooltip(guiGraphics, mouseX, mouseY);
         this.tickCounter++;
         if (this.tickCounter > 20) {
             this.tickCounter = 0;
@@ -192,18 +197,19 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
         int max_rows_passed = (int) Math.max(Math.ceil(searchResults.size() / (double) NUM_COLS) - 4, 0);
 //        AdminShop.LOGGER.debug("rows_passed:"+rows_passed+", max_rows_passed:"+max_rows_passed+", searchResults.size:"+searchResults.size());
 //        AdminShop.LOGGER.debug("relX:"+relX+", relY:"+relY);
-        matrixStack.pushPose();
+        PoseStack pose = guiGraphics.pose();
+        pose.pushPose();
         RenderSystem.setShaderTexture(0, GUI);
-        matrixStack.translate(0, 0, 300);
+        pose.translate(0, 0, 300);
         // Top scroll indicator
         if (rows_passed > 0) {
-            blit(matrixStack, relX+15, relY+32, 15, 223, 162, 8);
+            guiGraphics.blit(GUI, relX+15, relY+32, 15, 223, 162, 8);
         }
         // Bottom scroll indicator
         if (rows_passed < max_rows_passed) {
-            blit(matrixStack, relX+15, relY+96, 15, 232, 162, 8);
+            guiGraphics.blit(GUI, relX+15, relY+96, 15, 232, 162, 8);
         }
-        matrixStack.popPose();
+        pose.popPose();
     }
 
     private void filterSearch() {
@@ -221,14 +227,16 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
     }
 
     @Override
-    protected void renderLabels(PoseStack matrixStack, int mouseX, int mouseY) {
-        matrixStack.pushPose();
+    protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        PoseStack pose = guiGraphics.pose();
+        Font font = Minecraft.getInstance().font;
+        pose.pushPose();
         //Block Title
         String blockName = I18n.get(ShopBlock.SCREEN_ADMINSHOP_SHOP);
-        drawCenteredString(matrixStack, font, blockName, getXSize()/2, 6, 0xffffff);
+        guiGraphics.drawCenteredString(font, blockName, getXSize()/2, 6, 0xffffff);
 
         //Player Inventory Title
-        drawString(matrixStack, font, playerInventoryTitle, 16, getYSize()-94, 0xffffff);
+        guiGraphics.drawString(font, playerInventoryTitle, 16, getYSize()-94, 0xffffff);
 
         //Player Balance
         BankAccount selectedAccount = getBankAccount();
@@ -237,22 +245,22 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
         NumberFormat numberFormat = NumberFormat.getInstance();
         String formatted = Screen.hasAltDown() ? MoneyFormat.forcedFormat(money, MoneyFormat.FormatType.RAW) :
                 MoneyFormat.forcedFormat(money, MoneyFormat.FormatType.SHORT);
-        drawString(matrixStack, Minecraft.getInstance().font,
+        guiGraphics.drawString(font,
                 I18n.get(GUI_MONEY) + formatted,
                 getXSize() - font.width(I18n.get(GUI_MONEY) + formatted) - 6,
                 6, 0xffffff); //x, y, color
 
         // Bank account
-        drawString(matrixStack, font, MojangAPI.getUsernameByUUID(selectedAccountInfo.getKey())+":"+
+        guiGraphics.drawString(font, MojangAPI.getUsernameByUUID(selectedAccountInfo.getKey())+":"+
                 selectedAccountInfo.getValue(),16,112,0xffffff);
 
         //Tooltip for item the player is hovering over
         List<ShopButton> shopButtons = isBuy ? buyButtons : sellButtons;
         Optional<ShopButton> button = shopButtons.stream().filter(b -> b.isMouseOn).findFirst();
-        button.ifPresent(shopButton -> renderTooltip(matrixStack, shopButton.getTooltipContent(),
+        button.ifPresent(shopButton -> guiGraphics.renderTooltip(font, shopButton.getTooltipContent(),
                 Optional.empty(), mouseX-(this.width - this.imageWidth)/2,
                 mouseY-(this.height - this.imageHeight)/2));
-        matrixStack.popPose();
+        pose.popPose();
 
     }
 
@@ -333,11 +341,11 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
     }
 
     @Override
-    protected void renderBg(@NotNull PoseStack matrixStack, float partialTicks, int mouseX, int mouseY){
+    protected void renderBg(GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY){
         RenderSystem.setShaderTexture(0, GUI);
         int relX = (this.width - this.imageWidth) / 2;
         int relY = (this.height - this.imageHeight) / 2;
-        this.blit(matrixStack, relX, relY, 0, 0, this.imageWidth, this.imageHeight);
+        guiGraphics.blit(GUI, relX, relY, 0, 0, this.imageWidth, this.imageHeight);
     }
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
@@ -378,7 +386,7 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
             List<ShopItem> finalShopItems = shopItems;
             ShopButton button = new ShopButton(shopItems.get(j),
                     x+SHOP_BUTTON_X+SHOP_BUTTON_SIZE*(j%NUM_COLS),
-                    y+SHOP_BUTTON_Y+SHOP_BUTTON_SIZE*((j/NUM_COLS)%NUM_ROWS), itemRenderer, (b) -> {
+                    y+SHOP_BUTTON_Y+SHOP_BUTTON_SIZE*((j/NUM_COLS)%NUM_ROWS), (b) -> {
                 int quantity = ((ShopButton)b).getQuantity();
                 attemptTransaction(getBankAccount(), isBuy, finalShopItems.get(j2), quantity);
             });
@@ -395,8 +403,10 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
         }
         changeAccountButton = new ChangeAccountButton(x+127, y+108, (b) -> {
             changeAccounts();
-            assert Minecraft.getInstance().player != null;
-            Minecraft.getInstance().player.sendSystemMessage(Component.literal("Changed account to "+
+            Minecraft mc = Minecraft.getInstance();
+            Player player = mc.player;
+            assert player != null;
+            player.sendSystemMessage(Component.literal("Changed account to "+
                     MojangAPI.getUsernameByUUID(getAccountDetails().getKey())+":"+
                     getAccountDetails().getValue()));
         });
@@ -408,9 +418,10 @@ public class ShopScreen extends AbstractContainerScreen<ShopMenu> {
             removeWidget(setDefaultAccountButton);
         }
         setDefaultAccountButton = new SetDefaultAccountButton(x+109, y+108, (b) -> {
-            setDefaultAccount(getAccountDetails());
-            assert Minecraft.getInstance().player != null;
-            Minecraft.getInstance().player.sendSystemMessage(Component.literal("Set default account to "+
+            setDefaultAccount(getAccountDetails());            Minecraft mc = Minecraft.getInstance();
+            Player player = mc.player;
+            assert player != null;
+            player.sendSystemMessage(Component.literal("Set default account to "+
                     MojangAPI.getUsernameByUUID(getAccountDetails().getKey())+":"+
                     getAccountDetails().getValue()));
         });

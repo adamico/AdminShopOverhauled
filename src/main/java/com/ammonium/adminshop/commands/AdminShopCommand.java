@@ -76,7 +76,8 @@ public class AdminShopCommand {
             source.sendFailure(Component.literal("Unable to give permit to player"));
             return 0;
         }
-        source.sendSuccess(Component.literal("Obtained trade permit"), true);
+        source.sendSuccess(() -> Component.literal("Obtained trade permit"), true);
+        
         return 1;
     }
 
@@ -112,7 +113,7 @@ public class AdminShopCommand {
         onlineMembers.forEach(memberPlayer -> Messages.sendToPlayer(
                 new PacketSyncMoneyToClient(moneyManager.getSharedAccounts().get(memberPlayer.getStringUUID())),
                 memberPlayer));
-        source.sendSuccess(Component.literal("Successfully added money to account!"), true);
+        source.sendSuccess(() -> Component.literal("Successfully added money to account!"), true);
         return 1;
     }
 }

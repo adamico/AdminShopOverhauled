@@ -22,14 +22,14 @@ public class BuyerMenu extends AbstractContainerMenu {
     private final Level level;
 
     public BuyerMenu(int windowId, Inventory inv, FriendlyByteBuf extraData) {
-        this(windowId, inv, inv.player.level.getBlockEntity(extraData.readBlockPos()));
+        this(windowId, inv, inv.player.level().getBlockEntity(extraData.readBlockPos()));
     }
 
     public BuyerMenu(int windowId, Inventory inv, BlockEntity entity) {
         super(ModMenuTypes.BUYER_MENU.get(), windowId);
         checkContainerSize(inv, TE_INVENTORY_SLOT_COUNT);
         this.blockEntity = ((BuyerBE) entity);
-        this.level = inv.player.level;
+        this.level = inv.player.level();
 
         addPlayerInventory(inv);
         addPlayerHotbar(inv);
@@ -37,7 +37,6 @@ public class BuyerMenu extends AbstractContainerMenu {
         this.blockEntity.getCapability(ForgeCapabilities.ITEM_HANDLER).ifPresent(handler -> {
             this.addSlot(new ModResultSlot(handler, 0, 80, 42));
         });
-
     }
 
     public BuyerBE getBlockEntity() {
